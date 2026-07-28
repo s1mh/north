@@ -1,0 +1,12 @@
+{
+  "config": {
+    "MD013": {
+      "line_length": 80,
+      "tables": false
+    }
+  },
+  "ignores": [
+    "docs/reference/prototype/CLAUDE.md",
+    "docs/reference/prototype/Handoff.md"
+  ]
+}

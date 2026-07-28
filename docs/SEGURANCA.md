@@ -28,7 +28,7 @@ Principais cenários de ameaça:
 ### Classificação das variáveis
 
 | Variável | Navegador | Uso |
-|---|---:|---|
+| --- | ---: | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | sim | identifica o projeto Supabase |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | sim | acesso sujeito a grants e RLS |
 | `SUPABASE_SECRET_KEY` | nunca | job administrativo isolado |

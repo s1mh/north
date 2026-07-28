@@ -3,9 +3,9 @@
 ## Decisões iniciais
 
 | Tema | Decisão |
-|---|---|
+| --- | --- |
 | Aplicação | Next.js App Router com TypeScript, uma aplicação na raiz |
-| Renderização | Server Components por padrão; cliente apenas quando necessário |
+| Renderização | Server Components por padrão; cliente só quando necessário |
 | Backend | Route Handlers na Vercel; evitar um segundo backend no MVP |
 | Identidade | Supabase Auth com sessão SSR e claims validadas |
 | Dados | Supabase Postgres, migrations locais e RLS deny-by-default |
@@ -22,7 +22,7 @@ acesso. A secreta ignora RLS e nunca entra em caminho executável pelo cliente.
 ## Ambientes
 
 | Ambiente | Vercel | Supabase | Dados | Segredos |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Local | servidor local | stack local | seed sintético | `.env.local`, fora do Git |
 | Preview | deployment de PR | projeto/branch não produtivo | sintéticos | cofre Preview |
 | Staging | domínio restrito | projeto dedicado | sintéticos representativos | cofre Staging |
@@ -220,7 +220,7 @@ fechamento” de cotação em tempo real.
 ## Matriz de acesso
 
 | Categoria | `anon` | `authenticated` | servidor privilegiado |
-|---|---:|---:|---:|
+| --- | ---: | ---: | ---: |
 | Perfil, carteira, metas, watchlist | nenhum | somente o próprio usuário | jobs explicitamente autorizados |
 | Consentimento e suitability | nenhum | leitura própria; escrita por casos de uso | auditoria autorizada |
 | Catálogo publicado | nenhum no MVP | leitura de itens publicados | curadoria |
