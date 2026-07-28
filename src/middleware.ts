@@ -32,6 +32,7 @@ export async function middleware(request: NextRequest) {
     }
     return redirect;
   }
+  response.headers.set("Cache-Control", "private, no-store");
   return response;
 }
 
@@ -45,5 +46,6 @@ export const config = {
     "/metas/:path*",
     "/produtos/:path*",
     "/onboarding/:path*",
+    "/redefinir-senha/:path*",
   ],
 };
