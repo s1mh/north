@@ -1,0 +1,14 @@
+import { createBrowserClient } from "@supabase/ssr";
+import { getPublicEnv } from "@/server/env/public";
+
+let client: ReturnType<typeof createBrowserClient> | undefined;
+
+export function createClient() {
+  if (client) return client;
+  const env = getPublicEnv();
+  client = createBrowserClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  );
+  return client;
+}
