@@ -181,6 +181,12 @@ export const profileCopy: Record<InvestorProfile, string> = {
     "Você aceita oscilações maiores em busca de crescimento no longo prazo, sem abrir mão de uma base diversificada.",
 };
 
+export function targetAllocationRecord(profile: InvestorProfile) {
+  return Object.fromEntries(
+    targetAllocations[profile].map(({ label, value }) => [label, value]),
+  );
+}
+
 export function scoreAnswers(answers: Readonly<Record<string, string>>) {
   if (Object.keys(answers).length !== suitabilityQuestions.length) {
     throw new Error("Responda todas as perguntas antes de calcular o perfil.");
