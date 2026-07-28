@@ -1,0 +1,11 @@
+{
+  "name": "North — educação financeira",
+  "short_name": "North",
+  "description": "Carteira, metas e educação financeira em uma direção só.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EFEDE7",
+  "theme_color": "#EFEDE7",
+  "lang": "pt-BR",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
