@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 
 const allocation = [{ label:"Renda fixa", value:"42%", color:"var(--rf)", width:42 },{ label:"Ações", value:"24%", color:"var(--ac)", width:24 },{ label:"Fundos", value:"19%", color:"var(--fu)", width:19 },{ label:"Cripto", value:"15%", color:"var(--cr)", width:15 }];
+const shortcuts = [['✦', 'Assistente', '/assistente'], ['↗', 'Investir', '/investir'], ['◎', 'Metas', '/metas'], ['◇', 'Produtos', '/produtos']] as const;
 
 export default function Home() {
   return <AppShell active="/">
@@ -11,7 +12,7 @@ export default function Home() {
     <div className="legend">{allocation.map(item => <div key={item.label}><span className="dot" style={{background:item.color}} />{item.label} <b>{item.value}</b></div>)}</div>
 
     <section className="section"><p className="eyebrow">Continue sua jornada</p><div className="shortcuts">
-      {[['✦','Assistente','/assistente'],['↗','Investir','/investir'],['◎','Metas','/metas'],['◇','Produtos','/produtos']].map(([icon,label,href]) => <Link className="shortcut" href={href} key={label}><span className="shortcut-icon">{icon}</span>{label}</Link>)}
+      {shortcuts.map(([icon,label,href]) => <Link className="shortcut" href={href} key={label}><span className="shortcut-icon">{icon}</span>{label}</Link>)}
     </div></section>
 
     <section className="section"><div className="section-head"><div><p className="eyebrow">North observa</p><h2>Sugestões pra você</h2></div><Link href="/assistente">Ver todas</Link></div>
