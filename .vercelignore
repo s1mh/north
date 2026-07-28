@@ -1,0 +1,13 @@
+# Product documentation and the executable design prototype are not runtime assets.
+docs/
+
+# Local database and test artifacts are never part of a web deployment.
+supabase/tests/
+coverage/
+playwright-report/
+test-results/
+
+# Repository-only files
+.github/
+SECURITY.md
+*.zip
