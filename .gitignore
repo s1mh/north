@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Next.js
+.next/
+out/
+dist/
+
+# Tests and tooling
+coverage/
+playwright-report/
+test-results/
+*.log
+*.tsbuildinfo
+
+# Local Supabase state
+supabase/.branches/
+supabase/.temp/
+
+# Vercel
+.vercel/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+!.env.test.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Uploaded archives are source material, not repository artifacts
+*.zip
