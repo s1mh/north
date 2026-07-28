@@ -4,14 +4,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   profileCopy,
-  scoreAnswers,
   suitabilityQuestions,
   targetAllocations,
 } from "./questionnaire";
 import type { InvestorProfile } from "./score";
 
 type Answers = Record<string, string>;
-type Result = { score: number; profile: InvestorProfile };
+export type SuitabilityResult = { score: number; profile: InvestorProfile };
 
 const profileLabels: Record<InvestorProfile, string> = {
   conservador: "Conservador",
@@ -19,10 +18,12 @@ const profileLabels: Record<InvestorProfile, string> = {
   arrojado: "Arrojado",
 };
 
-export function SuitabilityFlow() {
+export function SuitabilityFlow({ initialResult = null }: { initialResult?: SuitabilityResult | null }) {
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<SuitabilityResult | null>(initialResult);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const question = suitabilityQuestions[current]!;
   const selected = answers[question.id];
   const progress = ((current + 1) / suitabilityQuestions.length) * 100;
@@ -41,19 +42,39 @@ export function SuitabilityFlow() {
     setCurrent((value) => value - 1);
   }
 
-  function next() {
+  async function next() {
     if (!selected) return;
     if (current < suitabilityQuestions.length - 1) {
       setCurrent((value) => value + 1);
       return;
     }
-    setResult(scoreAnswers(answers));
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch("/api/suitability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers }),
+      });
+      const payload = await response.json() as SuitabilityResult | { error?: string };
+      if (!response.ok || !("profile" in payload)) {
+        throw new Error("error" in payload ? payload.error : undefined);
+      }
+      setResult(payload);
+    } catch (submissionError) {
+      setError(submissionError instanceof Error && submissionError.message
+        ? submissionError.message
+        : "Não foi possível salvar seu perfil agora.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function restart() {
     setAnswers({});
     setCurrent(0);
     setResult(null);
+    setError("");
   }
 
   if (result) {
@@ -134,8 +155,9 @@ export function SuitabilityFlow() {
           })}
         </fieldset>
 
-        <button className="button onboarding-action" type="button" onClick={next} disabled={!selected}>
-          {current === suitabilityQuestions.length - 1 ? "Ver meu perfil" : "Próxima"}
+        {error && <p className="form-error suitability-error" role="alert">{error}</p>}
+        <button className="button onboarding-action" type="button" onClick={next} disabled={!selected || saving}>
+          {saving ? "Salvando seu perfil…" : current === suitabilityQuestions.length - 1 ? "Ver meu perfil" : "Próxima"}
         </button>
       </section>
     </main>

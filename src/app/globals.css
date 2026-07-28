@@ -12,6 +12,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .muted { color: var(--muted); }
 .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:38px; }
 .wordmark { font-size:22px; font-weight:900; letter-spacing:-.06em; }
+.topbar-actions { display:flex; align-items:center; gap:8px; }
+.sign-out { min-height:44px; padding:0 8px; border:0; color:var(--muted2); background:transparent; font-size:10px; font-weight:750; cursor:pointer; }
+.sign-out:disabled { opacity:.45; }
 .avatar { display:grid; place-items:center; width:44px; height:44px; border:1px solid var(--hair); border-radius:50%; background:var(--surface); font-size:12px; font-weight:800; }
 .section { margin-top: 38px; }
 .section-head { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:14px; }
@@ -63,6 +66,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .answer-letter { color:var(--muted2); font-size:12px; font-weight:800; }
 .answer-list label[data-selected="true"] .answer-letter { color:var(--ink); }
 .onboarding-action { width:100%; margin-top:auto; flex:none; }
+.suitability-error { margin:0 0 12px; text-align:center; }
 .profile-title { margin:10px 0 0; font-size:clamp(46px, 14vw, 66px); font-weight:900; line-height:.95; letter-spacing:-.055em; text-transform:capitalize; }
 .profile-copy { margin:16px 0 0; color:var(--muted); font-size:13px; line-height:1.5; }
 .profile-scale { display:grid; grid-template-columns:1fr 2fr 1fr; gap:4px; margin-top:24px; }
@@ -113,6 +117,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .consent-field a, .auth-switch a { text-decoration:underline; text-underline-offset:2px; }
 .auth-submit { width:100%; margin-top:26px; }
 .auth-switch { margin:14px 0 0; color:var(--muted); text-align:center; font-size:11px; }
+.forgot-password { align-self:flex-end; min-height:36px; padding-top:10px; color:var(--muted); font-size:11px; font-weight:700; text-decoration:underline; text-underline-offset:2px; }
 .sign-in-form .eyebrow { margin-top:48px; }
 .auth-confirmation { min-height:calc(100dvh - 56px); display:flex; flex-direction:column; justify-content:center; }
 .auth-confirmation > p:not(.eyebrow) { color:var(--muted); font-size:13px; line-height:1.5; }

@@ -55,6 +55,7 @@ export function SignInForm() {
         <span>(02) Senha</span>
         <input name="password" type="password" autoComplete="current-password" placeholder="Sua senha" />
       </label>
+      <Link className="forgot-password" href="/recuperar-senha">Esqueci minha senha</Link>
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="button auth-submit" type="submit" disabled={sending}>{sending ? "Entrando…" : "Entrar"}</button>
       <p className="auth-switch">Ainda não tem conta? <Link href="/cadastro">Criar conta</Link></p>
