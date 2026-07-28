@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#E7E6E1;font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased;transition:background .3s}
+body.dk{background:#0F0E0C}
+.wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:34px 16px}
+.cap{font:600 11px Archivo;letter-spacing:.08em;color:#8a857b;text-align:center;text-wrap:balance;max-width:320px}
+.cap b{color:#12110E}
+.frame{--bg:#EFEDE7;--ink:#12110E;--muted:#6B6659;--muted2:#9A9488;--line:#E3E1DA;--hair:rgba(0,0,0,.1);--track:rgba(18,17,14,.16);--glass:rgba(249,248,243,.62);--glassb:rgba(255,255,255,.75);--oncta:#F5F4EF;--rf:#F2C9D0;--ac:#E9DE9E;--fi:#A8E2DC;--fu:#CDE5C4;--cr:#D9CDEE;--intl:#F2D3B6;--cx:#C9D8EE;--oncol:rgba(18,17,14,.6);width:320px;height:660px;border-radius:46px;overflow:hidden;position:relative;box-shadow:0 26px 60px rgba(20,18,14,.20),0 5px 16px rgba(20,18,14,.08);border:1px solid rgba(0,0,0,.06);background:var(--bg);display:flex;flex-direction:column;transition:background .3s}
+.frame.dark{--bg:#1B1814;--ink:#F1EFEA;--muted:#ADA79B;--muted2:#8E887C;--line:rgba(255,255,255,.15);--hair:rgba(255,255,255,.1);--track:rgba(255,255,255,.2);--glass:rgba(24,21,17,.6);--glassb:rgba(255,255,255,.16);--oncta:#1B1814;--rf:#5E2C37;--ac:#575121;--fi:#1E4E48;--fu:#2F4B2B;--cr:#403458;--intl:#5C3F23;--cx:#263A57;--oncol:rgba(255,255,255,.66);border-color:rgba(255,255,255,.08)}
+.scr{scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
+.sb{display:flex;justify-content:space-between;align-items:center;padding:15px 24px 8px;flex:none}
+.sbt{font-weight:700;font-size:13px;color:var(--ink)}
+.bat{width:22px;height:11px;border-radius:3px;padding:1.5px;display:flex;border:1.5px solid var(--ink)}
+.batf{width:65%;border-radius:1px;background:var(--ink)}
+.nav{position:absolute;left:14px;right:14px;bottom:14px;display:flex;justify-content:center}
+.navpill{display:flex;align-items:center;gap:2px;padding:5px;border-radius:100px;background:var(--glass);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);border:1px solid var(--glassb);box-shadow:0 12px 30px rgba(20,18,14,.16),inset 0 1px 0 rgba(255,255,255,.4)}
+.navi{color:var(--muted);padding:9px 10px;font:600 10.5px Archivo;cursor:pointer}
+.navon{background:var(--ink);color:var(--oncta);border-radius:100px;padding:9px 14px;font:600 10.5px Archivo;cursor:pointer}
+.cta{background:var(--ink);color:var(--oncta);border-radius:100px;text-align:center;padding:15px;font:700 14px Archivo;cursor:pointer}
+.p{cursor:pointer}
+.tgl{display:flex;align-items:center;gap:9px;font:600 11px Archivo;letter-spacing:.04em;color:#8a857b;cursor:pointer;user-select:none}
+.tgl .sw{width:38px;height:22px;border-radius:100px;background:rgba(120,116,108,.45);position:relative;transition:background .2s}
+.tgl .sw i{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tgl.on .sw{background:#1E7A4D}
+.tgl.on .sw i{left:18px}
+</style>
+</helmet>
+<div class="wrap">
+<div class="cap">Mock clicável · <b>North</b> — toque nos botões, no menu e nos cartões pra navegar o fluxo</div>
+<div class="tgl {{ tglCls }}" onClick="{{ toggleDark }}"><span>Modo escuro</span><span class="sw"><i></i></span></div>
+<div class="frame {{ frameCls }}">
+
+<sc-if value="{{ is_splash }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:#131210;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:#F6F5F0">9:41</span><div class="bat" style="border:1.5px solid #F6F5F0"><div class="batf" style="background:#F6F5F0"></div></div></div>
+<div style="flex:1;display:flex;flex-direction:column;padding:0 28px">
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+<div style="display:flex;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:var(--rf)"></span><span style="width:9px;height:9px;border-radius:50%;background:var(--ac)"></span><span style="width:9px;height:9px;border-radius:50%;background:var(--fi)"></span><span style="width:9px;height:9px;border-radius:50%;background:var(--cr)"></span></div>
+<div style="font:900 62px/0.9 Archivo;letter-spacing:-.04em;color:#F6F5F0;margin-top:22px">NORTH</div>
+<div style="font:500 15px/1.4 Archivo;color:#B7B2A6;margin-top:16px;text-wrap:pretty">Seu assessor de investimentos — pra te ajudar a encontrar seu norte e fazer o dinheiro render.</div>
+</div>
+<div style="padding-bottom:34px"><div style="background:#F6F5F0;color:#131210;border-radius:100px;text-align:center;padding:15px;font:700 14px Archivo;cursor:pointer" onClick="{{ goCadastro }}">Criar minha conta</div><div onClick="{{ goHome }}" style="border:1.5px solid #6B6659;color:#F6F5F0;border-radius:100px;text-align:center;padding:14px;font:700 14px Archivo;margin-top:10px;cursor:pointer">Entrar</div><div style="text-align:center;font:500 11px Archivo;color:#8a857b;margin-top:16px">Educacional · não é recomendação de investimento</div></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_cadastro }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 24px 24px">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 0 0"><span class="p" style="font:400 20px Archivo;color:var(--ink)" onClick="{{ goSplash }}">←</span><div style="flex:1;height:4px;background:var(--line);border-radius:2px;overflow:hidden"><div style="width:33%;height:100%;background:var(--ink)"></div></div><span style="font:600 10px Archivo;color:var(--muted2)">1 / 3</span></div>
+<div style="font:800 27px/1.05 Archivo;letter-spacing:-.02em;color:var(--ink);margin-top:22px">Vamos criar sua conta</div>
+<div style="margin-top:24px"><div style="font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--muted2)">(01) Nome completo</div><div style="border-bottom:2px solid var(--ink);padding:8px 2px;font:600 16px Archivo;color:var(--ink);margin-top:6px">Rafael Menezes</div></div>
+<div style="margin-top:22px"><div style="font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--muted2)">(02) E-mail</div><div style="border-bottom:2px solid var(--ink);padding:8px 2px;font:600 16px Archivo;color:var(--ink);margin-top:6px">rafael@email.com</div></div>
+<div style="margin-top:22px"><div style="font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--muted2)">(03) Senha</div><div style="border-bottom:2px solid var(--line);padding:8px 2px;font:600 16px Archivo;color:var(--ink);letter-spacing:.15em;margin-top:6px">••••••••</div><div style="display:flex;gap:4px;margin-top:8px"><span style="flex:1;height:3px;background:#1E7A4D;border-radius:2px"></span><span style="flex:1;height:3px;background:#1E7A4D;border-radius:2px"></span><span style="flex:1;height:3px;background:#1E7A4D;border-radius:2px"></span><span style="flex:1;height:3px;background:var(--line);border-radius:2px"></span></div></div>
+<div class="cta" style="margin-top:26px" onClick="{{ goBancos }}">Continuar</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_bancos }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 24px 24px">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 0 0"><span class="p" style="font:400 20px Archivo;color:var(--ink)" onClick="{{ goCadastro }}">←</span><div style="flex:1;height:4px;background:var(--line);border-radius:2px;overflow:hidden"><div style="width:66%;height:100%;background:var(--ink)"></div></div><span style="font:600 10px Archivo;color:var(--muted2)">2 / 3</span></div>
+<div style="font:800 27px/1.05 Archivo;letter-spacing:-.02em;color:var(--ink);margin-top:22px">Onde você já tem conta?</div>
+<div style="font:500 12.5px/1.45 Archivo;color:var(--muted);margin-top:8px">Vamos mostrar os produtos que cada um oferece.</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:18px">
+<div style="display:flex;align-items:center;gap:12px;border:1.5px solid var(--ink);border-radius:12px;padding:12px 14px"><span style="width:34px;height:34px;border-radius:9px;background:var(--cr);display:flex;align-items:center;justify-content:center;font:800 14px Archivo;color:var(--ink)">N</span><span style="flex:1;font:700 14px Archivo;color:var(--ink)">Nubank</span><span style="width:22px;height:22px;border-radius:6px;background:var(--ink);color:var(--oncta);display:flex;align-items:center;justify-content:center;font:700 12px Archivo">✓</span></div>
+<div style="display:flex;align-items:center;gap:12px;border:1.5px solid var(--ink);border-radius:12px;padding:12px 14px"><span style="width:34px;height:34px;border-radius:9px;background:var(--intl);display:flex;align-items:center;justify-content:center;font:800 14px Archivo;color:var(--ink)">I</span><span style="flex:1;font:700 14px Archivo;color:var(--ink)">Itaú</span><span style="width:22px;height:22px;border-radius:6px;background:var(--ink);color:var(--oncta);display:flex;align-items:center;justify-content:center;font:700 12px Archivo">✓</span></div>
+<div style="display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px"><span style="width:34px;height:34px;border-radius:9px;background:var(--ac);display:flex;align-items:center;justify-content:center;font:800 14px Archivo;color:var(--ink)">X</span><span style="flex:1;font:700 14px Archivo;color:var(--ink)">XP Investimentos</span><span style="width:22px;height:22px;border-radius:6px;border:1.5px solid var(--line)"></span></div>
+<div style="display:flex;align-items:center;gap:12px;border:1.5px dashed var(--ink);border-radius:12px;padding:12px 14px"><span style="width:34px;height:34px;border-radius:9px;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font:300 22px Archivo;color:var(--ink)">+</span><div style="flex:1"><div style="font:700 14px Archivo;color:var(--ink)">Adicionar manualmente</div><div style="font:500 10px Archivo;color:var(--muted2)">A gente busca os produtos desse banco pra você</div></div></div>
+</div>
+<div class="cta" style="margin-top:20px" onClick="{{ goSuit }}">Continuar · 2 selecionados</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_suit }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div style="flex:1;display:flex;flex-direction:column;padding:0 24px 24px">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 0 0"><span class="p" style="font:400 20px Archivo;color:var(--ink)" onClick="{{ goBack }}">←</span><div style="flex:1;height:4px;background:var(--line);border-radius:2px;overflow:hidden"><div style="width:33%;height:100%;background:var(--ink)"></div></div><span style="font:600 10px Archivo;color:var(--muted2)">04 / 12</span></div>
+<div style="font:600 10px Archivo;letter-spacing:.14em;text-transform:uppercase;color:#C08A72;margin-top:26px">Tolerância a risco</div>
+<div style="font:800 25px/1.1 Archivo;letter-spacing:-.02em;color:var(--ink);margin-top:12px;text-wrap:balance">Seus investimentos caem 20% em um mês. O que você faz?</div>
+<div style="display:flex;flex-direction:column;gap:9px;margin-top:24px">
+<div class="p" style="border:1.5px solid var(--line);border-radius:12px;padding:14px 15px;display:flex;align-items:center;gap:12px" onClick="{{ goResultado }}"><span style="font:700 12px Archivo;color:var(--muted2)">A</span><span style="font:600 13px/1.3 Archivo;color:var(--ink)">Vendo tudo pra não perder mais</span></div>
+<div class="p" style="border:2px solid var(--ink);border-radius:12px;padding:14px 15px;display:flex;align-items:center;gap:12px;background:var(--ac)" onClick="{{ goResultado }}"><span style="font:700 12px Archivo;color:var(--ink)">B</span><span style="font:600 13px/1.3 Archivo;color:var(--ink)">Espero e não mexo, faz parte</span></div>
+<div class="p" style="border:1.5px solid var(--line);border-radius:12px;padding:14px 15px;display:flex;align-items:center;gap:12px" onClick="{{ goResultado }}"><span style="font:700 12px Archivo;color:var(--muted2)">C</span><span style="font:600 13px/1.3 Archivo;color:var(--ink)">Aproveito e compro mais</span></div>
+</div>
+<div class="cta" style="margin-top:auto" onClick="{{ goResultado }}">Próxima</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_resultado }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 24px 24px">
+<div style="font:600 10px Archivo;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);padding:14px 0 0">Seu perfil de investidor</div>
+<div style="font:900 46px/0.95 Archivo;letter-spacing:-.03em;color:var(--ink);margin-top:12px">Moderado</div>
+<div style="font:500 13px/1.45 Archivo;color:var(--muted);margin-top:12px;text-wrap:pretty">Você aceita alguma oscilação em troca de retorno melhor, mantendo boa parte em segurança.</div>
+<div style="display:flex;gap:4px;margin-top:20px"><span style="flex:1;height:6px;background:var(--ink);border-radius:3px"></span><span style="flex:2;height:6px;background:var(--ink);border-radius:3px"></span><span style="flex:1;height:6px;background:var(--line);border-radius:3px"></span></div>
+<div style="display:flex;justify-content:space-between;font:600 10px Archivo;color:var(--muted2);margin-top:8px"><span>Conservador</span><span style="color:var(--ink)">Moderado</span><span>Arrojado</span></div>
+<div style="margin-top:24px;font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--muted2)">Carteira-alvo sugerida</div>
+<div style="display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;margin-top:10px"><div style="flex:40;background:var(--rf)"></div><div style="flex:25;background:var(--ac)"></div><div style="flex:15;background:var(--fi)"></div><div style="flex:10;background:var(--intl)"></div><div style="flex:10;background:var(--cr)"></div></div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:var(--rf)"></span><span style="flex:1;font:600 12.5px Archivo;color:var(--ink)">Renda Fixa</span><span style="font:700 12.5px Archivo;color:var(--ink)">40%</span></div>
+<div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:var(--ac)"></span><span style="flex:1;font:600 12.5px Archivo;color:var(--ink)">Ações · ETF</span><span style="font:700 12.5px Archivo;color:var(--ink)">25%</span></div>
+<div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:var(--fi)"></span><span style="flex:1;font:600 12.5px Archivo;color:var(--ink)">FIIs</span><span style="font:700 12.5px Archivo;color:var(--ink)">15%</span></div>
+<div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:var(--intl)"></span><span style="flex:1;font:600 12.5px Archivo;color:var(--ink)">Internacional</span><span style="font:700 12.5px Archivo;color:var(--ink)">10%</span></div>
+<div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:var(--cr)"></span><span style="flex:1;font:600 12.5px Archivo;color:var(--ink)">Cripto</span><span style="font:700 12.5px Archivo;color:var(--ink)">10%</span></div>
+</div>
+<div class="cta" style="margin-top:20px" onClick="{{ finishProfile }}">Ir pro meu North</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_home }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 92px">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 0"><div style="font:800 17px Archivo;letter-spacing:-.03em;color:var(--ink)">NORTH</div><div class="p" style="width:30px;height:30px;border-radius:50%;background:var(--cr);display:flex;align-items:center;justify-content:center;font:700 12px Archivo;color:var(--ink)" onClick="{{ goPerfil }}">R</div></div>
+<div style="padding:18px 0 0"><div style="font:600 10px Archivo;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2)">Patrimônio total</div><div style="font:800 42px/0.98 Archivo;letter-spacing:-.03em;color:var(--ink);margin-top:7px">R$ 48.320<span style="font-size:20px;color:var(--muted2)">,75</span></div><div style="font:600 12.5px Archivo;color:var(--ink);margin-top:7px">+2,4% <span style="color:var(--muted2);font-weight:500">no mês · +R$ 1.132</span></div></div>
+<div class="p" style="padding:18px 0 0" onClick="{{ goCarteira }}"><div style="display:flex;height:13px;border-radius:7px;overflow:hidden;gap:2px"><div style="flex:42;background:var(--rf)"></div><div style="flex:25;background:var(--ac)"></div><div style="flex:15;background:var(--fi)"></div><div style="flex:10;background:var(--intl)"></div><div style="flex:8;background:var(--cr)"></div></div><div style="display:flex;justify-content:space-between;font:500 10px Archivo;color:var(--muted2);margin-top:7px"><span>5 classes · Moderado</span><span style="border-bottom:1.5px solid var(--ink);color:var(--ink)">Ver carteira</span></div></div>
+<div style="display:flex;gap:8px;margin-top:20px"><div class="p" onClick="{{ goChat }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:13px 4px;border:1.5px solid var(--ink);border-radius:14px"><span style="width:34px;height:34px;border-radius:10px;background:conic-gradient(from 210deg,#F2C9D0,#E9DE9E,#A8E2DC,#D9CDEE,#F2C9D0)"></span><span style="font:600 10px Archivo;color:var(--ink)">Assistente</span></div><div class="p" onClick="{{ goInvestir }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:13px 4px;border:1.5px solid var(--ink);border-radius:14px"><span style="width:34px;height:34px;border-radius:10px;background:var(--ac);display:flex;align-items:center;justify-content:center;font:300 24px Archivo;color:var(--ink);line-height:1">+</span><span style="font:600 10px Archivo;color:var(--ink)">Investir</span></div><div class="p" onClick="{{ goMetas }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:13px 4px;border:1.5px solid var(--ink);border-radius:14px"><span style="width:34px;height:34px;border-radius:10px;background:var(--cx);display:flex;align-items:center;justify-content:center;font:700 15px Archivo;color:var(--ink)">◎</span><span style="font:600 10px Archivo;color:var(--ink)">Metas</span></div><div class="p" onClick="{{ goProdutos }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:13px 4px;border:1.5px solid var(--ink);border-radius:14px"><span style="width:34px;height:34px;border-radius:10px;background:var(--intl);display:flex;align-items:center;justify-content:center;font:800 15px Archivo;color:var(--ink)">$</span><span style="font:600 10px Archivo;color:var(--ink)">Produtos</span></div></div>
+<div style="padding:22px 0 10px;display:flex;justify-content:space-between;align-items:baseline"><span style="font:800 18px Archivo;letter-spacing:-.02em;color:var(--ink)">Sugestões pra você</span><span class="p" style="font:600 11px Archivo;color:var(--ink);border-bottom:1.5px solid var(--ink)" onClick="{{ goChat }}">abrir</span></div><div class="p" style="background:var(--cr);border-radius:16px;padding:14px" onClick="{{ goChat }}"><div style="font:600 9px Archivo;letter-spacing:.12em;text-transform:uppercase;color:#5a4f70">Rebalanceamento</div><div style="font:600 13.5px/1.35 Archivo;color:var(--ink);margin-top:6px;text-wrap:pretty">Cripto chegou a 8% e passou do alvo de 5% do seu perfil. Que tal rebalancear?</div></div><div class="p" style="margin-top:8px;background:var(--ac);border-radius:16px;padding:14px" onClick="{{ goChat }}"><div style="font:600 9px Archivo;letter-spacing:.12em;text-transform:uppercase;color:#7a6f45">Oportunidade</div><div style="font:600 13.5px/1.35 Archivo;color:var(--ink);margin-top:6px;text-wrap:pretty">Com a Selic em 10,5%, prefixados do Tesouro voltaram a pagar mais de 12% ao ano.</div></div><div class="p" style="margin-top:8px;background:var(--fu);border-radius:16px;padding:14px" onClick="{{ goChat }}"><div style="font:600 9px Archivo;letter-spacing:.12em;text-transform:uppercase;color:#4a6a44">Ritmo da meta</div><div style="font:600 13.5px/1.35 Archivo;color:var(--ink);margin-top:6px;text-wrap:pretty">Você está R$ 90/mês abaixo do ideal pra bater a meta Viagem no prazo.</div></div><div style="font:500 9px/1.4 Archivo;color:var(--muted2);margin-top:10px;text-wrap:pretty">Insights educacionais com base no seu perfil, carteira e mercado. Não é recomendação de investimento.</div>
+<div class="p" style="margin:16px 0 0;background:var(--cx);border-radius:16px;padding:15px" onClick="{{ goMetas }}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:700 14px Archivo;color:var(--ink)">Meta · Aposentadoria</span><span style="font:600 10px Archivo;color:var(--oncol)">34%</span></div><div style="height:7px;border-radius:4px;background:var(--track);margin-top:10px;overflow:hidden"><div style="width:34%;height:100%;background:var(--ink);border-radius:4px"></div></div></div>
+<div style="padding:22px 0 12px;display:flex;justify-content:space-between;align-items:baseline"><span style="font:800 18px Archivo;letter-spacing:-.02em;color:var(--ink)">No mercado hoje</span><span class="p" style="font:600 11px Archivo;color:var(--ink);border-bottom:1.5px solid var(--ink)" onClick="{{ goMercado }}">ver tudo</span></div>
+<div class="p" style="border-top:1.5px solid var(--ink);padding-top:14px" onClick="{{ goMercado }}"><div style="height:110px;border-radius:12px;background:repeating-linear-gradient(135deg,#E1DFD7 0 11px,#E9E7E0 11px 22px);display:flex;align-items:flex-end;padding:9px"><span style="font:500 9px Archivo;color:#8f8a7e;background:rgba(255,255,255,.72);padding:3px 7px;border-radius:5px">imagem da notícia</span></div><div style="font:600 9px Archivo;letter-spacing:.14em;text-transform:uppercase;color:#C08A72;margin-top:12px">Ibovespa</div><div style="font:700 16px/1.2 Archivo;color:var(--ink);margin-top:5px;text-wrap:pretty">Ibovespa fecha em alta de 1,2% puxado por bancos e Vale</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:9px"><span style="font:500 10.5px Archivo;color:var(--muted2)">InfoMoney · 18h04</span><span style="font:600 11px Archivo;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:1px">Ler completo →</span></div></div>
+</div>
+<div class="nav"><div class="navpill"><span class="navon">Início</span><span class="navi" onClick="{{ goInvestir }}">Investir</span><span class="navi" onClick="{{ goCarteira }}">Carteira</span><span class="navi" onClick="{{ goMercado }}">Mercado</span></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_investir }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 92px">
+<div style="padding:10px 0 0;font:600 10px Archivo;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2)">Investir</div>
+<div style="display:flex;background:var(--line);border-radius:100px;padding:4px;margin-top:12px">
+<sc-if value="{{ invLivre }}" hint-placeholder-val="{{ true }}"><span style="flex:1;text-align:center;background:var(--ink);color:var(--oncta);border-radius:100px;padding:9px;font:600 12px Archivo;cursor:pointer">Livre</span><span class="p" style="flex:1;text-align:center;color:var(--muted);padding:9px;font:600 12px Archivo" onClick="{{ setMeta }}">Para uma meta</span></sc-if>
+<sc-if value="{{ invMeta }}" hint-placeholder-val="{{ false }}"><span class="p" style="flex:1;text-align:center;color:var(--muted);padding:9px;font:600 12px Archivo" onClick="{{ setLivre }}">Livre</span><span style="flex:1;text-align:center;background:var(--ink);color:var(--oncta);border-radius:100px;padding:9px;font:600 12px Archivo;cursor:pointer">Para uma meta</span></sc-if>
+</div>
+<sc-if value="{{ invMeta }}" hint-placeholder-val="{{ false }}"><div class="p" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;background:var(--cx);border-radius:12px;padding:11px 14px" onClick="{{ goMetas }}"><div><div style="font:500 9px Archivo;letter-spacing:.1em;text-transform:uppercase;color:var(--oncol)">Meta</div><div style="font:700 14px Archivo;color:var(--ink);margin-top:2px">Aposentadoria ▾</div></div><div style="text-align:right"><div style="font:600 10px Archivo;color:var(--oncol)">faltam</div><div style="font:700 13px Archivo;color:var(--ink)">R$ 131.600</div></div></div></sc-if>
+<div style="margin:16px 0 0;border-bottom:2px solid var(--ink);padding-bottom:8px;display:flex;align-items:baseline;gap:5px"><span style="font:700 16px Archivo;color:var(--muted2)">R$</span><span style="font:800 34px Archivo;letter-spacing:-.02em;color:var(--ink)">5.000</span></div>
+<div style="display:flex;gap:8px;margin-top:14px">
+<sc-if value="{{ recUnico }}" hint-placeholder-val="{{ true }}"><span style="flex:1;text-align:center;background:var(--ink);color:var(--oncta);border-radius:10px;padding:9px;font:600 11.5px Archivo;cursor:pointer">Aporte único</span><span class="p" style="flex:1;text-align:center;border:1.5px solid var(--ink);color:var(--ink);border-radius:10px;padding:9px;font:600 11.5px Archivo" onClick="{{ setMensal }}">Todo mês</span></sc-if>
+<sc-if value="{{ recMensal }}" hint-placeholder-val="{{ false }}"><span class="p" style="flex:1;text-align:center;border:1.5px solid var(--ink);color:var(--ink);border-radius:10px;padding:9px;font:600 11.5px Archivo" onClick="{{ setUnico }}">Aporte único</span><span style="flex:1;text-align:center;background:var(--ink);color:var(--oncta);border-radius:10px;padding:9px;font:600 11.5px Archivo;cursor:pointer">Todo mês</span></sc-if>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:18px"><span style="font:600 10px Archivo;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2)">Distribuição · perfil</span><span style="background:var(--ac);border-radius:100px;padding:4px 11px;font:700 11px Archivo;color:var(--ink)">Moderado</span></div>
+<div style="display:flex;flex-direction:column;gap:7px;margin-top:12px">
+<div style="display:flex;align-items:center;gap:11px;background:var(--rf);border-radius:12px;padding:9px 13px"><div style="font:800 15px Archivo;color:var(--ink);width:38px">40%</div><div style="flex:1"><div style="font:600 12.5px Archivo;color:var(--ink)">Renda Fixa</div><div style="font:500 9.5px Archivo;color:var(--oncol)">CDB 103% CDI</div></div><div style="font:700 13px Archivo;color:var(--ink)">R$ 2.000</div></div>
+<div style="display:flex;align-items:center;gap:11px;background:var(--ac);border-radius:12px;padding:9px 13px"><div style="font:800 15px Archivo;color:var(--ink);width:38px">25%</div><div style="flex:1"><div style="font:600 12.5px Archivo;color:var(--ink)">Ações · ETF</div><div style="font:500 9.5px Archivo;color:var(--oncol)">BOVA11</div></div><div style="font:700 13px Archivo;color:var(--ink)">R$ 1.250</div></div>
+<div style="display:flex;align-items:center;gap:11px;background:var(--fi);border-radius:12px;padding:9px 13px"><div style="font:800 15px Archivo;color:var(--ink);width:38px">15%</div><div style="flex:1"><div style="font:600 12.5px Archivo;color:var(--ink)">FIIs</div><div style="font:500 9.5px Archivo;color:var(--oncol)">MXRF11</div></div><div style="font:700 13px Archivo;color:var(--ink)">R$ 750</div></div>
+<div style="display:flex;align-items:center;gap:11px;background:var(--intl);border-radius:12px;padding:9px 13px"><div style="font:800 15px Archivo;color:var(--ink);width:38px">10%</div><div style="flex:1"><div style="font:600 12.5px Archivo;color:var(--ink)">Internacional</div><div style="font:500 9.5px Archivo;color:var(--oncol)">IVVB11</div></div><div style="font:700 13px Archivo;color:var(--ink)">R$ 500</div></div>
+<div style="display:flex;align-items:center;gap:11px;background:var(--cr);border-radius:12px;padding:9px 13px"><div style="font:800 15px Archivo;color:var(--ink);width:38px">10%</div><div style="flex:1"><div style="font:600 12.5px Archivo;color:var(--ink)">Cripto</div><div style="font:500 9.5px Archivo;color:var(--oncol)">BTC · ETH</div></div><div style="font:700 13px Archivo;color:var(--ink)">R$ 500</div></div>
+</div>
+<div style="margin:12px 0 0;border:1.5px solid var(--ink);border-radius:5px;padding:12px 14px"><div style="font:500 12px/1.35 Archivo;color:var(--ink);text-wrap:pretty">Estimativa: R$ 5.000 hoje ≈ <b>R$ 5.410 em 12 meses*</b></div><div style="font:500 8.5px Archivo;color:var(--muted2);margin-top:4px">*educacional, ~8% a.a. Não é recomendação de investimento.</div></div>
+<div class="cta" style="margin-top:12px" onClick="{{ goCarteira }}">Aplicar distribuição</div>
+</div>
+<div class="nav"><div class="navpill"><span class="navi" onClick="{{ goHome }}">Início</span><span class="navon">Investir</span><span class="navi" onClick="{{ goCarteira }}">Carteira</span><span class="navi" onClick="{{ goMercado }}">Mercado</span></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_carteira }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 92px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0 0"><div><div style="font:600 10px Archivo;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2)">Carteira · Moderado</div><div style="font:800 30px/1 Archivo;letter-spacing:-.03em;color:var(--ink);margin-top:8px">R$ 48.320<span style="font-size:16px;color:var(--muted2)">,75</span></div><div style="font:600 11.5px Archivo;color:var(--ink);margin-top:6px">+2,4% <span style="color:var(--muted2);font-weight:500">mês</span> · +9,2% <span style="color:var(--muted2);font-weight:500">ano</span></div></div><div class="p" style="border:1.5px solid var(--ink);border-radius:100px;padding:7px 12px;font:700 11px Archivo;color:var(--ink)" onClick="{{ goProdutos }}">+ Ativo</div></div>
+<div style="margin-top:16px;border:1.5px solid var(--ink);border-radius:5px;padding:13px 14px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 9.5px Archivo;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2)">Rentabilidade · ano</span><span style="font:600 10px Archivo;color:var(--muted2)">CDI 8,1%</span></div><div style="font:800 24px Archivo;letter-spacing:-.02em;color:var(--ink);margin-top:3px">+9,2%</div><div style="display:flex;align-items:flex-end;gap:3px;height:40px;margin-top:11px"><div style="flex:1;height:34%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:44%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:38%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:56%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:48%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:64%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:54%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:74%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:62%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:86%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:70%;background:var(--ink);border-radius:2px"></div><div style="flex:1;height:100%;background:var(--rf);border-radius:2px"></div></div></div>
+<div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;background:var(--rf);border-radius:12px;padding:10px 14px"><span style="font:700 13px Archivo;color:var(--ink)">Renda Fixa <span style="font-weight:600;font-size:10px;color:var(--oncol)">42%</span></span><span style="font:700 13px Archivo;color:var(--ink)">R$ 20.294</span></div>
+<div class="p" style="display:flex;justify-content:space-between;align-items:center;padding:8px 8px;border-bottom:1px solid var(--hair)" onClick="{{ goMercadoDet }}"><div><div style="font:700 12px Archivo;color:var(--ink)">CDB Nubank</div><div style="font:500 9.5px Archivo;color:var(--muted2)">108% CDI · 2027</div></div><span style="font:700 12px Archivo;color:var(--ink)">R$ 8.200</span></div>
+<div class="p" style="display:flex;justify-content:space-between;align-items:center;padding:8px 8px" onClick="{{ goMercadoDet }}"><div><div style="font:700 12px Archivo;color:var(--ink)">Tesouro Selic 2029</div><div style="font:500 9.5px Archivo;color:var(--muted2)">pós-fixado</div></div><span style="font:700 12px Archivo;color:var(--ink)">R$ 7.094</span></div>
+<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;background:var(--ac);border-radius:12px;padding:10px 14px"><span style="font:700 13px Archivo;color:var(--ink)">Ações B3 <span style="font-weight:600;font-size:10px;color:var(--oncol)">18%</span></span><span style="font:700 13px Archivo;color:var(--ink)">R$ 8.698</span></div>
+<div class="p" style="display:flex;justify-content:space-between;align-items:center;padding:8px 8px;border-bottom:1px solid var(--hair)" onClick="{{ goMercadoDet }}"><div><div style="font:700 12px Archivo;color:var(--ink)">PETR4</div><div style="font:500 9.5px Archivo;color:var(--muted2)">Petrobras PN</div></div><div style="text-align:right"><div style="font:700 12px Archivo;color:var(--ink)">R$ 3.100</div><div style="font:600 9px Archivo;color:#1E7A4D">+1,2%</div></div></div>
+<div class="p" style="display:flex;justify-content:space-between;align-items:center;padding:8px 8px" onClick="{{ goMercadoDet }}"><div><div style="font:700 12px Archivo;color:var(--ink)">VALE3</div><div style="font:500 9.5px Archivo;color:var(--muted2)">Vale ON</div></div><div style="text-align:right"><div style="font:700 12px Archivo;color:var(--ink)">R$ 2.900</div><div style="font:600 9px Archivo;color:#B4442F">−0,4%</div></div></div>
+<div style="margin-top:14px;display:flex;align-items:center;gap:9px;background:var(--fi);border-radius:12px;padding:10px 14px"><span style="flex:1;font:700 13px Archivo;color:var(--ink)">FIIs <span style="font-weight:600;font-size:10px;color:var(--oncol)">12%</span></span><span style="font:700 13px Archivo;color:var(--ink)">R$ 5.798</span></div>
+<div style="margin-top:8px;display:flex;align-items:center;gap:9px;background:var(--cr);border-radius:12px;padding:10px 14px"><span style="flex:1;font:700 13px Archivo;color:var(--ink)">Cripto <span style="font-weight:600;font-size:10px;color:var(--oncol)">8%</span></span><span style="font:700 13px Archivo;color:var(--ink)">R$ 3.866</span></div>
+</div>
+<div class="nav"><div class="navpill"><span class="navi" onClick="{{ goHome }}">Início</span><span class="navi" onClick="{{ goInvestir }}">Investir</span><span class="navon">Carteira</span><span class="navi" onClick="{{ goMercado }}">Mercado</span></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_mercado }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 92px">
+<div style="padding:10px 0 0;display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 10px Archivo;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2)">Mercado</span><span style="font:500 10px Archivo;color:var(--muted2)">fechamento · 26 jul</span></div>
+<div style="font:800 30px/1 Archivo;letter-spacing:-.03em;color:var(--ink);margin-top:8px">Fechamento</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">
+<div class="p" style="border:1.5px solid var(--ink);border-radius:8px;padding:11px 12px" onClick="{{ goMercadoDet }}"><div style="font:600 9px Archivo;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)">Ibovespa</div><div style="font:800 19px Archivo;letter-spacing:-.02em;color:var(--ink);margin-top:4px">128.412</div><div style="font:600 10.5px Archivo;color:#1E7A4D;margin-top:2px">+1,2%</div></div>
+<div class="p" style="border:1.5px solid var(--ink);border-radius:8px;padding:11px 12px" onClick="{{ goMercadoDet }}"><div style="font:600 9px Archivo;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)">Dólar</div><div style="font:800 19px Archivo;letter-spacing:-.02em;color:var(--ink);margin-top:4px">R$ 5,42</div><div style="font:600 10.5px Archivo;color:#B4442F;margin-top:2px">−0,3%</div></div>
+<div class="p" style="border:1.5px solid var(--ink);border-radius:8px;padding:11px 12px" onClick="{{ goMercadoDet }}"><div style="font:600 9px Archivo;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)">Selic</div><div style="font:800 19px Archivo;letter-spacing:-.02em;color:var(--ink);margin-top:4px">10,50%</div><div style="font:600 10.5px Archivo;color:var(--muted2);margin-top:2px">estável</div></div>
+<div class="p" style="border:1.5px solid var(--ink);border-radius:8px;padding:11px 12px" onClick="{{ goMercadoDet }}"><div style="font:600 9px Archivo;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)">Bitcoin</div><div style="font:800 19px Archivo;letter-spacing:-.02em;color:var(--ink);margin-top:4px">342,1k</div><div style="font:600 10.5px Archivo;color:#1E7A4D;margin-top:2px">+3,1%</div></div>
+</div>
+<div style="margin-top:16px;border:1.5px solid var(--ink);border-radius:5px;padding:14px"><div style="font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--ink)">Resumo do fechamento</div><div style="font:500 13px/1.4 Archivo;color:var(--ink);margin-top:9px;text-wrap:pretty">Bolsa em alta puxada por bancos e Vale; dólar recuou após inflação abaixo do esperado nos EUA. Selic mantida em 10,5%.</div></div>
+<div style="padding:20px 0 8px;font:800 16px Archivo;letter-spacing:-.02em;color:var(--ink);border-bottom:1.5px solid var(--ink)">Sua watchlist</div>
+<div class="p" style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--hair)" onClick="{{ goMercadoDet }}"><span style="font:700 12.5px Archivo;color:var(--ink)">NU · Nu Holdings</span><div style="display:flex;align-items:center;gap:9px"><div style="text-align:right"><div style="font:700 12px Archivo;color:var(--ink)">R$ 14,45</div><div style="font:600 9px Archivo;color:#1E7A4D">+9,0%</div></div><span style="font:700 15px Archivo;color:#B7B2A6">›</span></div></div>
+<div class="p" style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--hair)" onClick="{{ goMercadoDet }}"><span style="font:700 12.5px Archivo;color:var(--ink)">PETR4</span><div style="display:flex;align-items:center;gap:9px"><div style="text-align:right"><div style="font:700 12px Archivo;color:var(--ink)">R$ 38,20</div><div style="font:600 9px Archivo;color:#1E7A4D">+1,2%</div></div><span style="font:700 15px Archivo;color:#B7B2A6">›</span></div></div>
+<div class="p" style="display:flex;justify-content:space-between;align-items:center;padding:11px 0" onClick="{{ goMercadoDet }}"><span style="font:700 12.5px Archivo;color:var(--ink)">IVVB11</span><div style="display:flex;align-items:center;gap:9px"><div style="text-align:right"><div style="font:700 12px Archivo;color:var(--ink)">R$ 342,50</div><div style="font:600 9px Archivo;color:#1E7A4D">+0,9%</div></div><span style="font:700 15px Archivo;color:#B7B2A6">›</span></div></div>
+</div>
+<div class="nav"><div class="navpill"><span class="navi" onClick="{{ goHome }}">Início</span><span class="navi" onClick="{{ goInvestir }}">Investir</span><span class="navi" onClick="{{ goCarteira }}">Carteira</span><span class="navon">Mercado</span></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_mercadoDet }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 24px">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 0"><div class="p" style="width:30px;height:30px;border-radius:50%;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font:400 15px Archivo;color:var(--ink)" onClick="{{ goBack }}">×</div><div style="border:1.5px solid var(--ink);border-radius:100px;padding:7px 13px;font:700 11px Archivo;color:var(--ink)">+ Acompanhar</div></div>
+<div style="padding:14px 0 0"><div style="font:800 30px Archivo;letter-spacing:-.03em;color:var(--ink)">NU <span style="font:500 12px Archivo;color:var(--muted2)">Nu Holdings</span></div><div style="display:flex;align-items:baseline;gap:8px;margin-top:8px"><span style="font:800 26px Archivo;letter-spacing:-.02em;color:var(--ink)">R$ 14,45</span><span style="font:700 13px Archivo;color:#1E7A4D">+1,19 · +9,0%</span></div></div>
+<div style="display:flex;gap:5px;margin-top:14px"><span style="border:1.5px solid var(--line);color:var(--muted);border-radius:100px;padding:6px 10px;font:600 10.5px Archivo;cursor:pointer">1D</span><span style="border:1.5px solid var(--line);color:var(--muted);border-radius:100px;padding:6px 10px;font:600 10.5px Archivo;cursor:pointer">1S</span><span style="background:var(--ink);color:var(--oncta);border-radius:100px;padding:6px 11px;font:600 10.5px Archivo;cursor:pointer">1M</span><span style="border:1.5px solid var(--line);color:var(--muted);border-radius:100px;padding:6px 10px;font:600 10.5px Archivo;cursor:pointer">3M</span><span style="border:1.5px solid var(--line);color:var(--muted);border-radius:100px;padding:6px 10px;font:600 10.5px Archivo;cursor:pointer">6M</span><span style="border:1.5px solid var(--line);color:var(--muted);border-radius:100px;padding:6px 10px;font:600 10.5px Archivo;cursor:pointer">1A</span></div>
+<svg width="100%" height="130" viewBox="0 0 280 130" preserveAspectRatio="none" style="display:block;margin-top:16px">
+<line x1="0" y1="32" x2="280" y2="32" style="stroke:var(--hair);stroke-width:1"></line>
+<line x1="0" y1="64" x2="280" y2="64" style="stroke:var(--hair);stroke-width:1"></line>
+<line x1="0" y1="96" x2="280" y2="96" style="stroke:var(--hair);stroke-width:1"></line>
+<path d="M4,104 L26,88 L48,98 L70,76 L92,90 L114,66 L136,78 L158,58 L180,68 L202,48 L224,58 L246,36 L268,14 L268,130 L4,130 Z" style="fill:rgba(30,122,77,0.12);stroke:none"></path>
+<polyline points="4,104 26,88 48,98 70,76 92,90 114,66 136,78 158,58 180,68 202,48 224,58 246,36 268,14" style="fill:none;stroke:#1E7A4D;stroke-width:2;stroke-linejoin:round"></polyline>
+</svg>
+<div style="display:flex;justify-content:space-between;font:500 9px Archivo;color:var(--muted2);margin-top:6px"><span>29</span><span>6</span><span>13</span><span>20</span><span>27</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 10px;margin-top:18px;border-top:1.5px solid var(--ink);padding-top:16px">
+<div><div style="font:500 8.5px Archivo;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2)">Abertura</div><div style="font:700 13px Archivo;color:var(--ink);margin-top:2px">14,25</div></div>
+<div><div style="font:500 8.5px Archivo;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2)">Máxima</div><div style="font:700 13px Archivo;color:var(--ink);margin-top:2px">14,68</div></div>
+<div><div style="font:500 8.5px Archivo;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2)">Mínima</div><div style="font:700 13px Archivo;color:var(--ink);margin-top:2px">14,23</div></div>
+<div><div style="font:500 8.5px Archivo;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2)">Volume</div><div style="font:700 13px Archivo;color:var(--ink);margin-top:2px">52,1M</div></div>
+<div><div style="font:500 8.5px Archivo;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2)">P/L</div><div style="font:700 13px Archivo;color:var(--ink);margin-top:2px">22,23</div></div>
+<div><div style="font:500 8.5px Archivo;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2)">Máx 52s</div><div style="font:700 13px Archivo;color:var(--ink);margin-top:2px">15,80</div></div>
+</div>
+<div class="cta" style="margin-top:18px" onClick="{{ goBack }}">Voltar ao mercado</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_chat }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div style="display:flex;align-items:center;gap:9px;padding:2px 22px 12px;border-bottom:1px solid var(--hair)"><span class="p" style="font:400 20px Archivo;color:var(--ink)" onClick="{{ goBack }}">←</span><span style="width:30px;height:30px;border-radius:50%;background:conic-gradient(from 210deg,#F2C9D0,#E9DE9E,#A8E2DC,#D9CDEE,#F2C9D0)"></span><div><div style="font:700 14px Archivo;color:var(--ink)">North</div><div style="font:500 9.5px Archivo;color:#1E7A4D">seu assessor · educacional</div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:16px 20px 92px;display:flex;flex-direction:column;gap:12px">
+<div style="align-self:flex-end;max-width:76%;background:var(--ink);color:var(--oncta);border-radius:16px 16px 4px 16px;padding:11px 14px;font:500 12.5px/1.4 Archivo">Como rebalanceio minha cripto?</div>
+<div style="align-self:flex-start;max-width:88%;background:var(--bg);border:1.5px solid var(--line);border-radius:16px 16px 16px 4px;padding:12px 14px"><div style="font:500 12.5px/1.45 Archivo;color:var(--ink);text-wrap:pretty">Sua cripto está em 8% e o alvo do perfil Moderado é 5%. Dá pra vender ~R$ 1.450 e levar pra renda fixa, voltando ao equilíbrio.</div>
+<div style="margin-top:10px;background:var(--ink);color:var(--oncta);border-radius:100px;text-align:center;padding:11px;font:700 12.5px Archivo;cursor:pointer" onClick="{{ goInvestir }}">Abrir no Investir</div>
+<div style="font:500 9px Archivo;color:var(--muted2);margin-top:8px">Educacional. Não é recomendação de investimento.</div></div>
+<div style="align-self:flex-start;display:flex;flex-wrap:wrap;gap:6px;max-width:90%"><span style="border:1.5px solid var(--ink);border-radius:100px;padding:7px 12px;font:600 11px Archivo;color:var(--ink);cursor:pointer">O que é rebalancear?</span><span style="border:1.5px solid var(--ink);border-radius:100px;padding:7px 12px;font:600 11px Archivo;color:var(--ink);cursor:pointer">Ver minha carteira</span></div>
+</div>
+<div style="position:absolute;left:14px;right:14px;bottom:14px;display:flex;align-items:center;gap:8px;padding:7px 8px 7px 16px;border-radius:100px;background:var(--glass);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);border:1px solid var(--glassb);box-shadow:0 12px 30px rgba(20,18,14,.16)"><span style="flex:1;font:500 12.5px Archivo;color:var(--muted2)">Pergunte sobre investir…</span><span style="width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--oncta);display:flex;align-items:center;justify-content:center;font:700 13px Archivo">↑</span></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_metas }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 92px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0 0"><div style="font:800 28px/1 Archivo;letter-spacing:-.02em;color:var(--ink)">Metas</div><div class="p" style="border:1.5px solid var(--ink);border-radius:100px;padding:7px 12px;font:700 11px Archivo;color:var(--ink)" onClick="{{ goNovaMeta }}">+ Nova</div></div>
+<div class="p" style="margin-top:18px;background:var(--cx);border-radius:16px;padding:16px" onClick="{{ goMetaDet }}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:700 15px Archivo;color:var(--ink)">Aposentadoria</span><span style="font:500 11px Archivo;color:var(--oncol)">2039</span></div><div style="display:flex;align-items:baseline;gap:6px;margin-top:8px"><span style="font:800 22px Archivo;color:var(--ink)">R$ 68.400</span><span style="font:500 11px Archivo;color:var(--oncol)">de R$ 200.000</span></div><div style="height:7px;border-radius:4px;background:var(--track);margin-top:10px;overflow:hidden"><div style="width:34%;height:100%;background:var(--ink);border-radius:4px"></div></div><div style="font:600 10px Archivo;color:var(--ink);margin-top:6px">34% · no ritmo certo</div></div>
+<div class="p" style="margin-top:10px;background:var(--intl);border-radius:16px;padding:16px" onClick="{{ goMetaDet }}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:700 15px Archivo;color:var(--ink)">Viagem · Japão</span><span style="font:500 11px Archivo;color:var(--oncol)">2027</span></div><div style="display:flex;align-items:baseline;gap:6px;margin-top:8px"><span style="font:800 22px Archivo;color:var(--ink)">R$ 9.200</span><span style="font:500 11px Archivo;color:var(--oncol)">de R$ 25.000</span></div><div style="height:7px;border-radius:4px;background:var(--track);margin-top:10px;overflow:hidden"><div style="width:37%;height:100%;background:#B4442F;border-radius:4px"></div></div><div style="font:600 10px Archivo;color:#B4442F;margin-top:6px">37% · R$ 90/mês abaixo do ideal</div></div>
+<div class="p" style="margin-top:10px;background:var(--fu);border-radius:16px;padding:16px" onClick="{{ goMetaDet }}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:700 15px Archivo;color:var(--ink)">Reserva de emergência</span><span style="font:500 11px Archivo;color:var(--oncol)">contínua</span></div><div style="display:flex;align-items:baseline;gap:6px;margin-top:8px"><span style="font:800 22px Archivo;color:var(--ink)">R$ 18.000</span><span style="font:500 11px Archivo;color:var(--oncol)">de R$ 20.000</span></div><div style="height:7px;border-radius:4px;background:var(--track);margin-top:10px;overflow:hidden"><div style="width:90%;height:100%;background:var(--ink);border-radius:4px"></div></div><div style="font:600 10px Archivo;color:var(--ink);margin-top:6px">90% · quase lá!</div></div>
+</div>
+<div class="nav"><div class="navpill"><span class="navi" onClick="{{ goHome }}">Início</span><span class="navi" onClick="{{ goInvestir }}">Investir</span><span class="navi" onClick="{{ goCarteira }}">Carteira</span><span class="navi" onClick="{{ goMercado }}">Mercado</span></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_metaDet }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 24px">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 0 0"><span class="p" style="font:400 20px Archivo;color:var(--ink)" onClick="{{ goBack }}">←</span><span style="flex:1;font:700 13px Archivo;color:var(--ink)">Viagem · Japão</span></div>
+<div style="margin-top:16px;background:var(--intl);border-radius:18px;padding:18px;text-align:center"><div style="font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--oncol)">Progresso</div><div style="font:900 40px/1 Archivo;letter-spacing:-.03em;color:var(--ink);margin-top:8px">37%</div><div style="height:8px;border-radius:5px;background:var(--track);margin-top:14px;overflow:hidden"><div style="width:37%;height:100%;background:var(--ink);border-radius:5px"></div></div><div style="display:flex;justify-content:space-between;font:600 11px Archivo;color:var(--ink);margin-top:8px"><span>R$ 9.200</span><span style="color:var(--oncol)">R$ 25.000</span></div></div>
+<div style="display:flex;gap:8px;margin-top:12px"><div style="flex:1;border:1.5px solid var(--ink);border-radius:12px;padding:11px 12px"><div style="font:600 9px Archivo;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2)">Prazo</div><div style="font:700 15px Archivo;color:var(--ink);margin-top:3px">dez 2027</div></div><div style="flex:1;border:1.5px solid var(--ink);border-radius:12px;padding:11px 12px"><div style="font:600 9px Archivo;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2)">Faltam</div><div style="font:700 15px Archivo;color:var(--ink);margin-top:3px">R$ 15.800</div></div></div>
+<div style="margin-top:16px;border:1.5px solid var(--ink);border-radius:5px;padding:15px"><div style="font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--ink)">Plano sugerido</div><div style="font:500 13.5px/1.4 Archivo;color:var(--ink);margin-top:9px;text-wrap:pretty">Aportando <b>R$ 620/mês</b> você chega em dez/2027. Hoje você aporta R$ 530 — <b>+R$ 90</b> recoloca no ritmo.</div><div style="font:500 9px Archivo;color:var(--muted2);margin-top:9px">Educacional. Não é recomendação de investimento.</div></div>
+<div class="cta" style="margin-top:14px" onClick="{{ goInvestir }}">Ajustar aporte pra R$ 620</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_novaMeta }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 24px 24px">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 0 0"><span class="p" style="font:400 20px Archivo;color:var(--ink)" onClick="{{ goBack }}">←</span><span style="flex:1;font:700 13px Archivo;color:var(--ink)">Nova meta</span></div>
+<div style="font:800 26px/1.05 Archivo;letter-spacing:-.02em;color:var(--ink);margin-top:20px">Qual é o seu objetivo?</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:18px"><span style="border:2px solid var(--ink);background:var(--cx);border-radius:12px;padding:11px 14px;font:600 12.5px Archivo;color:var(--ink)">🏖 Aposentadoria</span><span style="border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;font:600 12.5px Archivo;color:var(--ink)">✈ Viagem</span><span style="border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;font:600 12.5px Archivo;color:var(--ink)">🏠 Imóvel</span><span style="border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;font:600 12.5px Archivo;color:var(--ink)">🚗 Carro</span><span style="border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;font:600 12.5px Archivo;color:var(--ink)">✏ Personalizada</span></div>
+<div style="margin-top:22px"><div style="font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--muted2)">Nome da meta</div><div style="border-bottom:2px solid var(--ink);padding:8px 2px;font:600 16px Archivo;color:var(--ink);margin-top:6px">Casamento</div></div>
+<div style="margin-top:22px"><div style="font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--muted2)">Quanto você quer juntar</div><div style="border-bottom:2px solid var(--ink);padding:8px 2px;font:800 26px Archivo;color:var(--ink);margin-top:6px">R$ 50.000</div></div>
+<div style="margin-top:22px"><div style="font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--muted2)">Até quando</div><div style="border-bottom:2px solid var(--ink);padding:8px 2px;font:700 18px Archivo;color:var(--ink);margin-top:6px">Dezembro 2030</div></div>
+<div style="margin-top:20px;background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;font:500 12.5px/1.4 Archivo;color:var(--ink);text-wrap:pretty">Com esse prazo, o plano sugerido fica em <b>~R$ 690/mês</b> pra você chegar lá.</div>
+<div class="cta" style="margin-top:16px" onClick="{{ goMetaDet }}">Criar meta e ver plano</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_produtos }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 24px">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 0 0"><span class="p" style="font:400 20px Archivo;color:var(--ink)" onClick="{{ goBack }}">←</span><span style="flex:1;font:700 13px Archivo;color:var(--ink)">Produtos do seu banco</span></div>
+<div style="font:500 12px/1.4 Archivo;color:var(--muted);margin-top:14px;text-wrap:pretty">O que seus bancos oferecem hoje.</div><div class="p" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;background:var(--cr);border-radius:12px;padding:12px 14px" onClick="{{ goOportunidades }}"><span style="font:700 12.5px Archivo;color:var(--ink)">✨ Oportunidades pra você</span><span style="font:700 14px Archivo;color:var(--ink)">→</span></div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:16px"><span style="width:26px;height:26px;border-radius:7px;background:var(--intl);display:flex;align-items:center;justify-content:center;font:800 12px Archivo;color:var(--ink)">I</span><span style="font:700 14px Archivo;color:var(--ink)">Itaú</span></div>
+<div class="p" style="margin-top:10px;border:1.5px solid var(--ink);border-radius:14px;padding:15px" onClick="{{ goProdutoDet }}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="background:var(--rf);border-radius:100px;padding:4px 10px;font:600 9px Archivo;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)">Renda Fixa</span><span style="font:700 13px Archivo;color:#1E7A4D">11,3% a.a.</span></div><div style="font:700 15px Archivo;color:var(--ink);margin-top:9px;text-wrap:pretty">CDB 108% CDI · vence 2027</div><div style="font:500 11.5px/1.4 Archivo;color:var(--muted);margin-top:5px;text-wrap:pretty">Trava uma taxa boa agora; combina com a fatia de renda fixa do seu perfil.</div></div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:18px"><span style="width:26px;height:26px;border-radius:7px;background:var(--cr);display:flex;align-items:center;justify-content:center;font:800 12px Archivo;color:var(--ink)">N</span><span style="font:700 14px Archivo;color:var(--ink)">Nubank</span></div>
+<div class="p" style="margin-top:10px;border:1.5px solid var(--ink);border-radius:14px;padding:15px" onClick="{{ goProdutoDet }}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="background:var(--fu);border-radius:100px;padding:4px 10px;font:600 9px Archivo;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)">Fundo</span><span style="font:700 13px Archivo;color:var(--ink)">Taxa 0%</span></div><div style="font:700 15px Archivo;color:var(--ink);margin-top:9px;text-wrap:pretty">Reserva Imediata · liquidez no mesmo dia</div><div style="font:500 11.5px/1.4 Archivo;color:var(--muted);margin-top:5px;text-wrap:pretty">Boa pra sua reserva de emergência, que está 90% completa.</div></div>
+<div style="margin-top:14px;font:500 9.5px/1.4 Archivo;color:var(--muted2);text-wrap:pretty">Seleção educacional com base no seu perfil e bancos. Não é recomendação de investimento.</div>
+<div class="cta" style="margin-top:16px" onClick="{{ goInvestir }}">Simular no Investir</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_oportunidades }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 24px">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 0 0"><span class="p" style="font:400 20px Archivo;color:var(--ink)" onClick="{{ goBack }}">←</span><span style="flex:1;font:700 13px Archivo;color:var(--ink)">Oportunidades</span></div>
+<div style="font:500 12px/1.4 Archivo;color:var(--muted);margin-top:14px;text-wrap:pretty">A gente cruza seus bancos e o mercado pro seu perfil Moderado.</div>
+<div class="p" style="margin-top:16px;border:1.5px solid var(--ink);border-radius:14px;padding:15px" onClick="{{ goProdutoDet }}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="background:var(--rf);border-radius:100px;padding:4px 10px;font:600 9px Archivo;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)">Renda Fixa · Itaú</span><span style="font:700 13px Archivo;color:#1E7A4D">11,3% a.a.</span></div><div style="font:700 15px Archivo;color:var(--ink);margin-top:9px;text-wrap:pretty">CDB 108% paga acima da média com a Selic alta</div><div style="font:500 11.5px/1.4 Archivo;color:var(--muted);margin-top:5px;text-wrap:pretty">Trava uma taxa boa agora; combina com a fatia de renda fixa do seu perfil.</div></div>
+<div class="p" style="margin-top:10px;border:1.5px solid var(--ink);border-radius:14px;padding:15px" onClick="{{ goProdutoDet }}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="background:var(--fu);border-radius:100px;padding:4px 10px;font:600 9px Archivo;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)">Fundo · Nubank</span><span style="font:700 13px Archivo;color:var(--ink)">Taxa 0%</span></div><div style="font:700 15px Archivo;color:var(--ink);margin-top:9px;text-wrap:pretty">Reserva Imediata pra sua reserva de emergência</div><div style="font:500 11.5px/1.4 Archivo;color:var(--muted);margin-top:5px;text-wrap:pretty">Liquidez no mesmo dia — sua reserva está 90% completa.</div></div>
+<div style="margin-top:14px;font:500 9.5px/1.4 Archivo;color:var(--muted2);text-wrap:pretty">Seleção educacional com base no seu perfil e bancos. Não é recomendação de investimento.</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_produtoDet }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 24px">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 0 0"><span class="p" style="font:400 20px Archivo;color:var(--ink)" onClick="{{ goBack }}">←</span><span style="flex:1;font:700 13px Archivo;color:var(--ink)">CDB Itaú</span></div>
+<div style="margin-top:14px;background:var(--rf);border-radius:18px;padding:18px"><div style="font:600 9px Archivo;letter-spacing:.12em;text-transform:uppercase;color:var(--oncol)">Renda Fixa · Itaú</div><div style="font:800 24px/1.05 Archivo;letter-spacing:-.02em;color:var(--ink);margin-top:8px">CDB 108% CDI</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:10px"><span style="font:800 30px Archivo;color:var(--ink)">≈ 11,3%</span><span style="font:600 12px Archivo;color:var(--oncol)">a.a. estimado</span></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 10px;margin-top:18px">
+<div><div style="font:600 9px Archivo;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2)">Vencimento</div><div style="font:700 14px Archivo;color:var(--ink);margin-top:3px">jan 2027</div></div>
+<div><div style="font:600 9px Archivo;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2)">Liquidez</div><div style="font:700 14px Archivo;color:var(--ink);margin-top:3px">No vencimento</div></div>
+<div><div style="font:600 9px Archivo;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2)">Mínimo</div><div style="font:700 14px Archivo;color:var(--ink);margin-top:3px">R$ 100</div></div>
+<div><div style="font:600 9px Archivo;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2)">Proteção</div><div style="font:700 14px Archivo;color:var(--ink);margin-top:3px">FGC</div></div>
+</div>
+<div style="margin-top:18px;border:1.5px solid var(--ink);border-radius:5px;padding:14px"><div style="font:600 10px Archivo;letter-spacing:.13em;text-transform:uppercase;color:var(--ink)">Vale a pena?</div><div style="font:500 13px/1.4 Archivo;color:var(--ink);margin-top:8px;text-wrap:pretty">Rende mais que a poupança e tem garantia do FGC, mas o dinheiro fica preso até 2027. Bom pra objetivos de médio prazo, não pra reserva de emergência.</div><div style="font:500 9px Archivo;color:var(--muted2);margin-top:8px">Educacional. Não é recomendação de investimento.</div></div>
+<div class="cta" style="margin-top:14px" onClick="{{ goInvestir }}">Simular no Investir</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is_perfil }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div class="sb"><span class="sbt" style="color:var(--ink)">9:41</span><div class="bat" style="border:1.5px solid var(--ink)"><div class="batf" style="background:var(--ink)"></div></div></div>
+<div class="scr" style="flex:1;overflow-y:auto;padding:0 22px 92px">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 0 0"><span class="p" style="font:400 20px Archivo;color:var(--ink)" onClick="{{ goBack }}">←</span><span style="font:800 26px Archivo;letter-spacing:-.02em;color:var(--ink)">Perfil</span></div>
+<div style="display:flex;align-items:center;gap:14px;margin-top:18px"><div style="width:56px;height:56px;border-radius:50%;background:var(--cr);display:flex;align-items:center;justify-content:center;font:800 22px Archivo;color:var(--ink)">R</div><div><div style="font:700 17px Archivo;color:var(--ink)">Rafael Menezes</div><div style="font:500 12px Archivo;color:var(--muted2)">rafael@email.com</div></div></div>
+<div style="margin-top:18px;border:1.5px solid var(--ink);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center"><div><div style="font:600 9px Archivo;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2)">Perfil de investidor</div><div style="font:800 20px Archivo;color:var(--ink);margin-top:3px">Moderado</div></div><span class="p" style="font:700 11px Archivo;color:var(--ink);border:1.5px solid var(--ink);border-radius:100px;padding:7px 12px" onClick="{{ refazer }}">Refazer</span></div>
+<div style="display:flex;flex-direction:column;margin-top:18px">
+<div class="p" style="display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--hair)" onClick="{{ goProdutos }}"><span style="width:30px;height:30px;border-radius:8px;background:var(--intl);display:flex;align-items:center;justify-content:center;font:700 13px Archivo;color:var(--ink)">$</span><span style="flex:1;font:600 13.5px Archivo;color:var(--ink)">Meus bancos e produtos</span><span style="font:500 11px Archivo;color:var(--muted2)">3 ›</span></div>
+<div class="p" style="display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--hair)" onClick="{{ goMetas }}"><span style="width:30px;height:30px;border-radius:8px;background:var(--cx);display:flex;align-items:center;justify-content:center;font:700 13px Archivo;color:var(--ink)">◎</span><span style="flex:1;font:600 13.5px Archivo;color:var(--ink)">Minhas metas</span><span style="font:500 11px Archivo;color:var(--muted2)">3 ›</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--hair)"><span style="width:30px;height:30px;border-radius:8px;background:var(--fu);display:flex;align-items:center;justify-content:center;font:700 13px Archivo;color:var(--ink)">↻</span><span style="flex:1;font:600 13.5px Archivo;color:var(--ink)">Aportes recorrentes</span><span style="font:500 11px Archivo;color:var(--muted2)">›</span></div>
+<div class="p" style="display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--hair)" onClick="{{ toggleDark }}"><span style="width:30px;height:30px;border-radius:8px;background:var(--cr);display:flex;align-items:center;justify-content:center;font:700 14px Archivo;color:var(--ink)">☾</span><span style="flex:1;font:600 13.5px Archivo;color:var(--ink)">Modo escuro</span><span class="tgl {{ tglCls }}"><span class="sw"><i></i></span></span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--hair)"><span style="width:30px;height:30px;border-radius:8px;background:var(--ac);display:flex;align-items:center;justify-content:center;font:700 13px Archivo;color:var(--ink)">◔</span><span style="flex:1;font:600 13.5px Archivo;color:var(--ink)">Notificações</span><span style="font:500 11px Archivo;color:var(--muted2)">›</span></div>
+</div>
+<div style="margin-top:18px;text-align:center;font:700 13px Archivo;color:#B4442F;cursor:pointer">Sair da conta</div>
+</div>
+<div class="nav"><div class="navpill"><span class="navi" onClick="{{ goHome }}">Início</span><span class="navi" onClick="{{ goInvestir }}">Investir</span><span class="navi" onClick="{{ goCarteira }}">Carteira</span><span class="navi" onClick="{{ goMercado }}">Mercado</span></div></div>
+</div>
+</sc-if>
+
+</div>
+<div class="cap" style="margin-top:2px">Fluxo: splash → cadastro → bancos → suitability → perfil → <b>home</b>. No app, toque no menu, nos cartões e no avatar.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { screen: 'splash', invMode: 'livre', invRec: 'unico', hist: [], reprofiling: false, dark: false };
+  componentDidUpdate(){ document.body.classList.toggle('dk', this.state.dark); }
+  go(s){ return () => this.setState(st => ({ screen: s, hist: [...st.hist, st.screen] })); }
+  back(){ this.setState(st => { const h = [...st.hist]; const prev = h.pop() || 'home'; return { screen: prev, hist: h }; }); }
+  renderVals(){
+    const s = this.state.screen;
+    const keys = ['splash','cadastro','bancos','suit','resultado','home','investir','carteira','mercado','mercadoDet','chat','metas','metaDet','novaMeta','produtos','produtoDet','oportunidades','perfil'];
+    const out = {};
+    keys.forEach(k => { out['is_' + k] = (s === k); });
+    const cap = k => k.charAt(0).toUpperCase() + k.slice(1);
+    keys.forEach(k => { out['go' + cap(k)] = this.go(k); });
+    out.invLivre = this.state.invMode === 'livre';
+    out.invMeta  = this.state.invMode === 'meta';
+    out.setLivre = () => this.setState({ invMode: 'livre' });
+    out.setMeta  = () => this.setState({ invMode: 'meta' });
+    out.recUnico  = this.state.invRec === 'unico';
+    out.recMensal = this.state.invRec === 'mensal';
+    out.setUnico  = () => this.setState({ invRec: 'unico' });
+    out.setMensal = () => this.setState({ invRec: 'mensal' });
+    out.goBack = () => this.back();
+    out.refazer = () => this.setState(st => ({ screen: 'suit', reprofiling: true, hist: [...st.hist, st.screen] }));
+    out.finishProfile = () => this.setState(st => ({ screen: st.reprofiling ? 'perfil' : 'home', reprofiling: false, hist: [] }));
+    out.frameCls = this.state.dark ? 'dark' : '';
+    out.tglCls = this.state.dark ? 'on' : '';
+    out.toggleDark = () => this.setState(s => ({ dark: !s.dark }));
+    return out;
+  }
+}
+</script>
+</body>
+</html>
