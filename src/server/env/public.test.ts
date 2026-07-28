@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parsePublicEnv } from "./public";
 
-const key = "sb_publishable_test_key_123456789";
+const key = "x".repeat(24);
 
 describe("parsePublicEnv", () => {
   it.each([
