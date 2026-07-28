@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { signInSchema, signUpSchema } from "./auth-schema";
+import {
+  passwordResetRequestSchema,
+  passwordUpdateSchema,
+  signInSchema,
+  signUpSchema,
+} from "./auth-schema";
 
 describe("signUpSchema", () => {
   const valid = {
@@ -30,5 +35,28 @@ describe("signUpSchema", () => {
 describe("signInSchema", () => {
   it("não revela regras de cadastro ao validar login", () => {
     expect(signInSchema.safeParse({ email: "marina@example.com", password: "x" }).success).toBe(true);
+  });
+});
+
+describe("passwordResetRequestSchema", () => {
+  it("normaliza o e-mail sem revelar se a conta existe", () => {
+    expect(passwordResetRequestSchema.parse({ email: " MARINA@EXAMPLE.COM " }))
+      .toEqual({ email: "marina@example.com" });
+  });
+});
+
+describe("passwordUpdateSchema", () => {
+  it("aceita duas senhas fortes e iguais", () => {
+    expect(passwordUpdateSchema.safeParse({
+      password: "N0rth!segura",
+      confirmation: "N0rth!segura",
+    }).success).toBe(true);
+  });
+
+  it("rejeita confirmações diferentes", () => {
+    expect(passwordUpdateSchema.safeParse({
+      password: "N0rth!segura",
+      confirmation: "Outra!senha1",
+    }).success).toBe(false);
   });
 });
