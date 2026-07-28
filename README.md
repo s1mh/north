@@ -13,9 +13,27 @@ produção**.
 - [Handoff e protótipo originais](docs/reference/prototype/README.md)
 - [Política para relatos de vulnerabilidade](SECURITY.md)
 
-O próximo incremento deve criar uma única aplicação Next.js na raiz e a
-estrutura local do Supabase. Evitar um monorepo neste momento reduz
-complexidade de deploy, dependências e superfície de ataque.
+A fundação executável usa uma única aplicação Next.js na raiz e Supabase
+local. Ela inclui a primeira experiência mobile-first, tokens claro/escuro,
+rotas principais, manifest PWA, headers de segurança, validação de ambiente,
+migration inicial e testes RLS entre duas contas.
+
+## Começar
+
+Com Node 20, Docker e a Supabase CLI instalados:
+
+```bash
+npm install
+cp .env.example .env.local
+supabase start
+supabase db reset
+npm run dev
+```
+
+A interface funciona com dados ilustrativos sem credenciais. Integrações
+reais serão conectadas progressivamente nos próximos marcos. Consulte o
+[guia de configuração e deploy](docs/CONFIGURACAO_E_DEPLOY.md) antes de criar
+projetos ou segredos.
 
 ## Princípios obrigatórios
 

@@ -1,0 +1,2 @@
+-- Intentionally empty: authenticated sample data is created by local test helpers.
+-- Never place production exports or personal data in this repository.
