@@ -1,21 +1,39 @@
 begin;
 select plan(13);
 
-select has_table('public', 'profiles');
-select has_table('public', 'consent_records');
-select has_table('public', 'suitability_assessments');
-select has_table('public', 'goals');
+select has_table('public'::name, 'profiles'::name);
+select has_table('public'::name, 'consent_records'::name);
+select has_table('public'::name, 'suitability_assessments'::name);
+select has_table('public'::name, 'goals'::name);
 select is((select relrowsecurity from pg_class where oid = 'public.profiles'::regclass), true, 'profiles has RLS');
 select is((select relrowsecurity from pg_class where oid = 'public.goals'::regclass), true, 'goals has RLS');
 
-insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_user_meta_data, created_at, updated_at)
 values
-  ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ana@example.test', '', now(), now(), now()),
-  ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'bia@example.test', '', now(), now(), now());
-
-insert into public.profiles (id, display_name) values
-  ('00000000-0000-0000-0000-000000000001', 'Ana'),
-  ('00000000-0000-0000-0000-000000000002', 'Bia');
+  (
+    '00000000-0000-0000-0000-000000000001',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'ana@example.test',
+    '',
+    now(),
+    '{"display_name":"Ana","consent_terms_version":"2026-07-28","consent_privacy_version":"2026-07-28"}'::jsonb,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000000002',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'bia@example.test',
+    '',
+    now(),
+    '{"display_name":"Bia","consent_terms_version":"2026-07-28","consent_privacy_version":"2026-07-28"}'::jsonb,
+    now(),
+    now()
+  );
 insert into public.goals (user_id, name, kind, target_amount, target_date) values
   ('00000000-0000-0000-0000-000000000001', 'Reserva da Ana', 'reserva', 30000, '2027-12-31');
 

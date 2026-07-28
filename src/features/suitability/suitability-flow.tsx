@@ -93,7 +93,7 @@ export function SuitabilityFlow() {
           <p className="result-note">
             Este resultado é educacional e considera somente suas respostas. Você pode refazer o questionário quando quiser.
           </p>
-          <Link className="button onboarding-action" href="/">Ir para o início</Link>
+          <Link className="button onboarding-action" href="/inicio">Ir para o início</Link>
           <button className="text-action" type="button" onClick={restart}>Refazer agora</button>
         </section>
       </main>
