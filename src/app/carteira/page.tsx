@@ -44,10 +44,12 @@ export default async function CarteiraPage() {
     .order("trade_date", { referencedTable: "portfolio_transactions", ascending: true })
     .order("created_at", { referencedTable: "portfolio_transactions", ascending: true });
 
-  const positions = ((data ?? []) as unknown as Instrument[]).map((instrument) => ({
+  const allPositions = ((data ?? []) as unknown as Instrument[]).map((instrument) => ({
     instrument,
     ...derivePosition(instrument.portfolio_transactions, instrument.latest_price),
-  })).filter((position) => position.quantity > 0n);
+  }));
+  const positions = allPositions.filter((position) => position.quantity > 0n);
+  const closedPositions = allPositions.filter((position) => position.quantity === 0n);
 
   const totalCents = positions.reduce(
     (total, position) => total + (position.currentValueCents ?? position.costBasisCents),
@@ -69,7 +71,7 @@ export default async function CarteiraPage() {
       <Link className="portfolio-add" href="/carteira/novo">+ Ativo</Link>
     </div>
 
-    {positions.length === 0 ? <section className="section empty-card">
+    {allPositions.length === 0 ? <section className="section empty-card">
       <h2>Sua carteira começa aqui</h2>
       <p>Adicione uma compra para acompanhar seus ativos com valores reais, sem números ilustrativos.</p>
       <Link className="button" href="/carteira/novo">Adicionar primeiro ativo</Link>
@@ -94,14 +96,20 @@ export default async function CarteiraPage() {
               const observed = instrument.price_observed_at
                 ? new Intl.DateTimeFormat("pt-BR").format(new Date(instrument.price_observed_at))
                 : null;
-              return <article className="portfolio-item" key={instrument.id}>
+              return <Link className="portfolio-item" href={`/carteira/${instrument.id}`} key={instrument.id}>
                 <div><strong>{instrument.symbol}</strong><span>{instrument.name} · {formatQuantity(quantity)} cotas</span></div>
                 <div><strong>{formatMoneyFromCents(currentValueCents ?? costBasisCents)}</strong><span>{instrument.portfolio_institutions?.name}{observed ? ` · preço de ${observed}` : ""}</span></div>
-              </article>;
+              </Link>;
             })}
           </section>;
         })}
       </div>
+      {closedPositions.length > 0 ? <section className="closed-positions">
+        <p className="eyebrow">Posições encerradas</p>
+        {closedPositions.map(({ instrument }) => <Link href={`/carteira/${instrument.id}`} key={instrument.id}>
+          <span><strong>{instrument.symbol}</strong>{instrument.name}</span><span>Ver histórico →</span>
+        </Link>)}
+      </section> : null}
     </>}
 
     <p className="status-note">Valores factuais vêm das movimentações registradas por você. O preço manual sempre exibe sua data; futuras cotações mostrarão também a fonte.</p>
