@@ -44,6 +44,45 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .progress span { display:block; width:63%; height:100%; border-radius:inherit; background:var(--ink); }
 .goal-meta { display:flex; justify-content:space-between; color:var(--muted); font-size:11px; font-weight:700; }
 .goal-copy { margin:13px 0 0; color:var(--muted); font-size:11px; line-height:1.5; }
+.goals-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.goals-heading h1 { margin:0; font-size:clamp(36px, 11vw, 48px); line-height:.95; letter-spacing:-.055em; }
+.goal-list { margin-top:20px; display:flex; flex-direction:column; gap:10px; }
+.goal-list-card { padding:17px; border-radius:16px; }
+.goal-list-card header, .goal-list-card > div:nth-child(2), .goal-list-card footer { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+.goal-list-card header strong { font-size:15px; }
+.goal-list-card header span, .goal-list-card > div:nth-child(2) span { color:var(--muted); font-size:10px; }
+.goal-list-card > div:nth-child(2) { margin-top:9px; justify-content:flex-start; }
+.goal-list-card > div:nth-child(2) strong { font-size:22px; letter-spacing:-.035em; }
+.goal-list-card .progress { margin:11px 0 7px; }
+.goal-list-card footer { color:var(--muted); font-size:9.5px; font-weight:700; }
+.goal-form { width:100%; min-height:calc(100dvh - 56px); display:flex; flex-direction:column; }
+.goal-kind-options { margin:26px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:8px; border:0; }
+.goal-kind-options button { min-height:44px; padding:0 13px; display:flex; align-items:center; gap:7px; border:1.5px solid var(--line); border-radius:12px; background:transparent; font-size:11px; font-weight:750; cursor:pointer; }
+.goal-kind-options button[data-selected="true"] { border:2px solid var(--ink); background:var(--cx); }
+.goal-kind-options button span { font-size:14px; }
+.goal-detail { width:100%; }
+.goal-progress-card { margin-top:22px; padding:20px; border-radius:18px; text-align:center; }
+.goal-progress-card > strong { display:block; margin-top:7px; font-size:42px; line-height:1; letter-spacing:-.045em; }
+.goal-progress-card .progress { height:8px; margin:16px 0 9px; }
+.goal-progress-card > div:last-child { display:flex; justify-content:space-between; font-size:11px; font-weight:800; }
+.goal-progress-card > div:last-child span:last-child { color:var(--muted); }
+.goal-facts { margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.goal-facts div { padding:13px; display:flex; flex-direction:column; gap:5px; border:1.5px solid var(--ink); border-radius:12px; }
+.goal-facts span { color:var(--muted2); font-size:9px; font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
+.goal-facts strong { font-size:13px; }
+.goal-plan-card { margin-top:16px; padding:16px; border:1.5px solid var(--ink); border-radius:7px; }
+.goal-plan-card h2 { margin:0; font-size:21px; letter-spacing:-.03em; }
+.goal-plan-card > p:not(.eyebrow) { margin:9px 0 0; color:var(--muted); font-size:11px; line-height:1.5; }
+.goal-plan-card > strong { display:block; margin-top:12px; font-size:10px; line-height:1.45; }
+.goal-contribution-form { margin-top:28px; padding-top:24px; border-top:1px solid var(--hair); }
+.goal-contribution-form .section-head { margin-bottom:0; }
+.goal-contribution-form > p:not(.form-error) { margin:14px 0; color:var(--muted); font-size:10px; line-height:1.45; }
+.goal-contribution-form > .button { width:100%; }
+.goal-history { margin-top:30px; }
+.goal-history article { min-height:56px; padding:10px 2px; display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid var(--hair); }
+.goal-history article > div { display:flex; flex-direction:column; gap:3px; }
+.goal-history article strong { font-size:12px; }
+.goal-history article span { color:var(--muted2); font-size:9.5px; }
 .home-market-grid, .market-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .market-card { min-width:0; padding:13px; border:1.5px solid var(--ink); border-radius:8px; }
 .market-card p { margin:0; color:var(--muted2); font-size:9px; font-weight:750; letter-spacing:.1em; text-transform:uppercase; }

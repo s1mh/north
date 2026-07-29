@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { deriveGoalProgress, getActiveContributionPlan } from "@/features/goals/calculation";
 import {
   derivePosition,
   formatMoneyFromCents,
@@ -26,6 +27,11 @@ type Goal = {
   name: string;
   target_amount: string | number;
   target_date: string;
+  goal_contributions: Array<{ amount: string | number }>;
+  contribution_plans:
+    | { amount: string | number; status: string }
+    | Array<{ amount: string | number; status: string }>
+    | null;
 };
 
 const classes: Record<string, { label: string; color: string }> = {
@@ -71,7 +77,11 @@ export default async function Home() {
       .limit(12),
     supabase
       .from("goals")
-      .select("id, name, target_amount, target_date")
+      .select(`
+        id, name, target_amount, target_date,
+        goal_contributions(amount),
+        contribution_plans(amount, status)
+      `)
       .eq("status", "active")
       .order("target_date", { ascending: true })
       .limit(1)
@@ -101,6 +111,13 @@ export default async function Home() {
     (indicatorResult.data ?? []) as unknown as MarketIndicatorRow[],
   );
   const goal = goalResult.data as Goal | null;
+  const goalPlan = goal ? getActiveContributionPlan(goal.contribution_plans) : undefined;
+  const goalProgress = goal ? deriveGoalProgress({
+    targetAmount: goal.target_amount,
+    targetDate: goal.target_date,
+    contributions: goal.goal_contributions.map((item) => item.amount),
+    plannedMonthlyAmount: goalPlan?.amount,
+  }) : null;
 
   return <AppShell active="/inicio">
     <p className="eyebrow">Seu patrimônio</p>
@@ -179,11 +196,12 @@ export default async function Home() {
       <div className="goal">
         {goal ? <>
           <p className="eyebrow">Meta cadastrada</p>
-          <strong>{new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(Number(goal.target_amount))}</strong>
-          <p className="goal-copy">Prazo: {formatObservedDate(goal.target_date)}. O progresso será calculado quando você vincular patrimônio à meta.</p>
+          <strong>{formatMoneyFromCents(goalProgress!.contributedCents)} de {formatMoneyFromCents(goalProgress!.targetCents)}</strong>
+          <div className="progress"><span style={{ width: `${goalProgress!.percentage}%` }} /></div>
+          <div className="goal-meta">
+            <span>{goalProgress!.percentage.toLocaleString("pt-BR")}% concluída</span>
+            <span>Prazo: {formatObservedDate(goal.target_date)}</span>
+          </div>
         </> : <>
           <p className="eyebrow">Planejamento</p>
           <strong>Qual é sua prioridade?</strong>
