@@ -3,7 +3,7 @@
 * { box-sizing: border-box; }
 html { background: var(--bg); }
 body { margin: 0; color: var(--ink); background: var(--bg); font-family: Arial, "Helvetica Neue", sans-serif; -webkit-font-smoothing: antialiased; }
-button, input { font: inherit; color:inherit; }
+button, input, select { font: inherit; color:inherit; }
 a { color: inherit; text-decoration: none; }
 button, a { -webkit-tap-highlight-color: transparent; }
 .shell { width: min(100%, 480px); min-height: 100dvh; margin: 0 auto; padding: 28px 20px 118px; overflow: hidden; }
@@ -142,5 +142,36 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .legal-shell h2 { margin:26px 0 8px; font-size:18px; letter-spacing:-.025em; }
 .legal-shell p { color:var(--muted); font-size:13px; line-height:1.65; }
 .legal-review { margin-top:36px; padding:14px; border:1px solid var(--line); border-radius:10px; }
+.portfolio-summary { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+.portfolio-summary h1 { margin:0; font-size:clamp(30px, 9vw, 42px); line-height:1; letter-spacing:-.045em; }
+.portfolio-summary > div > p:last-child { margin:7px 0 0; color:var(--muted); font-size:11px; }
+.portfolio-add { min-height:42px; padding:0 15px; display:grid; place-items:center; border:1.5px solid var(--ink); border-radius:999px; font-size:11px; font-weight:800; white-space:nowrap; }
+.portfolio-value-card { margin-top:20px; padding:15px; border:1.5px solid var(--ink); border-radius:7px; }
+.portfolio-value-card div { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+.portfolio-value-card span { color:var(--muted2); font-size:9.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.portfolio-value-card strong { font-size:20px; letter-spacing:-.03em; }
+.portfolio-value-card p { margin:12px 0 0; color:var(--muted); font-size:10.5px; line-height:1.45; }
+.portfolio-groups { display:flex; flex-direction:column; gap:14px; margin-top:18px; }
+.portfolio-groups section > header { padding:11px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; border-radius:12px; font-size:13px; font-weight:800; }
+.portfolio-groups header small { color:var(--muted); font-size:10px; }
+.portfolio-groups header strong { font-size:13px; white-space:nowrap; }
+.portfolio-item { padding:10px 8px; display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid var(--hair); }
+.portfolio-item:last-child { border-bottom:0; }
+.portfolio-item > div { min-width:0; display:flex; flex-direction:column; gap:3px; }
+.portfolio-item > div:last-child { text-align:right; }
+.portfolio-item strong { font-size:12px; }
+.portfolio-item span { overflow:hidden; color:var(--muted2); font-size:9.5px; text-overflow:ellipsis; white-space:nowrap; }
+.portfolio-form { width:100%; min-height:calc(100dvh - 56px); display:flex; flex-direction:column; }
+.portfolio-form-head { display:flex; align-items:flex-start; gap:8px; }
+.portfolio-form-head > a { width:44px; min-height:44px; margin-left:-12px; display:grid; place-items:center; font-size:21px; }
+.portfolio-form-head .eyebrow { margin-top:3px; }
+.portfolio-form-head h1 { margin:0; font-size:clamp(28px, 8vw, 38px); letter-spacing:-.045em; }
+.portfolio-field-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.portfolio-form select { width:100%; min-height:42px; border:0; border-bottom:2px solid var(--line); outline:0; background:transparent; border-radius:0; font-weight:700; }
+.portfolio-form select:focus { border-color:var(--ink); }
+.portfolio-disclaimer { margin:26px 0 0; color:var(--muted2); font-size:10.5px; line-height:1.5; }
+.portfolio-error { margin-top:12px; }
+.portfolio-submit { width:100%; margin-top:auto; }
 @media (prefers-reduced-motion: reduce) { .progress-track span, .answer-list label { transition:none; } }
+@media (max-width:360px) { .portfolio-field-row { grid-template-columns:1fr; gap:0; } .portfolio-summary { align-items:flex-end; } }
 @media (min-width:700px) { body::before { content:""; position:fixed; inset:0; pointer-events:none; background:radial-gradient(circle at 70% 10%, var(--rf), transparent 28%),radial-gradient(circle at 20% 90%, var(--fi), transparent 22%); opacity:.32; } .shell { position:relative; background:color-mix(in srgb, var(--bg) 92%, transparent); } }

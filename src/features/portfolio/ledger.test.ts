@@ -1,0 +1,51 @@
+import { describe, expect, it } from "vitest";
+import { derivePosition, formatMoneyFromCents, formatQuantity, type PortfolioTransaction } from "./ledger";
+
+function transaction(overrides: Partial<PortfolioTransaction> = {}): PortfolioTransaction {
+  return {
+    transaction_type: "compra",
+    quantity: "10",
+    unit_price: "12.34",
+    fees: "0",
+    ...overrides,
+  };
+}
+
+describe("portfolio ledger", () => {
+  it("calculates values without binary floating point", () => {
+    const result = derivePosition([transaction({ quantity: "0.3", unit_price: "0.10" })], "0.10");
+    expect(result.costBasisCents).toBe(3n);
+    expect(result.currentValueCents).toBe(3n);
+  });
+
+  it("rounds a purchase to cents and includes fees", () => {
+    const result = derivePosition([transaction({ quantity: "3", unit_price: "10.005", fees: "1.25" })], null);
+    expect(result.costBasisCents).toBe(3127n);
+  });
+
+  it("removes proportional cost on a partial sale", () => {
+    const result = derivePosition([
+      transaction({ quantity: "10", unit_price: "10", fees: "1" }),
+      transaction({ transaction_type: "venda", quantity: "4", unit_price: "12" }),
+    ], "12");
+    expect(result.quantity).toBe(600000000n);
+    expect(result.costBasisCents).toBe(6060n);
+    expect(result.currentValueCents).toBe(7200n);
+  });
+
+  it("keeps missing price explicit", () => {
+    expect(derivePosition([transaction()], null).currentValueCents).toBeNull();
+  });
+
+  it("rejects a negative position", () => {
+    expect(() => derivePosition([
+      transaction({ quantity: "1" }),
+      transaction({ transaction_type: "venda", quantity: "2" }),
+    ], null)).toThrow("insufficient position");
+  });
+
+  it("formats monetary values and fractional quantities in pt-BR", () => {
+    expect(formatMoneyFromCents(123456n)).toBe("R$ 1.234,56");
+    expect(formatQuantity(125000000n)).toBe("1,25");
+  });
+});
