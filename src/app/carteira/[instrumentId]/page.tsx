@@ -5,6 +5,7 @@ import {
   derivePosition,
   formatMoneyFromCents,
   formatQuantity,
+  getPriceStatus,
   transactionValueCents,
   type PortfolioTransaction,
 } from "@/features/portfolio/ledger";
@@ -14,6 +15,9 @@ type DetailedTransaction = PortfolioTransaction & {
   id: string;
   trade_date: string;
   created_at: string;
+  reverses_transaction_id: string | null;
+  corrects_transaction_id: string | null;
+  audit_reason: string | null;
 };
 
 type Instrument = {
@@ -66,7 +70,11 @@ export default async function PortfolioInstrumentPage({
     .select(`
       id, symbol, name, asset_class, latest_price, price_observed_at,
       portfolio_institutions(name),
-      portfolio_transactions(id, transaction_type, quantity, unit_price, fees, cash_amount, trade_date, created_at)
+      portfolio_transactions(
+        id, transaction_type, quantity, unit_price, fees, cash_amount,
+        reverses_transaction_id, corrects_transaction_id, audit_reason,
+        trade_date, created_at
+      )
     `)
     .eq("id", instrumentId)
     .order("trade_date", { referencedTable: "portfolio_transactions", ascending: false })
@@ -81,6 +89,12 @@ export default async function PortfolioInstrumentPage({
   const observed = instrument.price_observed_at
     ? new Intl.DateTimeFormat("pt-BR").format(new Date(instrument.price_observed_at))
     : null;
+  const priceStatus = getPriceStatus(instrument.latest_price, instrument.price_observed_at);
+  const reversedIds = new Set(
+    instrument.portfolio_transactions
+      .map((transaction) => transaction.reverses_transaction_id)
+      .filter((id): id is string => Boolean(id)),
+  );
 
   return <AppShell active="/carteira">
     <div className="instrument-head">
@@ -101,21 +115,42 @@ export default async function PortfolioInstrumentPage({
         <div><dt>Rendimentos</dt><dd>{formatMoneyFromCents(position.incomeCents)}</dd></div>
         <div><dt>Taxas avulsas</dt><dd>{formatMoneyFromCents(position.expenseCents)}</dd></div>
       </dl>
-      <p>{observed ? `Último preço informado em ${observed}.` : "Sem preço atual informado."}</p>
+      <p data-price-status={priceStatus}>
+        {priceStatus === "missing"
+          ? "Sem preço atual informado; o valor usa o custo da posição."
+          : priceStatus === "stale"
+            ? `Preço manual desatualizado desde ${observed}.`
+            : `Último preço informado em ${observed}.`}
+      </p>
     </section>
 
     <section className="transaction-history">
       <div className="section-head"><div><p className="eyebrow">Livro imutável</p><h2>Movimentações</h2></div></div>
       <div>
         {instrument.portfolio_transactions.map((transaction) => {
-          const outgoing = ["venda", "resgate", "taxa"].includes(transaction.transaction_type);
+          const reversal = Boolean(transaction.reverses_transaction_id);
+          const originalReversed = reversedIds.has(transaction.id);
+          const baseOutgoing = ["venda", "resgate", "taxa"].includes(transaction.transaction_type);
+          const outgoing = reversal ? !baseOutgoing : baseOutgoing;
+          const baseLabel = transactionLabels[transaction.transaction_type] ?? "Movimentação";
+          const label = reversal
+            ? `Estorno de ${baseLabel.toLocaleLowerCase("pt-BR")}`
+            : transaction.corrects_transaction_id
+              ? `${baseLabel} corrigida`
+              : originalReversed
+                ? `${baseLabel} original`
+                : baseLabel;
           return <article key={transaction.id}>
             <span className="transaction-mark" data-outgoing={outgoing}>{outgoing ? "−" : "+"}</span>
             <div>
-              <strong>{transactionLabels[transaction.transaction_type]}</strong>
+              <strong>{label}</strong>
               <span>{formatTradeDate(transaction.trade_date)}{Number(transaction.quantity) !== 0 ? ` · ${String(transaction.quantity).replace(".", ",")} cotas` : ""}</span>
+              {transaction.audit_reason ? <small>{transaction.audit_reason}</small> : null}
             </div>
-            <strong>{outgoing ? "−" : ""}{formatMoneyFromCents(transactionValueCents(transaction))}</strong>
+            <div className="transaction-actions">
+              <strong>{outgoing ? "−" : ""}{formatMoneyFromCents(transactionValueCents(transaction))}</strong>
+              {!reversal && !originalReversed ? <Link href={`/carteira/${instrument.id}/movimentacoes/${transaction.id}/corrigir`}>Corrigir</Link> : null}
+            </div>
           </article>;
         })}
       </div>

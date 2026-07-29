@@ -47,15 +47,24 @@ export const portfolioAssetSchema = z.object({
   tradeDate: z.iso.date().refine((value) => value <= todayInSaoPaulo()),
 }).strict();
 
-export const portfolioTransactionSchema = z.object({
-  instrumentId: z.uuid(),
+const transactionFields = {
   transactionType: z.enum(transactionTypes),
   quantity: decimal,
   unitPrice: decimal,
   fees: nonNegativeMoney,
   cashAmount: nonNegativeMoney,
   tradeDate: z.iso.date().refine((value) => value <= todayInSaoPaulo()),
-}).strict().superRefine((value, context) => {
+};
+
+function validateTransactionShape(
+  value: {
+    transactionType: typeof transactionTypes[number];
+    quantity: string;
+    unitPrice: string;
+    cashAmount: string;
+  },
+  context: z.RefinementCtx,
+) {
   const changesPosition = ["compra", "venda", "aporte", "resgate"].includes(value.transactionType);
   const quantityIsPositive = BigInt(value.quantity.replace(".", "")) > 0n;
   const unitPriceIsPositive = BigInt(value.unitPrice.replace(".", "")) > 0n;
@@ -68,4 +77,20 @@ export const portfolioTransactionSchema = z.object({
   if (!changesPosition && (quantityIsPositive || unitPriceIsPositive || !cashAmountIsPositive)) {
     context.addIssue({ code: "custom", message: "Movimentação financeira inválida." });
   }
-});
+}
+
+export const portfolioTransactionSchema = z.object({
+  instrumentId: z.uuid(),
+  ...transactionFields,
+}).strict().superRefine(validateTransactionShape);
+
+export const portfolioCorrectionSchema = z.object({
+  transactionId: z.uuid(),
+  reason: z.string().trim().min(3).max(200),
+  ...transactionFields,
+}).strict().superRefine(validateTransactionShape);
+
+export const portfolioReversalSchema = z.object({
+  transactionId: z.uuid(),
+  reason: z.string().trim().min(3).max(200),
+}).strict();

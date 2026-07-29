@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { portfolioAssetSchema, portfolioTransactionSchema } from "./submission";
+import {
+  portfolioAssetSchema,
+  portfolioCorrectionSchema,
+  portfolioReversalSchema,
+  portfolioTransactionSchema,
+} from "./submission";
 
 const valid = {
   institutionName: "Nubank",
@@ -68,5 +73,30 @@ describe("portfolio transaction submission", () => {
     expect(portfolioTransactionSchema.safeParse({ ...movement, quantity: "0" }).success).toBe(false);
     expect(portfolioTransactionSchema.safeParse({ ...movement, cashAmount: "10" }).success).toBe(false);
     expect(portfolioTransactionSchema.safeParse({ ...movement, tradeDate: "2099-01-01" }).success).toBe(false);
+  });
+});
+
+describe("portfolio transaction audit", () => {
+  const correction = {
+    transactionId: "00000000-0000-4000-8000-000000000002",
+    transactionType: "compra",
+    quantity: "8",
+    unitPrice: "42,00",
+    fees: "1,00",
+    cashAmount: "0",
+    tradeDate: "2026-07-28",
+    reason: "Preço digitado incorretamente",
+  };
+
+  it("accepts a complete correction and normalizes money", () => {
+    expect(portfolioCorrectionSchema.parse(correction).unitPrice).toBe("42.00");
+  });
+
+  it("requires an audit reason", () => {
+    expect(portfolioCorrectionSchema.safeParse({ ...correction, reason: "x" }).success).toBe(false);
+    expect(portfolioReversalSchema.safeParse({
+      transactionId: correction.transactionId,
+      reason: "Lançamento duplicado",
+    }).success).toBe(true);
   });
 });
