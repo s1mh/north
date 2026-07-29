@@ -14,10 +14,21 @@ export const assetClasses = [
   "outros",
 ] as const;
 
-const positiveDecimal = z.string()
+export const transactionTypes = [
+  "compra",
+  "venda",
+  "aporte",
+  "resgate",
+  "rendimento",
+  "taxa",
+] as const;
+
+const decimal = z.string()
   .trim()
   .regex(/^\d{1,15}([.,]\d{1,8})?$/)
-  .transform((value) => value.replace(",", "."))
+  .transform((value) => value.replace(",", "."));
+
+const positiveDecimal = decimal
   .refine((value) => BigInt(value.replace(".", "")) > 0n);
 
 const nonNegativeMoney = z.string()
@@ -35,3 +46,26 @@ export const portfolioAssetSchema = z.object({
   fees: nonNegativeMoney,
   tradeDate: z.iso.date().refine((value) => value <= todayInSaoPaulo()),
 }).strict();
+
+export const portfolioTransactionSchema = z.object({
+  instrumentId: z.uuid(),
+  transactionType: z.enum(transactionTypes),
+  quantity: decimal,
+  unitPrice: decimal,
+  fees: nonNegativeMoney,
+  cashAmount: nonNegativeMoney,
+  tradeDate: z.iso.date().refine((value) => value <= todayInSaoPaulo()),
+}).strict().superRefine((value, context) => {
+  const changesPosition = ["compra", "venda", "aporte", "resgate"].includes(value.transactionType);
+  const quantityIsPositive = BigInt(value.quantity.replace(".", "")) > 0n;
+  const unitPriceIsPositive = BigInt(value.unitPrice.replace(".", "")) > 0n;
+  const cashAmountIsPositive = BigInt(value.cashAmount.replace(".", "")) > 0n;
+
+  if (changesPosition && (!quantityIsPositive || !unitPriceIsPositive || cashAmountIsPositive)) {
+    context.addIssue({ code: "custom", message: "Movimentação de posição inválida." });
+  }
+
+  if (!changesPosition && (quantityIsPositive || unitPriceIsPositive || !cashAmountIsPositive)) {
+    context.addIssue({ code: "custom", message: "Movimentação financeira inválida." });
+  }
+});

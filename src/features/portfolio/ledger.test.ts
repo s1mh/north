@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { derivePosition, formatMoneyFromCents, formatQuantity, type PortfolioTransaction } from "./ledger";
+import {
+  derivePosition,
+  formatMoneyFromCents,
+  formatQuantity,
+  transactionValueCents,
+  type PortfolioTransaction,
+} from "./ledger";
 
 function transaction(overrides: Partial<PortfolioTransaction> = {}): PortfolioTransaction {
   return {
@@ -47,5 +53,26 @@ describe("portfolio ledger", () => {
   it("formats monetary values and fractional quantities in pt-BR", () => {
     expect(formatMoneyFromCents(123456n)).toBe("R$ 1.234,56");
     expect(formatQuantity(125000000n)).toBe("1,25");
+  });
+
+  it("tracks income and standalone fees without changing the position", () => {
+    const result = derivePosition([
+      transaction(),
+      transaction({ transaction_type: "rendimento", quantity: "0", unit_price: "0", cash_amount: "25.50" }),
+      transaction({ transaction_type: "taxa", quantity: "0", unit_price: "0", cash_amount: "3.25" }),
+    ], "12.34");
+    expect(result.quantity).toBe(1000000000n);
+    expect(result.incomeCents).toBe(2550n);
+    expect(result.expenseCents).toBe(325n);
+  });
+
+  it("calculates the displayed value for position and cash movements", () => {
+    expect(transactionValueCents(transaction({ quantity: "2", unit_price: "12.345" }))).toBe(2469n);
+    expect(transactionValueCents(transaction({
+      transaction_type: "rendimento",
+      quantity: "0",
+      unit_price: "0",
+      cash_amount: "9.99",
+    }))).toBe(999n);
   });
 });
