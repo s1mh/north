@@ -3,6 +3,7 @@ import {
   derivePosition,
   formatMoneyFromCents,
   formatQuantity,
+  getPriceStatus,
   transactionValueCents,
   type PortfolioTransaction,
 } from "./ledger";
@@ -74,5 +75,36 @@ describe("portfolio ledger", () => {
       unit_price: "0",
       cash_amount: "9.99",
     }))).toBe(999n);
+  });
+
+  it("ignores an original transaction and its audit reversal", () => {
+    const result = derivePosition([
+      { ...transaction(), id: "original" },
+      {
+        ...transaction(),
+        id: "reversal",
+        reverses_transaction_id: "original",
+        audit_reason: "Valor incorreto",
+      },
+      { ...transaction({ quantity: "8", unit_price: "13" }), id: "corrected", corrects_transaction_id: "original" },
+    ], "13");
+    expect(result.quantity).toBe(800000000n);
+    expect(result.costBasisCents).toBe(10400n);
+  });
+});
+
+describe("portfolio price status", () => {
+  const now = new Date("2026-07-28T21:00:00-03:00");
+
+  it("keeps a missing price explicit", () => {
+    expect(getPriceStatus(null, null, now)).toBe("missing");
+  });
+
+  it("marks old prices as stale", () => {
+    expect(getPriceStatus("10", "2026-07-26T00:00:00-03:00", now)).toBe("stale");
+  });
+
+  it("accepts a recent observed price", () => {
+    expect(getPriceStatus("10", "2026-07-28T00:00:00-03:00", now)).toBe("current");
   });
 });

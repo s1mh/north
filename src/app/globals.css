@@ -189,12 +189,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .instrument-position dt { margin:0 0 4px; }
 .instrument-position dd { margin:0; font-size:12px; font-weight:800; }
 .instrument-position > p { margin:16px 0 0; color:var(--muted); font-size:10px; }
+.instrument-position > p[data-price-status="stale"], .instrument-position > p[data-price-status="missing"] { color:var(--down); font-weight:700; }
 .transaction-history { margin-top:30px; }
 .transaction-history > div:last-child { display:flex; flex-direction:column; }
 .transaction-history article { min-height:58px; padding:10px 2px; display:grid; grid-template-columns:30px 1fr auto; align-items:center; gap:10px; border-bottom:1px solid var(--hair); }
 .transaction-history article > div { display:flex; flex-direction:column; gap:3px; }
 .transaction-history article strong { font-size:11px; }
 .transaction-history article span { color:var(--muted2); font-size:9.5px; }
+.transaction-history article small { color:var(--muted2); font-size:8.5px; line-height:1.3; }
+.transaction-actions { align-items:flex-end; text-align:right; }
+.transaction-actions a { min-height:28px; display:flex; align-items:center; color:var(--muted); font-size:9px; font-weight:800; text-decoration:underline; text-underline-offset:2px; }
 .transaction-mark { width:28px; height:28px; display:grid; place-items:center; border-radius:50%; color:var(--up) !important; background:color-mix(in srgb, var(--up) 14%, transparent); font-size:15px !important; font-weight:900; }
 .transaction-mark[data-outgoing="true"] { color:var(--down) !important; background:color-mix(in srgb, var(--down) 14%, transparent); }
 .transaction-types { margin:28px 0 0; padding:0; display:grid; grid-template-columns:repeat(3,1fr); gap:7px; border:0; }
@@ -202,6 +206,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .transaction-types button { min-height:42px; padding:0 7px; border:1px solid var(--line); border-radius:999px; background:transparent; font-size:10.5px; font-weight:800; cursor:pointer; }
 .transaction-types button[data-selected="true"] { border-color:var(--ink); color:var(--oncta); background:var(--ink); }
 .transaction-form .portfolio-form-head h1 { font-size:clamp(25px, 7vw, 34px); }
+.danger-action { min-height:44px; margin-top:8px; border:0; color:var(--down); background:transparent; font-size:11px; font-weight:800; cursor:pointer; }
+.danger-action:disabled { opacity:.4; }
 @media (prefers-reduced-motion: reduce) { .progress-track span, .answer-list label { transition:none; } }
 @media (max-width:360px) { .portfolio-field-row { grid-template-columns:1fr; gap:0; } .portfolio-summary { align-items:flex-end; } .instrument-head { grid-template-columns:32px 1fr; } .instrument-head .portfolio-add { grid-column:2; justify-self:start; } }
 @media (min-width:700px) { body::before { content:""; position:fixed; inset:0; pointer-events:none; background:radial-gradient(circle at 70% 10%, var(--rf), transparent 28%),radial-gradient(circle at 20% 90%, var(--fi), transparent 22%); opacity:.32; } .shell { position:relative; background:color-mix(in srgb, var(--bg) 92%, transparent); } }
