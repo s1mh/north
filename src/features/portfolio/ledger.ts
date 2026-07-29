@@ -3,6 +3,7 @@ export type PortfolioTransaction = {
   quantity: string | number;
   unit_price: string | number;
   fees: string | number;
+  cash_amount?: string | number;
 };
 
 const QUANTITY_SCALE = 8;
@@ -25,7 +26,7 @@ function roundDivide(numerator: bigint, denominator: bigint) {
   return sign * ((absolute + denominator / 2n) / denominator);
 }
 
-function marketValueCents(quantity: bigint, price: bigint) {
+export function marketValueCents(quantity: bigint, price: bigint) {
   return roundDivide(quantity * price * 100n, 10n ** BigInt(QUANTITY_SCALE + PRICE_SCALE));
 }
 
@@ -35,6 +36,8 @@ export function derivePosition(
 ) {
   let quantity = 0n;
   let costBasisCents = 0n;
+  let incomeCents = 0n;
+  let expenseCents = 0n;
 
   for (const transaction of transactions) {
     const transactionQuantity = parseFixed(transaction.quantity, QUANTITY_SCALE);
@@ -58,6 +61,10 @@ export function derivePosition(
         costBasisCents -= roundDivide(costBasisCents * removed, quantity);
         quantity -= removed;
       }
+    } else if (transaction.transaction_type === "rendimento") {
+      incomeCents += parseFixed(transaction.cash_amount ?? 0, 2);
+    } else if (transaction.transaction_type === "taxa") {
+      expenseCents += parseFixed(transaction.cash_amount ?? 0, 2);
     }
   }
 
@@ -65,7 +72,17 @@ export function derivePosition(
     ? null
     : marketValueCents(quantity, parseFixed(latestPrice, PRICE_SCALE));
 
-  return { quantity, costBasisCents, currentValueCents };
+  return { quantity, costBasisCents, currentValueCents, incomeCents, expenseCents };
+}
+
+export function transactionValueCents(transaction: PortfolioTransaction) {
+  if (transaction.transaction_type === "rendimento" || transaction.transaction_type === "taxa") {
+    return parseFixed(transaction.cash_amount ?? 0, 2);
+  }
+  return marketValueCents(
+    parseFixed(transaction.quantity, QUANTITY_SCALE),
+    parseFixed(transaction.unit_price, PRICE_SCALE),
+  );
 }
 
 export function formatMoneyFromCents(value: bigint) {
