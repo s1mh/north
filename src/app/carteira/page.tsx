@@ -4,6 +4,7 @@ import {
   derivePosition,
   formatMoneyFromCents,
   formatQuantity,
+  getPriceStatus,
   type PortfolioTransaction,
 } from "@/features/portfolio/ledger";
 import { createClient } from "@/server/supabase/client";
@@ -38,7 +39,11 @@ export default async function CarteiraPage() {
     .select(`
       id, symbol, name, asset_class, latest_price, price_observed_at,
       portfolio_institutions(name),
-      portfolio_transactions(transaction_type, quantity, unit_price, fees, trade_date, created_at)
+      portfolio_transactions(
+        id, transaction_type, quantity, unit_price, fees, cash_amount,
+        reverses_transaction_id, corrects_transaction_id, audit_reason,
+        trade_date, created_at
+      )
     `)
     .order("created_at", { ascending: true })
     .order("trade_date", { referencedTable: "portfolio_transactions", ascending: true })
@@ -96,9 +101,15 @@ export default async function CarteiraPage() {
               const observed = instrument.price_observed_at
                 ? new Intl.DateTimeFormat("pt-BR").format(new Date(instrument.price_observed_at))
                 : null;
+              const priceStatus = getPriceStatus(instrument.latest_price, instrument.price_observed_at);
+              const priceLabel = priceStatus === "missing"
+                ? "sem preço atual"
+                : priceStatus === "stale"
+                  ? `preço desatualizado · ${observed}`
+                  : `preço de ${observed}`;
               return <Link className="portfolio-item" href={`/carteira/${instrument.id}`} key={instrument.id}>
                 <div><strong>{instrument.symbol}</strong><span>{instrument.name} · {formatQuantity(quantity)} cotas</span></div>
-                <div><strong>{formatMoneyFromCents(currentValueCents ?? costBasisCents)}</strong><span>{instrument.portfolio_institutions?.name}{observed ? ` · preço de ${observed}` : ""}</span></div>
+                <div><strong>{formatMoneyFromCents(currentValueCents ?? costBasisCents)}</strong><span>{instrument.portfolio_institutions?.name} · {priceLabel}</span></div>
               </Link>;
             })}
           </section>;

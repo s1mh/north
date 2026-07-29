@@ -1,9 +1,13 @@
 export type PortfolioTransaction = {
+  id?: string;
   transaction_type: "compra" | "venda" | "aporte" | "resgate" | "rendimento" | "taxa" | "ajuste";
   quantity: string | number;
   unit_price: string | number;
   fees: string | number;
   cash_amount?: string | number;
+  reverses_transaction_id?: string | null;
+  corrects_transaction_id?: string | null;
+  audit_reason?: string | null;
 };
 
 const QUANTITY_SCALE = 8;
@@ -38,8 +42,16 @@ export function derivePosition(
   let costBasisCents = 0n;
   let incomeCents = 0n;
   let expenseCents = 0n;
+  const reversedIds = new Set(
+    transactions
+      .map((transaction) => transaction.reverses_transaction_id)
+      .filter((id): id is string => Boolean(id)),
+  );
 
   for (const transaction of transactions) {
+    if (transaction.reverses_transaction_id || (transaction.id && reversedIds.has(transaction.id))) {
+      continue;
+    }
     const transactionQuantity = parseFixed(transaction.quantity, QUANTITY_SCALE);
     const unitPrice = parseFixed(transaction.unit_price, PRICE_SCALE);
     const feesCents = parseFixed(transaction.fees, 2);
@@ -99,4 +111,14 @@ export function formatQuantity(value: bigint) {
   const whole = value / divisor;
   const fraction = (value % divisor).toString().padStart(QUANTITY_SCALE, "0").replace(/0+$/, "");
   return fraction ? `${whole},${fraction}` : whole.toString();
+}
+
+export function getPriceStatus(
+  latestPrice: string | number | null,
+  observedAt: string | null,
+  now = new Date(),
+) {
+  if (latestPrice === null || observedAt === null) return "missing" as const;
+  const ageInHours = (now.getTime() - new Date(observedAt).getTime()) / 3_600_000;
+  return ageInHours > 36 ? "stale" as const : "current" as const;
 }
