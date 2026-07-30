@@ -2,31 +2,76 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import type { Institution, ResearchRequest } from "@/features/institutions/types";
 
-const institutions = [
-  { name: "Nubank", initial: "N", color: "var(--cr)" },
-  { name: "Itaú", initial: "I", color: "var(--intl)" },
-  { name: "BTG Pactual", initial: "B", color: "var(--rf)" },
-  { name: "XP Investimentos", initial: "X", color: "var(--ac)" },
-  { name: "C6 Bank", initial: "C", color: "var(--fi)" },
-] as const;
-
-export function BankSelection() {
+export function BankSelection({
+  institutions,
+  initialSelected,
+  requests,
+  nextPath = "/onboarding/perfil",
+}: {
+  institutions: Institution[];
+  initialSelected: string[];
+  requests: ResearchRequest[];
+  nextPath?: string;
+}) {
   const router = useRouter();
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState(initialSelected);
   const [custom, setCustom] = useState("");
   const [adding, setAdding] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [researchRequests, setResearchRequests] = useState(requests);
 
-  function toggle(name: string) {
-    setSelected((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name]);
+  function toggle(id: string) {
+    setSelected((current) => current.includes(id)
+      ? current.filter((item) => item !== id)
+      : [...current, id]);
   }
 
-  function addCustom() {
+  async function addCustom() {
     const name = custom.trim();
-    if (!name || selected.includes(name)) return;
-    setSelected((current) => [...current, name]);
+    if (name.length < 2 || pending) return;
+    setPending(true);
+    setError("");
+    const response = await fetch("/api/institutions/research", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }).catch(() => null);
+    const result = await response?.json().catch(() => null);
+    if (!response?.ok || !result?.id) {
+      setError(result?.error ?? "Não foi possível enviar a pesquisa agora.");
+      setPending(false);
+      return;
+    }
+    setResearchRequests((current) => [...current, {
+      id: result.id,
+      requested_name: name,
+      status: "queued",
+    }]);
     setCustom("");
     setAdding(false);
+    setPending(false);
+  }
+
+  async function save() {
+    if (selected.length === 0 || pending) return;
+    setPending(true);
+    setError("");
+    const response = await fetch("/api/institutions", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ institutionIds: selected }),
+    }).catch(() => null);
+    const result = await response?.json().catch(() => null);
+    if (!response?.ok) {
+      setError(result?.error ?? "Não foi possível salvar seus bancos agora.");
+      setPending(false);
+      return;
+    }
+    router.push(nextPath);
+    router.refresh();
   }
 
   return (
@@ -41,31 +86,37 @@ export function BankSelection() {
         <p>Escolha seus bancos e corretoras. Vamos usar isso pra mostrar os produtos que cada um oferece.</p>
         <div className="bank-list">
           {institutions.map((institution) => {
-            const active = selected.includes(institution.name);
+            const active = selected.includes(institution.id);
             return (
-              <button type="button" key={institution.name} data-selected={active} onClick={() => toggle(institution.name)}>
-                <span className="bank-initial" style={{ background: institution.color }}>{institution.initial}</span>
+              <button type="button" key={institution.id} data-selected={active} onClick={() => toggle(institution.id)}>
+                <span className="bank-initial" style={{ background: `var(--${institution.color_token})` }}>{institution.initial}</span>
                 <strong>{institution.name}</strong>
                 <span className="bank-check">{active ? "✓" : ""}</span>
               </button>
             );
           })}
-          {selected.filter((name) => !institutions.some((institution) => institution.name === name)).map((name) => (
-            <button type="button" key={name} data-selected onClick={() => toggle(name)}>
-              <span className="bank-initial">+</span><strong>{name}</strong><span className="bank-check">✓</span>
-            </button>
-          ))}
         </div>
         {adding ? (
           <div className="custom-bank">
-            <input value={custom} onChange={(event) => setCustom(event.target.value)} placeholder="Banco ou corretora" autoFocus />
-            <button type="button" onClick={addCustom}>adicionar</button>
+            <input value={custom} maxLength={80} onChange={(event) => setCustom(event.target.value)} placeholder="Banco ou corretora" autoFocus />
+            <button type="button" disabled={pending || custom.trim().length < 2} onClick={addCustom}>enviar</button>
           </div>
         ) : (
-          <button className="add-bank" type="button" onClick={() => setAdding(true)}>+ <span>Adicionar manualmente<small>Você poderá revisar os produtos depois</small></span></button>
+          <button className="add-bank" type="button" onClick={() => setAdding(true)}>+ <span>Adicionar manualmente<small>Entra em pesquisa e revisão; nada é publicado automaticamente</small></span></button>
         )}
-        <button className="button auth-submit" type="button" disabled={selected.length === 0} onClick={() => router.push("/onboarding/perfil")}>
-          {selected.length === 0 ? "Selecione pelo menos um" : `Continuar · ${selected.length} selecionado${selected.length > 1 ? "s" : ""}`}
+        {researchRequests.length > 0 ? <div className="bank-research-list">
+          <p className="eyebrow">Em pesquisa</p>
+          {researchRequests.map((request) => <span key={request.id}>
+            {request.requested_name}<small>aguardando revisão</small>
+          </span>)}
+        </div> : null}
+        {error ? <p className="form-error" role="alert">{error}</p> : null}
+        <button className="button auth-submit" type="button" disabled={selected.length === 0 || pending} onClick={save}>
+          {pending
+            ? "Salvando…"
+            : selected.length === 0
+              ? "Selecione pelo menos um"
+              : `Continuar · ${selected.length} selecionado${selected.length > 1 ? "s" : ""}`}
         </button>
       </section>
     </main>
