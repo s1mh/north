@@ -10,6 +10,7 @@ produção**.
 - [Plano de implementação](docs/PLANO_DE_IMPLEMENTACAO.md)
 - [Arquitetura e modelo de dados](docs/ARQUITETURA_E_DADOS.md)
 - [Baseline de segurança](docs/SEGURANCA.md)
+- [PWA, atualização e temas](docs/PWA_E_TEMAS.md)
 - [Handoff e protótipo originais](docs/reference/prototype/README.md)
 - [Política para relatos de vulnerabilidade](SECURITY.md)
 

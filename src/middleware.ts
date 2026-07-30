@@ -45,6 +45,7 @@ export const config = {
     "/assistente/:path*",
     "/metas/:path*",
     "/produtos/:path*",
+    "/perfil/:path*",
     "/onboarding/:path*",
     "/redefinir-senha/:path*",
   ],
