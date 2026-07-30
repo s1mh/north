@@ -17,8 +17,10 @@ npm run dev
 ```
 
 Copie a URL e a chave publicável exibidas pelo `supabase status` para
-`.env.local`. A chave secreta local só será necessária para jobs
-administrativos. Rode `supabase test db` para comprovar o isolamento RLS.
+`.env.local`. Copie também `SECRET_KEY` para `SUPABASE_SECRET_KEY`; ela é
+necessária no servidor para a exclusão de conta e para jobs administrativos.
+Nunca exponha o resultado completo do comando em mensagens ou screenshots.
+Rode `supabase test db` para comprovar o isolamento RLS.
 
 ## 2. Supabase
 
@@ -43,7 +45,7 @@ raiz. Configure separadamente os escopos Preview e Production:
 
 - `NEXT_PUBLIC_SUPABASE_URL`;
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`;
-- `SUPABASE_SECRET_KEY` (somente quando um job privilegiado existir);
+- `SUPABASE_SECRET_KEY` (server-side; exclusão de conta e jobs privilegiados);
 - `LLM_API_KEY`, `MARKET_DATA_API_KEY` e `CRON_SECRET` apenas nos marcos que
   utilizarem essas integrações;
 - `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` antes de introduzir Server Actions.
