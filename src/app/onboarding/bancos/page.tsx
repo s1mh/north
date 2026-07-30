@@ -24,7 +24,9 @@ export default async function BanksPage({
       .order("created_at"),
     searchParams,
   ]);
-  const nextPath = params.next === "/produtos" ? "/produtos" : "/onboarding/perfil";
+  const nextPath = params.next === "/produtos" || params.next === "/perfil"
+    ? params.next
+    : "/onboarding/perfil";
 
   return <BankSelection
     institutions={(institutions ?? []) as Institution[]}
