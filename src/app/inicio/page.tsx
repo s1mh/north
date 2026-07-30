@@ -118,6 +118,7 @@ export default async function Home() {
     contributions: goal.goal_contributions.map((item) => item.amount),
     plannedMonthlyAmount: goalPlan?.amount,
   }) : null;
+  const goalNeedsPace = Boolean(goalProgress && goalProgress.monthlyGapCents > 0n);
 
   return <AppShell active="/inicio">
     <p className="eyebrow">Seu patrimônio</p>
@@ -177,14 +178,18 @@ export default async function Home() {
         <div><p className="eyebrow">North observa</p><h2>Próximo passo</h2></div>
       </div>
       <article className="editorial">
-        <p className="eyebrow">Carteira cadastrada</p>
-        <h3>{positions.length > 0
-          ? `${positions.length} ${positions.length === 1 ? "posição está" : "posições estão"} no seu histórico.`
-          : "Comece pelo que você já possui."}</h3>
-        <p>{positions.length > 0
-          ? "O patrimônio e a distribuição acima são derivados das movimentações registradas, sem estimativas inventadas."
-          : "Cadastre suas compras para transformar o protótipo em um retrato real do seu patrimônio."}</p>
-        <footer><span>Informação educacional</span><Link href="/carteira">Abrir carteira →</Link></footer>
+        <p className="eyebrow">{goalNeedsPace ? "Ritmo da meta" : "Carteira cadastrada"}</p>
+        <h3>{goalNeedsPace
+          ? `Seu plano está ${formatMoneyFromCents(goalProgress!.monthlyGapCents)} abaixo do ritmo mensal.`
+          : positions.length > 0
+            ? `${positions.length} ${positions.length === 1 ? "posição está" : "posições estão"} no seu histórico.`
+            : "Comece pelo que você já possui."}</h3>
+        <p>{goalNeedsPace
+          ? "O North dividiu o valor restante pelo prazo, sem supor rentabilidade. Abra o assistente para entender os dados usados."
+          : positions.length > 0
+            ? "O patrimônio e a distribuição acima são derivados das movimentações registradas, sem estimativas inventadas."
+            : "Cadastre suas compras para transformar o protótipo em um retrato real do seu patrimônio."}</p>
+        <footer><span>Fato calculado pelo North</span><Link href="/assistente">Conversar →</Link></footer>
       </article>
     </section>
 
