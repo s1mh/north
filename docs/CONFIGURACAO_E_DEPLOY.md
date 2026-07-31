@@ -47,8 +47,8 @@ raiz. Configure separadamente os escopos Preview e Production:
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`;
 - `SUPABASE_SECRET_KEY` (server-side; exclusão de conta e jobs privilegiados);
 - `CRON_SECRET` para autenticar a coleta diária;
-- `AI_GATEWAY_API_KEY` apenas para desenvolvimento local fora da Vercel. Nos
-  deployments, o AI Gateway usa automaticamente o token OIDC da Vercel;
+- `AI_GATEWAY_API_KEY` server-side, com chave exclusiva por ambiente e orçamento
+  rígido. O OIDC continua disponível para operações administrativas da Vercel;
 - `MARKET_DATA_API_KEY` somente quando um futuro provedor licenciado exigir;
 - `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` antes de introduzir Server Actions.
 
@@ -61,13 +61,23 @@ O assistente usa o Vercel AI Gateway no servidor, com modelo primário de baixo
 custo e fallback de outro provedor. A resposta é estruturada, recebe disclaimer
 no servidor e não inclui nome, e-mail nem IDs estáveis no prompt.
 
-Em Staging na Vercel, habilite o AI Gateway e use o OIDC automático, sem criar
-uma chave estática. Para executar a integração remotamente fora da Vercel,
-grave `AI_GATEWAY_API_KEY` apenas no ambiente local. O endpoint mantém
-autenticação, rate limit, timeout, validação da resposta e logs redigidos.
+Em Staging na Vercel, use uma chave exclusiva do AI Gateway salva como variável
+sensível. A chave `north-staging` tem orçamento de US$ 5 por mês e alertas em
+50%, 75% e 100%. O endpoint mantém autenticação, reserva da cota antes da
+chamada paga, limite de 20 interações por usuário a cada hora, timeout,
+validação da resposta e logs redigidos.
 
-Configure um limite de gastos no painel antes dos testes. O aplicativo pode
-voltar à resposta local controlada quando o gateway não está configurado.
+O modelo primário é `openai/gpt-5.6-luna`, com
+`anthropic/claude-haiku-4.5` como fallback. As chamadas recusam treinamento com
+os prompts, limitam a saída a 500 tokens e usam um identificador de usuário
+irreversível apenas para atribuição de consumo. O aplicativo volta à resposta
+local controlada quando o gateway, o orçamento ou o provedor não está
+disponível.
+
+Planos pagos, aumento de cota e integração com gateway de pagamento ficam
+explicitamente fora do Staging doméstico. Antes de lançar essa cobrança em
+produção, definir entitlement server-side, preços, limites por plano, webhooks
+idempotentes, cancelamento, reembolso e textos jurídicos.
 
 ## 5. Checklist de produção
 

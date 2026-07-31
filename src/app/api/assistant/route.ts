@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { assistantQuestionSchema, redactSensitiveText } from "@/features/assistant/policy";
 import { ASSISTANT_PROMPT_VERSION, runAssistantGateway } from "@/server/assistant/gateway";
 import { loadAssistantContext } from "@/server/assistant/context";
@@ -38,16 +39,39 @@ export async function POST(request: Request) {
 
   const redactedMessage = redactSensitiveText(parsed.data.message);
   const { context, sourceRefs, contextHash } = await loadAssistantContext(supabase);
+  const { data: generationId, error: claimError } = await supabase.rpc(
+    "claim_assistant_generation",
+    {
+      p_prompt_version: ASSISTANT_PROMPT_VERSION,
+      p_context_hash: contextHash,
+      p_source_refs: sourceRefs,
+      p_input_chars: Array.from(redactedMessage).length,
+    },
+  );
+  if (claimError || !generationId) {
+    const rateLimited = claimError?.message.includes("assistant rate limit");
+    return NextResponse.json(
+      {
+        error: rateLimited
+          ? "Você atingiu o limite de 20 perguntas por hora. Tente novamente mais tarde."
+          : "Não foi possível reservar esta interação agora.",
+      },
+      { status: rateLimited ? 429 : 500, headers: privateHeaders },
+    );
+  }
+
   const generation = await runAssistantGateway({
     question: redactedMessage,
     context,
+    userRef: createHash("sha256").update(user.id).digest("hex"),
     provider: hasVercelAiGatewayCredentials()
       ? createVercelAssistantProvider()
       : undefined,
-    timeoutMs: 8_000,
+    timeoutMs: 15_000,
   });
   const title = redactedMessage.slice(0, 80);
-  const { data: threadId, error } = await supabase.rpc("save_assistant_exchange", {
+  const { data: threadId, error } = await supabase.rpc("save_claimed_assistant_exchange", {
+    p_generation_id: generationId,
     p_thread_id: parsed.data.threadId,
     p_title: title,
     p_user_content: redactedMessage,
@@ -59,18 +83,15 @@ export async function POST(request: Request) {
     p_source_refs: sourceRefs,
   });
   if (error) {
-    const rateLimited = error.message.includes("assistant rate limit");
     const unavailableThread = error.code === "42501";
     return NextResponse.json(
       {
-        error: rateLimited
-          ? "Você atingiu o limite de 20 perguntas por hora. Tente novamente mais tarde."
-          : unavailableThread
+        error: unavailableThread
             ? "Essa conversa não está mais disponível."
             : "Não foi possível responder agora.",
       },
       {
-        status: rateLimited ? 429 : unavailableThread ? 404 : 500,
+        status: unavailableThread ? 404 : 500,
         headers: privateHeaders,
       },
     );
