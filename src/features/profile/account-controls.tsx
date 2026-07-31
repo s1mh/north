@@ -9,6 +9,9 @@ export function AccountControls() {
   const [confirming, setConfirming] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [password, setPassword] = useState("");
+  const canDelete = confirmation === ACCOUNT_DELETION_PHRASE && password.length >= 10;
 
   async function deleteAccount(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,6 +67,8 @@ export function AccountControls() {
         <span>Digite {ACCOUNT_DELETION_PHRASE}</span>
         <input
           name="confirmation"
+          value={confirmation}
+          onChange={(event) => setConfirmation(event.target.value)}
           required
           autoComplete="off"
           spellCheck={false}
@@ -74,6 +79,8 @@ export function AccountControls() {
         <input
           name="password"
           type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
           required
           minLength={10}
           maxLength={128}
@@ -81,7 +88,7 @@ export function AccountControls() {
         />
       </label>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <button className="account-delete-confirm" type="submit" disabled={pending}>
+      <button className="account-delete-confirm" type="submit" disabled={pending || !canDelete}>
         {pending ? "Excluindo…" : "Excluir definitivamente"}
       </button>
       <button
@@ -91,6 +98,8 @@ export function AccountControls() {
         onClick={() => {
           setConfirming(false);
           setError("");
+          setConfirmation("");
+          setPassword("");
         }}
       >
         Cancelar

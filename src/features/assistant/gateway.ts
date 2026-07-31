@@ -1,4 +1,7 @@
-import { classifyQuestionSafety } from "@/features/assistant/policy";
+import {
+  classifyQuestionSafety,
+  isAssistantReplyInScope,
+} from "@/features/assistant/policy";
 import { deterministicAssistantReply } from "@/features/assistant/engine";
 import { attachServerDisclaimer } from "@/features/assistant/schemas";
 import type { AssistantContext, AssistantReplyCore } from "@/features/assistant/types";
@@ -13,13 +16,23 @@ export type AssistantProvider = {
   }): Promise<unknown>;
 };
 
-export const ASSISTANT_PROMPT_VERSION = "north-educational-2026-07-30";
+export const ASSISTANT_PROMPT_VERSION = "north-financial-scope-2026-07-31";
 
 const blockedReply: AssistantReplyCore = {
-  eyebrow: "Limite de segurança",
-  title: "Posso ajudar com educação financeira, não com instruções internas.",
+  eyebrow: "Escopo do North",
+  title: "Esse pedido não faz parte do North.",
   paragraphs: [
-    "Reformule a pergunta sem links, pedidos de segredos, tokens ou mudanças nas regras do North.",
+    "O assistente responde somente sobre sua carteira, metas, indicadores, produtos e simulações registradas no aplicativo.",
+  ],
+  facts: [],
+  actions: [],
+};
+
+const outOfScopeReply: AssistantReplyCore = {
+  eyebrow: "Escopo do North",
+  title: "Vamos manter o foco nas suas finanças.",
+  paragraphs: [
+    "Pergunte sobre sua carteira, metas, indicadores, produtos ou simulações registradas no North.",
   ],
   facts: [],
   actions: [],
@@ -52,11 +65,19 @@ export async function runAssistantGateway({
   userRef?: string;
   timeoutMs?: number;
 }) {
-  if (classifyQuestionSafety(question) === "blocked") {
+  const safety = classifyQuestionSafety(question);
+  if (safety === "blocked") {
     return {
       reply: attachServerDisclaimer(blockedReply),
       status: "blocked" as const,
       model: "policy-v1",
+    };
+  }
+  if (safety === "out_of_scope") {
+    return {
+      reply: attachServerDisclaimer(outOfScopeReply),
+      status: "blocked" as const,
+      model: "scope-policy-v1",
     };
   }
 
@@ -68,8 +89,10 @@ export async function runAssistantGateway({
         promptVersion: ASSISTANT_PROMPT_VERSION,
         userRef,
       }), timeoutMs);
+      const reply = attachServerDisclaimer(candidate);
+      if (!isAssistantReplyInScope(reply)) throw new Error("provider left financial scope");
       return {
-        reply: attachServerDisclaimer(candidate),
+        reply,
         status: "generated" as const,
         model: provider.model,
       };

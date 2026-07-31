@@ -4,6 +4,8 @@ import {
   scoreAnswers,
 } from "@/features/suitability/questionnaire";
 import { suitabilitySubmissionSchema } from "@/features/suitability/submission";
+import { sendWelcomeEmail } from "@/server/email/welcome";
+import { getPrivateEnv } from "@/server/env/private";
 import { createClient } from "@/server/supabase/client";
 
 const privateHeaders = { "Cache-Control": "private, no-store" };
@@ -32,6 +34,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Responda todo o questionário." }, { status: 400, headers: privateHeaders });
   }
 
+  const { data: profileBefore } = await supabase
+    .from("profiles")
+    .select("current_assessment_id")
+    .eq("id", user.id)
+    .maybeSingle();
+  const isFirstCompletion = profileBefore?.current_assessment_id === null;
+
   const { error } = await supabase.rpc("complete_suitability", {
     p_answers: parsed.data.answers,
     p_questionnaire_version: QUESTIONNAIRE_VERSION,
@@ -41,6 +50,16 @@ export async function POST(request: Request) {
       { error: "Não foi possível salvar seu perfil agora." },
       { status: 500, headers: privateHeaders },
     );
+  }
+
+  if (isFirstCompletion && user.email) {
+    const { RESEND_API_KEY } = getPrivateEnv();
+    await sendWelcomeEmail({
+      apiKey: RESEND_API_KEY,
+      appUrl: new URL(request.url).origin,
+      to: user.email,
+      userId: user.id,
+    }).catch(() => "failed");
   }
 
   return NextResponse.json(result, { headers: privateHeaders });

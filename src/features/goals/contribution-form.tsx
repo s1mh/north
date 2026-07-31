@@ -42,7 +42,7 @@ export function GoalContributionForm({ goalId }: { goalId: string }) {
     </div>
     <div className="portfolio-field-row">
       <label className="auth-field"><span>Valor reservado</span>
-        <input name="amount" required inputMode="decimal" placeholder="500,00" />
+        <input name="amount" required inputMode="decimal" pattern="^\\d+(?:[,.]\\d{1,2})?$" title="Use um valor positivo com até duas casas decimais" placeholder="500,00" />
       </label>
       <label className="auth-field"><span>Data</span>
         <input name="contributedOn" type="date" required max={todayInSaoPaulo()} defaultValue={todayInSaoPaulo()} />

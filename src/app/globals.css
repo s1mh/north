@@ -84,6 +84,14 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .goal-history article > div { display:flex; flex-direction:column; gap:3px; }
 .goal-history article strong { font-size:12px; }
 .goal-history article span { color:var(--muted2); font-size:9.5px; }
+.goal-history article[data-reversed="true"] { opacity:.58; }
+.goal-history article[data-reversed="true"] strong { text-decoration:line-through; }
+.goal-contribution-meta { display:flex; align-items:flex-end; flex-direction:column; gap:5px; }
+.goal-contribution-reverse { padding:4px 0; border:0; color:var(--muted); background:transparent; font-size:9px; font-weight:800; text-decoration:underline; cursor:pointer; }
+.goal-contribution-reversal { width:min(210px, 48vw); display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.goal-contribution-reversal input { grid-column:1 / -1; min-width:0; padding:7px 8px; border:1px solid var(--line); border-radius:7px; background:var(--surface); font-size:10px; }
+.goal-contribution-reversal button { min-height:30px; padding:4px 6px; border:1px solid var(--line); border-radius:7px; background:var(--surface); font-size:9px; font-weight:800; cursor:pointer; }
+.goal-contribution-reversal .form-error { grid-column:1 / -1; margin:0; }
 .investment-page { width:100%; }
 .investment-heading h1 { margin:0; font-size:clamp(40px, 12vw, 54px); line-height:.92; letter-spacing:-.06em; }
 .investment-mode { margin-top:18px; padding:4px; display:grid; grid-template-columns:1fr 1fr; border-radius:999px; background:var(--line); }
