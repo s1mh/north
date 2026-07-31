@@ -229,6 +229,14 @@ Gate de saída:
 - resposta não inventa saldo, posição, preço ou fonte;
 - fallback seguro quando a IA está indisponível.
 
+Escopo posterior ao uso doméstico:
+
+- oferecer mais interações de IA apenas por entitlement de plano pago;
+- integrar cobrança somente na preparação de produção, com webhooks
+  idempotentes e limite server-side independente da interface;
+- manter uma cota gratuita controlada e fallback determinístico mesmo após a
+  monetização.
+
 ### Marco 6 — bancos e produtos
 
 Entregas:
