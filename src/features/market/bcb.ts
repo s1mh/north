@@ -1,13 +1,5 @@
 import { z } from "zod";
-
-export type MarketIndicator = {
-  code: string;
-  sourceSeries: string;
-  label: string;
-  value: number;
-  unit: "percent_year" | "percent_month";
-  observedOn: string;
-};
+import type { MarketIndicator } from "@/features/market/types";
 
 export const BCB_SERIES = [
   {

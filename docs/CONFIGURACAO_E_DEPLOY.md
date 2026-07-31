@@ -46,8 +46,10 @@ raiz. Configure separadamente os escopos Preview e Production:
 - `NEXT_PUBLIC_SUPABASE_URL`;
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`;
 - `SUPABASE_SECRET_KEY` (server-side; exclusão de conta e jobs privilegiados);
-- `LLM_API_KEY`, `MARKET_DATA_API_KEY` e `CRON_SECRET` apenas nos marcos que
-  utilizarem essas integrações;
+- `CRON_SECRET` para autenticar a coleta diária;
+- `AI_GATEWAY_API_KEY` apenas para desenvolvimento local fora da Vercel. Nos
+  deployments, o AI Gateway usa automaticamente o token OIDC da Vercel;
+- `MARKET_DATA_API_KEY` somente quando um futuro provedor licenciado exigir;
 - `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` antes de introduzir Server Actions.
 
 O Preview deve apontar exclusivamente para o projeto não produtivo. Ative
@@ -55,15 +57,17 @@ Deployment Protection em Staging e revisão obrigatória antes da promoção.
 
 ## 4. Provedor de IA
 
-A chave ainda não é consumida nesta fundação. Antes de ativar o gateway:
+O assistente usa o Vercel AI Gateway no servidor, com modelo primário de baixo
+custo e fallback de outro provedor. A resposta é estruturada, recebe disclaimer
+no servidor e não inclui nome, e-mail nem IDs estáveis no prompt.
 
-1. escolha provedor, região, retenção, política de treinamento e contrato;
-2. salve `LLM_API_KEY` somente no cofre da Vercel;
-3. implemente a chamada em `src/server/ai`, nunca em Client Components;
-4. envie somente agregados mínimos, sem nome, e-mail ou IDs estáveis;
-5. valide resposta estruturada e acrescente o disclaimer no servidor;
-6. aplique autenticação, rate limit, orçamento, timeout e fallback;
-7. registre apenas versão, status e métricas redigidas.
+Em Staging na Vercel, habilite o AI Gateway e use o OIDC automático, sem criar
+uma chave estática. Para executar a integração remotamente fora da Vercel,
+grave `AI_GATEWAY_API_KEY` apenas no ambiente local. O endpoint mantém
+autenticação, rate limit, timeout, validação da resposta e logs redigidos.
+
+Configure um limite de gastos no painel antes dos testes. O aplicativo pode
+voltar à resposta local controlada quando o gateway não está configurado.
 
 ## 5. Checklist de produção
 

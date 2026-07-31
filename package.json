@@ -2,7 +2,9 @@
   "name": "north",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": "20.x" },
+  "engines": {
+    "node": "20.x"
+  },
   "packageManager": "npm@11.4.2",
   "scripts": {
     "dev": "next dev --turbopack",
@@ -17,7 +19,9 @@
   "dependencies": {
     "@supabase/ssr": "0.7.0",
     "@supabase/supabase-js": "2.57.4",
-    "next": "15.5.7",
+    "ai": "6.0.237",
+    "fflate": "0.8.3",
+    "next": "15.5.22",
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "server-only": "0.0.1",
@@ -31,9 +35,15 @@
     "@types/react": "19.1.16",
     "@types/react-dom": "19.1.9",
     "eslint": "9.39.1",
-    "eslint-config-next": "15.5.7",
+    "eslint-config-next": "15.5.22",
     "jsdom": "27.1.0",
     "typescript": "5.9.3",
-    "vitest": "4.0.8"
+    "vitest": "4.1.10"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.25",
+      "sharp": "0.35.0"
+    }
   }
 }
