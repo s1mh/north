@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { AccountControls } from "@/features/profile/account-controls";
 import type { ThemePreference } from "@/features/profile/theme";
 import { ThemeControl } from "@/features/profile/theme-control";
 import { createClient } from "@/server/supabase/client";
@@ -67,5 +68,7 @@ export default async function ProfilePage() {
       <h2>North no seu aparelho</h2>
       <p>Use “Adicionar à Tela de Início” no menu do navegador. Sem internet, o North não exibe cópias antigas dos seus dados.</p>
     </section>
+
+    <AccountControls />
   </AppShell>;
 }

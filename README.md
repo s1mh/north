@@ -11,6 +11,8 @@ produção**.
 - [Arquitetura e modelo de dados](docs/ARQUITETURA_E_DADOS.md)
 - [Baseline de segurança](docs/SEGURANCA.md)
 - [PWA, atualização e temas](docs/PWA_E_TEMAS.md)
+- [Exportação e exclusão de dados](docs/DIREITOS_SOBRE_DADOS.md)
+- [Runbooks operacionais](docs/RUNBOOKS_OPERACIONAIS.md)
 - [Handoff e protótipo originais](docs/reference/prototype/README.md)
 - [Política para relatos de vulnerabilidade](SECURITY.md)
 
