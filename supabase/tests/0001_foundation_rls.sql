@@ -1,4 +1,6 @@
 begin;
+set local role postgres;
+set local search_path = public, extensions;
 select plan(13);
 
 select has_table('public'::name, 'profiles'::name);
@@ -48,7 +50,7 @@ select lives_ok($$ update public.goals set name = 'Ataque' where user_id = '0000
 select lives_ok($$ delete from public.goals where user_id = '00000000-0000-0000-0000-000000000001' $$, 'cross-owner delete exposes no row');
 select is((select count(*) from public.goals), 0::bigint, 'Ana goal remains invisible');
 
-reset role;
+set local role postgres;
 select is((select count(*) from public.goals where name = 'Reserva da Ana'), 1::bigint, 'Ana goal was not changed or deleted');
 select * from finish();
 rollback;

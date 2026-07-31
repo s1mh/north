@@ -1,4 +1,6 @@
 begin;
+set local role postgres;
+set local search_path = public, extensions;
 
 create extension if not exists pgtap;
 select plan(23);
@@ -164,7 +166,7 @@ select throws_ok(
   'another user cannot contribute to the owner goal'
 );
 
-reset role;
+set local role postgres;
 set local role anon;
 select throws_ok(
   $$ select * from public.goal_contributions $$,

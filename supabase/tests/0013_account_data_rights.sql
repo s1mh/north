@@ -1,4 +1,6 @@
 begin;
+set local role postgres;
+set local search_path = public, extensions;
 
 create extension if not exists pgtap;
 select plan(13);
@@ -115,7 +117,7 @@ select throws_ok(
   'anonymous users cannot read operational deletion events'
 );
 
-reset role;
+set local role postgres;
 select lives_ok(
   $$ delete from auth.users where id = '00000000-0000-0000-0000-000000000018' $$,
   'account deletion cascades through the portfolio chain'

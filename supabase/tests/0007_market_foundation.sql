@@ -1,4 +1,6 @@
 begin;
+set local role postgres;
+set local search_path = public, extensions;
 
 create extension if not exists pgtap;
 select plan(20);
@@ -82,7 +84,7 @@ select throws_ok(
   'operational alerts are not exposed to authenticated users'
 );
 
-reset role;
+set local role postgres;
 set local role anon;
 select throws_ok(
   $$ select * from public.market_indicators $$,
