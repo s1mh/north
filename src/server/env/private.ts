@@ -8,7 +8,7 @@ const optionalSecret = (minimum: number) => z.preprocess(
 
 const privateEnvSchema = z.object({
   SUPABASE_SECRET_KEY: optionalSecret(20),
-  LLM_API_KEY: optionalSecret(20),
+  AI_GATEWAY_API_KEY: optionalSecret(20),
   MARKET_DATA_API_KEY: optionalSecret(20),
   CRON_SECRET: optionalSecret(32),
 });
@@ -16,7 +16,7 @@ const privateEnvSchema = z.object({
 export function getPrivateEnv() {
   return parsePrivateEnv({
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
-    LLM_API_KEY: process.env.LLM_API_KEY,
+    AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
     MARKET_DATA_API_KEY: process.env.MARKET_DATA_API_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
   });
