@@ -32,8 +32,8 @@ Principais cenários de ameaça:
 | `NEXT_PUBLIC_SUPABASE_URL` | sim | identifica o projeto Supabase |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | sim | acesso sujeito a grants e RLS |
 | `SUPABASE_SECRET_KEY` | nunca | job administrativo isolado |
-| `LLM_API_KEY` | nunca | gateway server-only |
-| `MARKET_DATA_API_KEY` | nunca | adapter de ingestão |
+| `AI_GATEWAY_API_KEY` | nunca | gateway server-only fora da Vercel; deployments usam OIDC |
+| `MARKET_DATA_API_KEY` | nunca | futuro adapter licenciado que exigir chave |
 | `CRON_SECRET` | nunca | autentica invocação do cron |
 | `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | nunca | chave comum entre instâncias |
 
