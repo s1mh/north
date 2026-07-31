@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { resolveAuthenticatedDestination } from "@/features/auth/onboarding";
 import { getPublicEnv } from "@/server/env/public";
 
 export async function middleware(request: NextRequest) {
@@ -31,6 +32,31 @@ export async function middleware(request: NextRequest) {
       redirect.cookies.set(cookie);
     }
     return redirect;
+  }
+  const isOnboardingRoute = request.nextUrl.pathname.startsWith("/onboarding/");
+  const isPasswordResetRoute = request.nextUrl.pathname.startsWith("/redefinir-senha");
+  if (!isOnboardingRoute && !isPasswordResetRoute) {
+    const [profileResult, institutionResult] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("onboarding, current_assessment_id")
+        .maybeSingle(),
+      supabase
+        .from("user_institutions")
+        .select("*", { count: "exact", head: true }),
+    ]);
+    if (!profileResult.error && profileResult.data) {
+      const destination = resolveAuthenticatedDestination({
+        onboarding: profileResult.data.onboarding,
+        currentAssessmentId: profileResult.data.current_assessment_id,
+        linkedInstitutionCount: institutionResult.count,
+      });
+      if (destination !== "/inicio") {
+        const redirect = NextResponse.redirect(new URL(destination, request.url));
+        for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+        return redirect;
+      }
+    }
   }
   response.headers.set("Cache-Control", "private, no-store");
   return response;

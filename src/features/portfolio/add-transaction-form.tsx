@@ -78,19 +78,19 @@ export function AddTransactionForm({
     {changesPosition ? <>
       <div className="portfolio-field-row">
         <label className="auth-field"><span>Quantidade</span>
-          <input name="quantity" required inputMode="decimal" placeholder="10" />
+          <input name="quantity" required inputMode="decimal" pattern="^\\d+(?:[,.]\\d+)?$" title="Use apenas números e um separador decimal" placeholder="10" />
         </label>
         <label className="auth-field"><span>Preço unitário</span>
-          <input name="unitPrice" required inputMode="decimal" placeholder="37,50" />
+          <input name="unitPrice" required inputMode="decimal" pattern="^\\d+(?:[,.]\\d{1,2})?$" title="Use um valor positivo com até duas casas decimais" placeholder="37,50" />
         </label>
       </div>
       <label className="auth-field"><span>Taxas da operação</span>
-        <input name="fees" required inputMode="decimal" defaultValue="0,00" />
+        <input name="fees" required inputMode="decimal" pattern="^\\d+(?:[,.]\\d{1,2})?$" title="Informe uma taxa igual ou maior que zero" defaultValue="0,00" />
       </label>
       <input type="hidden" name="cashAmount" value="0" />
     </> : <>
       <label className="auth-field"><span>{transactionType === "rendimento" ? "Valor recebido" : "Valor da taxa"}</span>
-        <input name="cashAmount" required inputMode="decimal" placeholder="25,00" />
+        <input name="cashAmount" required inputMode="decimal" pattern="^\\d+(?:[,.]\\d{1,2})?$" title="Use um valor positivo com até duas casas decimais" placeholder="25,00" />
       </label>
       <input type="hidden" name="quantity" value="0" />
       <input type="hidden" name="unitPrice" value="0" />

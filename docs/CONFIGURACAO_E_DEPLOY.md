@@ -35,6 +35,20 @@ mesma região definida pela política LGPD. Em cada projeto:
    a decisão de produto estiver registrada;
 6. rode os testes RLS antes de promover a migration.
 
+No ambiente hospedado, defina `Site URL` como o domínio canônico daquele
+ambiente e permita explicitamente `/auth/callback`. O Staging atual usa
+`https://north-alpha.vercel.app` e
+`https://north-alpha.vercel.app/auth/callback`. Configure o Resend como SMTP
+do Auth (`smtp.resend.com`, porta 465, usuário `resend`) e use uma chave
+exclusiva como senha. O remetente deve pertencer a um domínio verificado no
+Resend. Copie os assuntos e conteúdos versionados em `supabase/templates/`
+para os templates hospedados de confirmação e recuperação.
+
+O e-mail de boas-vindas é disparado pelo servidor somente na primeira conclusão
+do onboarding. Crie no Resend uma segunda chave com acesso de envio restrito a
+`auth.usenorthapp.com.br` e cadastre-a como `RESEND_API_KEY` no ambiente da
+Vercel. Essa chave não é pública e não pode usar o prefixo `NEXT_PUBLIC_`.
+
 Não edite o schema apenas pelo Dashboard. Nunca use a chave secreta em código
 cliente, Preview público ou requisições normais de usuário.
 

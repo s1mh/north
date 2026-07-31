@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { goalContributionSchema, goalSchema } from "@/features/goals/submission";
+import {
+  goalContributionReversalSchema,
+  goalContributionSchema,
+  goalSchema,
+} from "@/features/goals/submission";
 
 describe("goal submissions", () => {
   it("normalizes Brazilian money without using floating point", () => {
@@ -51,6 +55,17 @@ describe("goal submissions", () => {
       amount: "250,50",
       contributedOn: "2030-01-01",
       note: "",
+    }).success).toBe(false);
+  });
+
+  it("requires an explicit reason to reverse a contribution", () => {
+    expect(goalContributionReversalSchema.safeParse({
+      contributionId: crypto.randomUUID(),
+      reason: "Lançamento duplicado",
+    }).success).toBe(true);
+    expect(goalContributionReversalSchema.safeParse({
+      contributionId: crypto.randomUUID(),
+      reason: "x",
     }).success).toBe(false);
   });
 });

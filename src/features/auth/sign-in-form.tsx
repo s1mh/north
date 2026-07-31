@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { resolveAuthenticatedDestination } from "@/features/auth/onboarding";
 import { signInSchema } from "./auth-schema";
 
 export function SignInForm() {
@@ -30,7 +31,20 @@ export function SignInForm() {
       const supabase = createClient();
       const { error: signInError } = await supabase.auth.signInWithPassword(parsed.data);
       if (signInError) throw signInError;
-      router.push("/inicio");
+      const [{ data: profile }, { count: linkedInstitutionCount }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("onboarding, current_assessment_id")
+          .maybeSingle(),
+        supabase
+          .from("user_institutions")
+          .select("*", { count: "exact", head: true }),
+      ]);
+      router.push(resolveAuthenticatedDestination({
+        onboarding: profile?.onboarding,
+        currentAssessmentId: profile?.current_assessment_id,
+        linkedInstitutionCount,
+      }));
       router.refresh();
     } catch {
       setError("E-mail ou senha incorretos.");

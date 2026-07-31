@@ -23,7 +23,7 @@ describe("Vercel assistant provider", () => {
     })) as Record<string, unknown>;
 
     expect(prompt).toEqual({
-      task: "Explique a pergunta usando somente o contexto validado.",
+      task: "Responda somente sobre finanças pessoais usando o contexto validado do North.",
       promptVersion: "test-v1",
       question: "Como está minha carteira?",
       context: assistantContextFixture,
