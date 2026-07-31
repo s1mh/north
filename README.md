@@ -23,7 +23,7 @@ migration inicial e testes RLS entre duas contas.
 
 ## Começar
 
-Com Node 20, Docker e a Supabase CLI instalados:
+Com Node 24, Docker e a Supabase CLI instalados:
 
 ```bash
 npm install

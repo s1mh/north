@@ -50,6 +50,27 @@ describe("BCB adapter", () => {
     )).toThrow("bcb_future_date");
   });
 
+  it("uses the latest observation already effective in São Paulo", () => {
+    expect(parseBcbPayload(
+      BCB_SERIES[0],
+      [
+        { data: "30/07/2026", valor: "15.00" },
+        { data: "31/07/2026", valor: "14.75" },
+        { data: "05/08/2026", valor: "14.25" },
+      ],
+      new Date("2026-07-31T12:00:00Z"),
+    )).toMatchObject({ observedOn: "2026-07-31", value: 14.75 });
+
+    expect(parseBcbPayload(
+      BCB_SERIES[0],
+      [
+        { data: "30/07/2026", valor: "15.00" },
+        { data: "31/07/2026", valor: "14.75" },
+      ],
+      new Date("2026-07-31T01:00:00Z"),
+    )).toMatchObject({ observedOn: "2026-07-30", value: 15 });
+  });
+
   it("retries a transient failure with a bounded number of calls", async () => {
     const fetcher = vi.fn()
       .mockResolvedValueOnce(new Response("unavailable", { status: 503 }))
@@ -63,6 +84,7 @@ describe("BCB adapter", () => {
       retryDelayMs: 0,
     })).resolves.toMatchObject({ code: "selic_target", value: 15 });
     expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher.mock.calls[0]?.[0]).toContain("ultimos/10");
   });
 
   it("refuses oversized payloads", async () => {
