@@ -6,7 +6,7 @@ credenciais entre Preview e Produção.
 
 ## 1. Desenvolvimento local
 
-Pré-requisitos: Node 20, Docker e Supabase CLI.
+Pré-requisitos: Node 24, Docker e Supabase CLI.
 
 ```bash
 npm install
