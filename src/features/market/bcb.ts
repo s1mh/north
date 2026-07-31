@@ -23,7 +23,16 @@ export const BCB_SERIES = [
 const bcbPayloadSchema = z.array(z.object({
   data: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/),
   valor: z.string().regex(/^-?\d+(?:[.,]\d+)?$/),
-}).strict()).length(1);
+}).strict()).min(1).max(20);
+
+function dateInSaoPaulo(now: Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
 
 export function parseBcbPayload(
   series: (typeof BCB_SERIES)[number],
@@ -31,27 +40,30 @@ export function parseBcbPayload(
   now = new Date(),
 ): MarketIndicator {
   const parsed = bcbPayloadSchema.parse(payload);
-  const { data, valor } = parsed[0]!;
-  const [day, month, year] = data.split("/");
-  const value = Number(valor.replace(",", "."));
+  const observations = parsed.map(({ data, valor }) => {
+    const [day, month, year] = data.split("/");
+    const observedOn = `${year}-${month}-${day}`;
+    const parsedDate = new Date(`${observedOn}T12:00:00Z`);
+    if (
+      Number.isNaN(parsedDate.valueOf())
+      || parsedDate.getUTCFullYear() !== Number(year)
+      || parsedDate.getUTCMonth() + 1 !== Number(month)
+      || parsedDate.getUTCDate() !== Number(day)
+    ) {
+      throw new Error("bcb_invalid_date");
+    }
+    return { observedOn, value: Number(valor.replace(",", ".")) };
+  });
+  const maximumObservedOn = dateInSaoPaulo(now);
+  const observation = observations
+    .filter(({ observedOn }) => observedOn <= maximumObservedOn)
+    .sort((left, right) => right.observedOn.localeCompare(left.observedOn))[0];
+  if (!observation) throw new Error("bcb_future_date");
+  const { observedOn, value } = observation;
 
   if (!Number.isFinite(value) || value < series.minimum || value > series.maximum) {
     throw new Error("bcb_value_out_of_range");
   }
-
-  const observedOn = `${year}-${month}-${day}`;
-  const parsedDate = new Date(`${observedOn}T12:00:00Z`);
-  if (
-    Number.isNaN(parsedDate.valueOf())
-    || parsedDate.getUTCFullYear() !== Number(year)
-    || parsedDate.getUTCMonth() + 1 !== Number(month)
-    || parsedDate.getUTCDate() !== Number(day)
-  ) {
-    throw new Error("bcb_invalid_date");
-  }
-  const maximumObservedDate = new Date(now);
-  maximumObservedDate.setUTCDate(maximumObservedDate.getUTCDate() + 1);
-  if (parsedDate > maximumObservedDate) throw new Error("bcb_future_date");
 
   return {
     code: series.code,
@@ -79,7 +91,7 @@ export async function fetchLatestBcbIndicator(
     retryDelayMs = 150,
   }: FetchLatestOptions = {},
 ) {
-  const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${series.sourceSeries}/dados/ultimos/1?formato=json`;
+  const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${series.sourceSeries}/dados/ultimos/10?formato=json`;
   let lastError: unknown;
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
