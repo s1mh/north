@@ -1,4 +1,6 @@
 begin;
+set local role postgres;
+set local search_path = public, extensions;
 
 create extension if not exists pgtap;
 select plan(9);
@@ -67,7 +69,7 @@ select is(
   'another user only changes own preference'
 );
 
-reset role;
+set local role postgres;
 select is(
   (
     select theme::text from public.profiles

@@ -1,4 +1,6 @@
 begin;
+set local role postgres;
+set local search_path = public, extensions;
 
 create extension if not exists pgtap;
 select plan(37);
@@ -152,7 +154,7 @@ select lives_ok(
   'different user can request same institution'
 );
 
-reset role;
+set local role postgres;
 select throws_ok(
   format(
     $$
