@@ -5,7 +5,7 @@ import type { AssistantProvider } from "@/features/assistant/gateway";
 import type { AssistantContext } from "@/features/assistant/types";
 
 export const PRIMARY_ASSISTANT_MODEL = "openai/gpt-5.6-luna";
-export const FALLBACK_ASSISTANT_MODEL = "google/gemini-3.5-flash-lite";
+export const FALLBACK_ASSISTANT_MODEL = "anthropic/claude-haiku-4.5";
 
 const SYSTEM_PROMPT = `Você é o assistente educacional do North.
 
@@ -49,17 +49,18 @@ export function createVercelAssistantProvider(): AssistantProvider {
     get model() {
       return resolvedModel;
     },
-    async generate({ question, context, promptVersion }) {
+    async generate({ question, context, promptVersion, userRef }) {
       const result = await generateText({
         model: PRIMARY_ASSISTANT_MODEL,
         system: SYSTEM_PROMPT,
         prompt: buildAssistantPrompt({ question, context, promptVersion }),
         output: Output.object({ schema: assistantReplyCoreSchema }),
-        maxOutputTokens: 900,
+        maxOutputTokens: 500,
         providerOptions: {
           gateway: {
             models: [FALLBACK_ASSISTANT_MODEL],
             disallowPromptTraining: true,
+            user: userRef,
             tags: ["environment:staging", "feature:north-assistant", promptVersion],
           },
         },

@@ -12,7 +12,7 @@ vi.mock("server-only", () => ({}));
 describe("Vercel assistant provider", () => {
   it("uses current, inexpensive models from two providers", () => {
     expect(PRIMARY_ASSISTANT_MODEL).toBe("openai/gpt-5.6-luna");
-    expect(FALLBACK_ASSISTANT_MODEL).toBe("google/gemini-3.5-flash-lite");
+    expect(FALLBACK_ASSISTANT_MODEL).toBe("anthropic/claude-haiku-4.5");
   });
 
   it("keeps the prompt limited to the redacted question and validated context", () => {
