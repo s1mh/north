@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { assistantQuestionSchema, redactSensitiveText } from "@/features/assistant/policy";
 import { ASSISTANT_PROMPT_VERSION, runAssistantGateway } from "@/server/assistant/gateway";
 import { loadAssistantContext } from "@/server/assistant/context";
+import {
+  createVercelAssistantProvider,
+  hasVercelAiGatewayCredentials,
+} from "@/server/assistant/vercel-provider";
 import { createClient } from "@/server/supabase/client";
 
 const privateHeaders = { "Cache-Control": "private, no-store" };
@@ -37,6 +41,10 @@ export async function POST(request: Request) {
   const generation = await runAssistantGateway({
     question: redactedMessage,
     context,
+    provider: hasVercelAiGatewayCredentials()
+      ? createVercelAssistantProvider()
+      : undefined,
+    timeoutMs: 8_000,
   });
   const title = redactedMessage.slice(0, 80);
   const { data: threadId, error } = await supabase.rpc("save_assistant_exchange", {

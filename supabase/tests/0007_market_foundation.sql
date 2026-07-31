@@ -3,7 +3,7 @@ set local role postgres;
 set local search_path = public, extensions;
 
 create extension if not exists pgtap;
-select plan(20);
+select plan(22);
 
 select has_table('public'::name, 'market_data_sources'::name);
 select has_table('public'::name, 'market_indicators'::name);
@@ -28,6 +28,20 @@ select is(
   1::bigint,
   'official BCB source is registered'
 );
+select is(
+  (select count(*) from public.market_data_sources where id = 'b3-public-eod'),
+  1::bigint,
+  'official B3 end-of-day source is registered'
+);
+select is(
+  (
+    select attribution
+    from public.market_data_sources
+    where id = 'b3-public-eod'
+  ),
+  'Fonte: B3 · fechamento oficial D-1',
+  'B3 source keeps its required attribution'
+);
 
 insert into public.market_indicators (
   source_id, code, source_series, label, value, unit, observed_on
@@ -39,7 +53,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000007', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
-select is((select count(*) from public.market_data_sources), 1::bigint, 'authenticated users read provenance');
+select is((select count(*) from public.market_data_sources), 2::bigint, 'authenticated users read provenance');
 select is(
   (
     select count(*) from public.market_indicators

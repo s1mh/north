@@ -61,8 +61,8 @@ export default async function MercadoPage() {
     <section className="section market-license-note">
       <p className="eyebrow">Cotações de ativos</p>
       <h2>Conexão licenciada em preparação</h2>
-      <p>Ações, fundos, índices e cripto serão exibidos somente depois que a fonte permitir uso no produto. O North não raspa cotações de páginas públicas.</p>
+      <p>O Ibovespa já usa o fechamento oficial gratuito da B3. Preços individuais de ações, fundos e cripto só serão exibidos quando a fonte permitir uso no produto.</p>
     </section>
-    <p className="status-note">Selic e IPCA: Banco Central do Brasil. A data observada é exibida em cada registro; “desatualizado” aparece quando a frequência esperada é ultrapassada.</p>
+    <p className="status-note">Selic e IPCA: Banco Central do Brasil. Ibovespa: arquivo oficial de índices da B3. A data observada é exibida em cada registro.</p>
   </AppShell>;
 }

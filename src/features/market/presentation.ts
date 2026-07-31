@@ -14,6 +14,7 @@ export type MarketIndicatorRow = {
 const maximumAgeDays: Record<string, number> = {
   selic_target: 7,
   ipca_monthly: 70,
+  ibovespa_close: 4,
 };
 
 export function latestIndicators(rows: MarketIndicatorRow[]) {
