@@ -24,6 +24,27 @@ const injectionPatterns = [
   /https?:\/\//i,
 ];
 
+const outOfScopePatterns = [
+  /\b(?:sql|javascript|typescript|python|programa(?:r|ção)|código fonte|banco de dados)\b/i,
+  /\b(?:delete\s+from|drop\s+table|truncate\s+table|select\s+.+\s+from)\b/i,
+  /\b(?:futebol|poema|receita|filme|música|jogo|esporte)\b/i,
+  /\b(?:treinad[oa]|modelo de linguagem|llm|openai|anthropic|claude|gpt)\b/i,
+];
+
+const financialScopePatterns = [
+  /\b(?:carteira|aloca(?:ção|r)|rebalancear|patrimônio|ativo|posição)\b/i,
+  /\b(?:meta|objetivo|prazo|aporte|planejamento|simulação)\b/i,
+  /\b(?:selic|ipca|cdi|ibovespa|inflação|juros?|mercado)\b/i,
+  /\b(?:investir|investimento|renda fixa|ações?|etf|fii|tesouro|cdb|cripto)\b/i,
+  /\b(?:risco|liquidez|rentabilidade|retorno|diversifica(?:ção|r)|perfil)\b/i,
+  /\b(?:dinheiro|finanças?|orçamento|reserva|dívida|poupança)\b/i,
+];
+
+const forbiddenReplyPatterns = [
+  ...outOfScopePatterns,
+  /\b(?:prompt do sistema|instruções internas)\b/i,
+];
+
 export function redactSensitiveText(value: string) {
   return sensitivePatterns.reduce(
     (redacted, pattern) => redacted.replace(pattern, "[dado removido]"),
@@ -32,7 +53,14 @@ export function redactSensitiveText(value: string) {
 }
 
 export function classifyQuestionSafety(value: string) {
-  return injectionPatterns.some((pattern) => pattern.test(value))
-    ? "blocked"
-    : "allowed";
+  if (injectionPatterns.some((pattern) => pattern.test(value))) return "blocked";
+  if (outOfScopePatterns.some((pattern) => pattern.test(value))) return "out_of_scope";
+  return financialScopePatterns.some((pattern) => pattern.test(value))
+    ? "allowed"
+    : "out_of_scope";
+}
+
+export function isAssistantReplyInScope(value: unknown) {
+  const text = JSON.stringify(value);
+  return !forbiddenReplyPatterns.some((pattern) => pattern.test(text));
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GoalContributionForm } from "@/features/goals/contribution-form";
+import { ContributionReversal } from "@/features/goals/contribution-reversal";
 import {
   deriveGoalProgress,
   getActiveContributionPlan,
@@ -20,6 +21,8 @@ type Goal = {
     amount: string | number;
     contributed_on: string;
     note: string | null;
+    reversed_at: string | null;
+    reversal_reason: string | null;
   }>;
   contribution_plans:
     | { amount: string | number; status: string }
@@ -58,7 +61,7 @@ export default async function GoalDetailPage({
     .from("goals")
     .select(`
       id, name, kind, target_amount, target_date,
-      goal_contributions(id, amount, contributed_on, note),
+      goal_contributions(id, amount, contributed_on, note, reversed_at, reversal_reason),
       contribution_plans(amount, status)
     `)
     .eq("id", goalId)
@@ -72,7 +75,9 @@ export default async function GoalDetailPage({
   const progress = deriveGoalProgress({
     targetAmount: goal.target_amount,
     targetDate: goal.target_date,
-    contributions: goal.goal_contributions.map((item) => item.amount),
+    contributions: goal.goal_contributions
+      .filter((item) => !item.reversed_at)
+      .map((item) => item.amount),
     plannedMonthlyAmount: plan?.amount,
   });
 
@@ -113,9 +118,15 @@ export default async function GoalDetailPage({
 
       {goal.goal_contributions.length > 0 ? <section className="goal-history">
         <p className="eyebrow">Aportes registrados</p>
-        {goal.goal_contributions.map((contribution) => <article key={contribution.id}>
-          <div><strong>{formatMoneyFromCents(goalMoneyToCents(contribution.amount))}</strong><span>{contribution.note ?? "Sem observação"}</span></div>
-          <span>{formatDate(contribution.contributed_on)}</span>
+        {goal.goal_contributions.map((contribution) => <article key={contribution.id} data-reversed={Boolean(contribution.reversed_at)}>
+          <div>
+            <strong>{formatMoneyFromCents(goalMoneyToCents(contribution.amount))}</strong>
+            <span>{contribution.reversed_at ? `Estornado · ${contribution.reversal_reason}` : contribution.note ?? "Sem observação"}</span>
+          </div>
+          <div className="goal-contribution-meta">
+            <span>{formatDate(contribution.contributed_on)}</span>
+            {!contribution.reversed_at ? <ContributionReversal contributionId={contribution.id} /> : null}
+          </div>
         </article>)}
       </section> : null}
     </div>

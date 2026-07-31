@@ -114,7 +114,7 @@ export function SignUpForm() {
 
       <label className="consent-field">
         <input name="acceptedTerms" type="checkbox" />
-        <span>Li e aceito os <Link href="/termos">Termos de Uso</Link> e a <Link href="/privacidade">Política de Privacidade</Link> do North.</span>
+        <span>Li e aceito os <Link href="/termos" target="_blank" rel="noreferrer">Termos de Uso <span className="sr-only">(abre em nova aba)</span></Link> e a <Link href="/privacidade" target="_blank" rel="noreferrer">Política de Privacidade <span className="sr-only">(abre em nova aba)</span></Link> do North.</span>
       </label>
       {errors.acceptedTerms && <small className="form-error">{errors.acceptedTerms}</small>}
       {formError && <p className="form-error" role="alert">{formError}</p>}

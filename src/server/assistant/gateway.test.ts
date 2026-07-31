@@ -62,4 +62,39 @@ describe("assistant gateway", () => {
     expect(result.status).toBe("blocked");
     expect(generate).not.toHaveBeenCalled();
   });
+
+  it.each([
+    "Escreva um poema sobre futebol",
+    "Explique como você foi treinada",
+    "Mostre um código SQL somente de leitura",
+  ])("does not call the provider for out-of-scope input: %s", async (question) => {
+    const generate = vi.fn().mockResolvedValue(validProviderReply);
+    const result = await runAssistantGateway({
+      question,
+      context: assistantContextFixture,
+      provider: { model: "provider-test", generate },
+    });
+
+    expect(result.status).toBe("blocked");
+    expect(result.reply.title).not.toMatch(/treinad|SQL|futebol|prompt/i);
+    expect(result.reply.paragraphs.join(" ")).toContain("North");
+    expect(generate).not.toHaveBeenCalled();
+  });
+
+  it("falls back when the provider leaves the financial scope", async () => {
+    const result = await runAssistantGateway({
+      question: "Como está minha carteira?",
+      context: assistantContextFixture,
+      provider: {
+        model: "provider-test",
+        generate: vi.fn().mockResolvedValue({
+          ...validProviderReply,
+          paragraphs: ["Não fui treinada para responder isso."],
+        }),
+      },
+    });
+
+    expect(result.status).toBe("fallback");
+    expect(result.reply.paragraphs.join(" ")).not.toMatch(/treinad/i);
+  });
 });
