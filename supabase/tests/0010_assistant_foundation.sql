@@ -1,4 +1,6 @@
 begin;
+set local role postgres;
+set local search_path = public, extensions;
 
 create extension if not exists pgtap;
 select plan(30);
@@ -244,7 +246,7 @@ select lives_ok(
 select is((select count(*) from public.assistant_threads), 0::bigint, 'thread is deleted');
 select is((select count(*) from public.assistant_messages), 0::bigint, 'message content is deleted');
 
-reset role;
+set local role postgres;
 select is(
   (select count(*) from public.ai_generations),
   20::bigint,
