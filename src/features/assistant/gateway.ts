@@ -9,6 +9,7 @@ export type AssistantProvider = {
     question: string;
     context: AssistantContext;
     promptVersion: string;
+    userRef: string;
   }): Promise<unknown>;
 };
 
@@ -42,11 +43,13 @@ export async function runAssistantGateway({
   question,
   context,
   provider,
+  userRef = "anonymous",
   timeoutMs = 4_000,
 }: {
   question: string;
   context: AssistantContext;
   provider?: AssistantProvider;
+  userRef?: string;
   timeoutMs?: number;
 }) {
   if (classifyQuestionSafety(question) === "blocked") {
@@ -63,6 +66,7 @@ export async function runAssistantGateway({
         question,
         context,
         promptVersion: ASSISTANT_PROMPT_VERSION,
+        userRef,
       }), timeoutMs);
       return {
         reply: attachServerDisclaimer(candidate),
