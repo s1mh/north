@@ -38,3 +38,8 @@ export const goalContributionSchema = z.object({
   contributedOn: z.iso.date().refine((value) => value <= todayInSaoPaulo()),
   note: z.string().trim().max(120).transform((value) => value || null),
 }).strict();
+
+export const goalContributionReversalSchema = z.object({
+  contributionId: z.uuid(),
+  reason: z.string().trim().min(3).max(160),
+}).strict();

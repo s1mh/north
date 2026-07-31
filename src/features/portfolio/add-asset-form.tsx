@@ -67,15 +67,15 @@ export function AddAssetForm() {
     </label>
     <div className="portfolio-field-row">
       <label className="auth-field"><span>Quantidade</span>
-        <input name="quantity" required inputMode="decimal" placeholder="10" />
+        <input name="quantity" required inputMode="decimal" pattern="^\\d+(?:[,.]\\d+)?$" title="Use apenas números e um separador decimal" placeholder="10" />
       </label>
       <label className="auth-field"><span>Preço unitário</span>
-        <input name="unitPrice" required inputMode="decimal" placeholder="37,50" />
+        <input name="unitPrice" required inputMode="decimal" pattern="^\\d+(?:[,.]\\d{1,2})?$" title="Use um valor positivo com até duas casas decimais" placeholder="37,50" />
       </label>
     </div>
     <div className="portfolio-field-row">
       <label className="auth-field"><span>Taxas</span>
-        <input name="fees" required inputMode="decimal" defaultValue="0,00" />
+        <input name="fees" required inputMode="decimal" pattern="^\\d+(?:[,.]\\d{1,2})?$" title="Informe uma taxa igual ou maior que zero" defaultValue="0,00" />
       </label>
       <label className="auth-field"><span>Data da compra</span>
         <input name="tradeDate" type="date" required max={today} defaultValue={today} />

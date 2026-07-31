@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { goalContributionSchema } from "@/features/goals/submission";
+import {
+  goalContributionReversalSchema,
+  goalContributionSchema,
+} from "@/features/goals/submission";
 import { createClient } from "@/server/supabase/client";
 
 const privateHeaders = { "Cache-Control": "private, no-store" };
@@ -45,4 +48,46 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ id: data }, { status: 201, headers: privateHeaders });
+}
+
+export async function DELETE(request: Request) {
+  if (request.headers.get("origin") !== new URL(request.url).origin) {
+    return NextResponse.json(
+      { error: "Origem inválida." },
+      { status: 403, headers: privateHeaders },
+    );
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json(
+      { error: "Sessão inválida." },
+      { status: 401, headers: privateHeaders },
+    );
+  }
+
+  const parsed = goalContributionReversalSchema.safeParse(
+    await request.json().catch(() => null),
+  );
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Informe o motivo do estorno." },
+      { status: 400, headers: privateHeaders },
+    );
+  }
+
+  const { error } = await supabase.rpc("reverse_goal_contribution", {
+    p_contribution_id: parsed.data.contributionId,
+    p_reason: parsed.data.reason,
+  });
+  if (error) {
+    const unavailable = error.code === "42501";
+    return NextResponse.json(
+      { error: unavailable ? "Este aporte não está disponível." : "Não foi possível estornar o aporte agora." },
+      { status: unavailable ? 403 : 500, headers: privateHeaders },
+    );
+  }
+
+  return new NextResponse(null, { status: 204, headers: privateHeaders });
 }

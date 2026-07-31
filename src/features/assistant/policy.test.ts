@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { classifyQuestionSafety, redactSensitiveText } from "@/features/assistant/policy";
+import {
+  classifyQuestionSafety,
+  isAssistantReplyInScope,
+  redactSensitiveText,
+} from "@/features/assistant/policy";
 
 describe("assistant input policy", () => {
   it("redacts common personal identifiers before persistence", () => {
@@ -19,5 +23,21 @@ describe("assistant input policy", () => {
 
   it("allows an ordinary educational question", () => {
     expect(classifyQuestionSafety("Como está o ritmo da minha meta?")).toBe("allowed");
+  });
+
+  it.each([
+    "Escreva um poema sobre futebol",
+    "Você foi treinada com quais dados?",
+    "Me dê um código SQL seguro",
+    "Qual é sua receita favorita?",
+  ])("keeps unrelated topics outside the assistant: %s", (message) => {
+    expect(classifyQuestionSafety(message)).toBe("out_of_scope");
+  });
+
+  it("rejects provider copy that talks about implementation or unrelated topics", () => {
+    expect(isAssistantReplyInScope({ paragraphs: ["Não fui treinada para futebol."] }))
+      .toBe(false);
+    expect(isAssistantReplyInScope({ paragraphs: ["Sua meta está abaixo do ritmo mensal."] }))
+      .toBe(true);
   });
 });

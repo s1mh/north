@@ -27,7 +27,7 @@ type Goal = {
   name: string;
   target_amount: string | number;
   target_date: string;
-  goal_contributions: Array<{ amount: string | number }>;
+  goal_contributions: Array<{ amount: string | number; reversed_at: string | null }>;
   contribution_plans:
     | { amount: string | number; status: string }
     | Array<{ amount: string | number; status: string }>
@@ -79,7 +79,7 @@ export default async function Home() {
       .from("goals")
       .select(`
         id, name, target_amount, target_date,
-        goal_contributions(amount),
+        goal_contributions(amount, reversed_at),
         contribution_plans(amount, status)
       `)
       .eq("status", "active")
@@ -115,7 +115,9 @@ export default async function Home() {
   const goalProgress = goal ? deriveGoalProgress({
     targetAmount: goal.target_amount,
     targetDate: goal.target_date,
-    contributions: goal.goal_contributions.map((item) => item.amount),
+    contributions: goal.goal_contributions
+      .filter((item) => !item.reversed_at)
+      .map((item) => item.amount),
     plannedMonthlyAmount: goalPlan?.amount,
   }) : null;
   const goalNeedsPace = Boolean(goalProgress && goalProgress.monthlyGapCents > 0n);
