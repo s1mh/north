@@ -18,6 +18,18 @@ describe("goal submissions", () => {
     expect(result.plannedMonthlyAmount).toBe("530.00");
   });
 
+  it("accepts ungrouped Brazilian values typed on a mobile keyboard", () => {
+    const result = goalSchema.parse({
+      name: "Reserva",
+      kind: "reserva",
+      targetAmount: "10000,00",
+      targetDate: "2030-12-01",
+      plannedMonthlyAmount: "530,00",
+    });
+    expect(result.targetAmount).toBe("10000.00");
+    expect(result.plannedMonthlyAmount).toBe("530.00");
+  });
+
   it("rejects past dates, negative plans and unknown fields", () => {
     expect(goalSchema.safeParse({
       name: "Viagem",

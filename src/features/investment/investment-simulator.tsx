@@ -189,9 +189,9 @@ export function InvestmentSimulator({
         onClick={() => chooseMode("goal")}
       >Para uma meta</button>
     </div>
-    {goals.length === 0 ? <p className="investment-mode-hint">
-      <Link href="/metas/nova">Crie uma meta</Link> para simular um plano ligado a um objetivo.
-    </p> : null}
+    {goals.length === 0 ? <Link className="investment-mode-hint" href="/metas/nova">
+      <strong>Criar uma meta</strong><span>Simule um plano ligado a um objetivo</span><b aria-hidden="true">→</b>
+    </Link> : null}
 
     {mode === "goal" && selectedGoal ? <label className="investment-goal">
       <span><small>Meta</small>
