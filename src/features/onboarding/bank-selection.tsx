@@ -98,7 +98,7 @@ export function BankSelection({
         </div>
         {adding ? (
           <div className="custom-bank">
-            <input value={custom} maxLength={80} onChange={(event) => setCustom(event.target.value)} placeholder="Banco ou corretora" autoFocus />
+            <input value={custom} maxLength={80} onChange={(event) => setCustom(event.target.value)} placeholder="Banco ou corretora" autoCapitalize="words" autoCorrect="on" spellCheck autoFocus />
             <button type="button" disabled={pending || custom.trim().length < 2} onClick={addCustom}>enviar</button>
           </div>
         ) : (

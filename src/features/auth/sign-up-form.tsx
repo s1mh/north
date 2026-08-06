@@ -10,6 +10,7 @@ import {
   signUpSchema,
   type SignUpInput,
 } from "./auth-schema";
+import { LegalReviewDialog, type LegalDocument } from "./legal-review-dialog";
 
 type FieldErrors = Partial<Record<keyof SignUpInput, string>>;
 
@@ -19,6 +20,7 @@ export function SignUpForm() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<"idle" | "sending" | "confirmation">("idle");
   const [formError, setFormError] = useState("");
+  const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -95,18 +97,27 @@ export function SignUpForm() {
 
       <label className="auth-field">
         <span>(01) Nome completo</span>
-        <input name="displayName" autoComplete="name" placeholder="Seu nome" aria-invalid={Boolean(errors.displayName)} />
+        <input
+          name="displayName"
+          autoComplete="name"
+          autoCapitalize="words"
+          autoCorrect="on"
+          spellCheck
+          enterKeyHint="next"
+          placeholder="Seu nome"
+          aria-invalid={Boolean(errors.displayName)}
+        />
         {errors.displayName && <small>{errors.displayName}</small>}
       </label>
       <label className="auth-field">
         <span>(02) E-mail</span>
-        <input name="email" type="email" inputMode="email" autoComplete="email" placeholder="voce@email.com" aria-invalid={Boolean(errors.email)} />
+        <input name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="voce@email.com" aria-invalid={Boolean(errors.email)} />
         {errors.email && <small>{errors.email}</small>}
       </label>
       <label className="auth-field">
         <span>(03) Senha</span>
         <div className="password-field">
-          <input name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" placeholder="10+ caracteres" aria-invalid={Boolean(errors.password)} />
+          <input name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done" placeholder="10+ caracteres" aria-invalid={Boolean(errors.password)} />
           <button type="button" onClick={() => setShowPassword((value) => !value)}>{showPassword ? "ocultar" : "mostrar"}</button>
         </div>
         {errors.password ? <small>{errors.password}</small> : <small className="field-hint">Maiúscula, minúscula, número e símbolo.</small>}
@@ -114,7 +125,7 @@ export function SignUpForm() {
 
       <label className="consent-field">
         <input name="acceptedTerms" type="checkbox" />
-        <span>Li e aceito os <Link href="/termos" target="_blank" rel="noreferrer">Termos de Uso <span className="sr-only">(abre em nova aba)</span></Link> e a <Link href="/privacidade" target="_blank" rel="noreferrer">Política de Privacidade <span className="sr-only">(abre em nova aba)</span></Link> do North.</span>
+        <span>Li e aceito os <button type="button" onClick={() => setLegalDocument("terms")}>Termos de Uso</button> e a <button type="button" onClick={() => setLegalDocument("privacy")}>Política de Privacidade</button> do North.</span>
       </label>
       {errors.acceptedTerms && <small className="form-error">{errors.acceptedTerms}</small>}
       {formError && <p className="form-error" role="alert">{formError}</p>}
@@ -123,6 +134,10 @@ export function SignUpForm() {
         {status === "sending" ? "Criando conta…" : "Continuar"}
       </button>
       <p className="auth-switch">Já tem conta? <Link href="/entrar">Entrar</Link></p>
+      {legalDocument ? <LegalReviewDialog
+        document={legalDocument}
+        onClose={() => setLegalDocument(null)}
+      /> : null}
     </form>
   );
 }

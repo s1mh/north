@@ -1,20 +1,59 @@
 import "server-only";
-import { fetchLatestB3Ibovespa } from "@/features/market/b3";
+import { fetchLatestB3EquityPrices, fetchLatestB3Ibovespa } from "@/features/market/b3";
 import { fetchBcbSnapshot } from "@/features/market/bcb";
-import type { MarketIndicator } from "@/features/market/types";
+import type { MarketIndicator, MarketPrice } from "@/features/market/types";
 import { createMarketAdminClient } from "@/server/market/admin-client";
+import { settleSequentially } from "@/server/market/settle-sequentially";
+
+type MarketSnapshot = {
+  indicators: MarketIndicator[];
+  prices: MarketPrice[];
+};
+
+const DEFAULT_B3_INSTRUMENTS = new Map([
+  ["PETR4", "Petrobras PN"],
+  ["VALE3", "Vale ON"],
+  ["ITUB4", "Itaú Unibanco PN"],
+  ["B3SA3", "B3 ON"],
+  ["WEGE3", "WEG ON"],
+  ["MGLU3", "Magazine Luiza ON"],
+]);
 
 const SOURCES: Array<{
   id: string;
-  fetchSnapshot: (now: Date) => Promise<MarketIndicator[]>;
+  fetchSnapshot: (
+    now: Date,
+    supabase: ReturnType<typeof createMarketAdminClient>,
+  ) => Promise<MarketSnapshot>;
 }> = [
   {
     id: "bcb-sgs",
-    fetchSnapshot: () => fetchBcbSnapshot(),
+    fetchSnapshot: async () => ({ indicators: await fetchBcbSnapshot(), prices: [] }),
   },
   {
     id: "b3-public-eod",
-    fetchSnapshot: async (now) => [await fetchLatestB3Ibovespa(now)],
+    fetchSnapshot: async (now, supabase) => {
+      const { data, error } = await supabase
+        .from("portfolio_instruments")
+        .select("symbol,name")
+        .eq("currency", "BRL")
+        .in("asset_class", ["acoes", "fundos", "fiis"])
+        .limit(200);
+      if (error) throw new Error("market_portfolio_symbols_unavailable");
+
+      const names = new Map(DEFAULT_B3_INSTRUMENTS);
+      for (const instrument of data ?? []) {
+        const symbol = String(instrument.symbol).trim().toUpperCase();
+        if (/^[A-Z0-9]{4,12}$/.test(symbol)) names.set(symbol, String(instrument.name));
+      }
+
+      const indicator = await fetchLatestB3Ibovespa(now);
+      const prices = (await fetchLatestB3EquityPrices(names.keys(), now)).map((price) => ({
+        ...price,
+        name: names.get(price.symbol) ?? price.symbol,
+      }));
+      return { indicators: [indicator], prices };
+    },
   },
 ];
 
@@ -30,6 +69,7 @@ const allowedErrorCodes = new Set([
   "bcb_unavailable",
   "bcb_value_out_of_range",
   "market_run_finish_failed",
+  "market_portfolio_symbols_unavailable",
   "market_write_failed",
 ]);
 
@@ -49,7 +89,10 @@ async function runSourceIngestion({
   supabase,
 }: {
   sourceId: string;
-  fetchSnapshot: (now: Date) => Promise<MarketIndicator[]>;
+  fetchSnapshot: (
+    now: Date,
+    supabase: ReturnType<typeof createMarketAdminClient>,
+  ) => Promise<MarketSnapshot>;
   now: Date;
   supabase: ReturnType<typeof createMarketAdminClient>;
 }) {
@@ -102,9 +145,11 @@ async function runSourceIngestion({
   if (claimError || !run) throw new Error("market_run_claim_failed");
 
   try {
-    const indicators = await fetchSnapshot(now);
-    const { error: writeError } = await supabase.from("market_indicators").upsert(
-      indicators.map((indicator) => ({
+    const snapshot = await fetchSnapshot(now, supabase);
+    const { error: indicatorWriteError } = snapshot.indicators.length === 0
+      ? { error: null }
+      : await supabase.from("market_indicators").upsert(
+        snapshot.indicators.map((indicator) => ({
         source_id: sourceId,
         code: indicator.code,
         source_series: indicator.sourceSeries,
@@ -116,20 +161,61 @@ async function runSourceIngestion({
       })),
       { onConflict: "source_id,code,observed_on" },
     );
-    if (writeError) throw new Error("market_write_failed");
+    if (indicatorWriteError) throw new Error("market_write_failed");
+
+    if (snapshot.prices.length > 0) {
+      const { data: instruments, error: instrumentWriteError } = await supabase
+        .from("market_instruments")
+        .upsert(snapshot.prices.map((price) => ({
+          source_id: sourceId,
+          source_instrument_id: price.sourceInstrumentId,
+          symbol: price.symbol,
+          name: price.name,
+          asset_class: "b3_listed",
+          currency: "BRL",
+          market: "B3",
+          active: true,
+        })), { onConflict: "source_id,source_instrument_id" })
+        .select("id,source_instrument_id");
+      if (instrumentWriteError || !instruments) throw new Error("market_write_failed");
+
+      const instrumentIds = new Map(instruments.map((instrument) => [
+        instrument.source_instrument_id,
+        instrument.id,
+      ]));
+      const rows = snapshot.prices.map((price) => ({
+        instrument_id: instrumentIds.get(price.sourceInstrumentId),
+        source_id: sourceId,
+        observed_at: `${price.observedOn}T23:00:00.000Z`,
+        currency: "BRL",
+        open: price.open,
+        high: price.high,
+        low: price.low,
+        close: price.close,
+        volume: null,
+        fetched_at: now.toISOString(),
+      }));
+      if (rows.some((row) => !row.instrument_id)) throw new Error("market_write_failed");
+      const { error: priceWriteError } = await supabase
+        .from("market_prices")
+        .upsert(rows, { onConflict: "instrument_id,source_id,observed_at" });
+      if (priceWriteError) throw new Error("market_write_failed");
+    }
+
+    const recordsWritten = snapshot.indicators.length + snapshot.prices.length;
 
     const { error: finishError } = await supabase
       .from("market_ingestion_runs")
       .update({
         status: "succeeded",
-        records_received: indicators.length,
-        records_written: indicators.length,
+        records_received: recordsWritten,
+        records_written: recordsWritten,
         finished_at: new Date().toISOString(),
       })
       .eq("id", run.id);
     if (finishError) throw new Error("market_run_finish_failed");
 
-    return { status: "succeeded" as const, recordsWritten: indicators.length };
+    return { status: "succeeded" as const, recordsWritten };
   } catch (error) {
     const errorCode = error instanceof Error && allowedErrorCodes.has(error.message)
       ? error.message
@@ -153,13 +239,12 @@ async function runSourceIngestion({
 }
 
 export async function runDailyMarketIngestion(now = new Date()) {
-  const supabase = createMarketAdminClient();
-  const settled = await Promise.allSettled(SOURCES.map((source) => runSourceIngestion({
+  const settled = await settleSequentially(SOURCES, (source) => runSourceIngestion({
     sourceId: source.id,
     fetchSnapshot: source.fetchSnapshot,
     now,
-    supabase,
-  })));
+    supabase: createMarketAdminClient(),
+  }));
   const failure = settled.find(
     (result): result is PromiseRejectedResult => result.status === "rejected",
   );

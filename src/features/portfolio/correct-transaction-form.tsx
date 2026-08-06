@@ -144,7 +144,7 @@ export function CorrectTransactionForm({
       <input name="tradeDate" type="date" required defaultValue={transaction.trade_date} />
     </label>
     <label className="auth-field"><span>Motivo da alteração</span>
-      <input name="reason" required minLength={3} maxLength={200} placeholder="Ex.: preço digitado incorretamente" />
+      <input name="reason" required minLength={3} maxLength={200} placeholder="Ex.: preço digitado incorretamente" autoCapitalize="sentences" autoCorrect="on" spellCheck />
     </label>
 
     <p className="portfolio-disclaimer">O lançamento original continuará visível no histórico, acompanhado do estorno e da correção.</p>
