@@ -49,7 +49,7 @@ export function GoalContributionForm({ goalId }: { goalId: string }) {
       </label>
     </div>
     <label className="auth-field"><span>Observação opcional</span>
-      <input name="note" maxLength={120} placeholder="Ex.: valor separado na conta" />
+      <input name="note" maxLength={120} placeholder="Ex.: valor separado na conta" autoCapitalize="sentences" autoCorrect="on" spellCheck />
     </label>
     <p>Este registro acompanha sua organização. Ele não transfere nem aplica dinheiro.</p>
     {error ? <p className="form-error portfolio-error" role="alert">{error}</p> : null}

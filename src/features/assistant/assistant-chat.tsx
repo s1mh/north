@@ -173,6 +173,10 @@ export function AssistantChat({
         onChange={(event) => setMessage(event.target.value)}
         placeholder="Pergunte sobre investir…"
         maxLength={500}
+        autoCapitalize="sentences"
+        autoCorrect="on"
+        spellCheck
+        enterKeyHint="send"
         disabled={pending}
       />
       <button
