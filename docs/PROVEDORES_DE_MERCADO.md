@@ -37,9 +37,32 @@ Referência oficial:
 - https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/historico/boletins-diarios/pesquisa-por-pregao/pesquisa-por-pregao/
 - https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/historico/boletins-diarios/pesquisa-por-pregao/layout-dos-arquivos/
 
+## Cotações com atraso no Staging
+
+No Staging e no uso pessoal, o North consulta a brapi pelo endpoint
+`/api/v2/stocks/quote`, sempre no servidor e com o token no cabeçalho
+`Authorization`. O plano gratuito fornece um ativo por requisição, até 15 mil
+requisições mensais e cotações com atraso aproximado de 30 minutos.
+
+Para controlar consumo, cada símbolo fica em cache por 30 minutos e uma página
+consulta no máximo oito símbolos distintos. Isso limita o pior caso contínuo a
+11.520 requisições em um mês de 30 dias. Falha, ausência da chave ou resposta
+inválida preserva o fechamento oficial D-1 da B3 já armazenado; respostas brutas
+e tokens nunca são persistidos ou enviados ao navegador.
+
+Esse uso não define autorização comercial para redistribuição em produção. Os
+termos e a licença do provedor devem ser revistos antes do lançamento público.
+
+Referências:
+
+- https://brapi.dev/docs
+- https://brapi.dev/faq/o-plano-gratuito-tem-limitacoes-importantes
+
 ## Operação
 
-A rotina é executada diariamente às 22h30 no horário de Brasília (01h30 UTC).
+A rotina oficial é executada diariamente às 22h30 no horário de Brasília
+(01h30 UTC). As cotações com atraso da brapi são buscadas sob demanda no
+servidor e reutilizadas pelo cache por 30 minutos.
 Ela usa o `CRON_SECRET` no cabeçalho `Authorization`, rejeita payloads
 inesperados, aplica limites próprios por formato e interrompe novas execuções
 de uma fonte após três falhas recentes.

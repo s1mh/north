@@ -313,6 +313,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .market-quotes-grid article > div:first-child strong { font-size:13px; }
 .market-quotes-grid article > div:first-child span { overflow:hidden; color:var(--muted); font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
 .market-quotes-grid article > b { display:block; margin-top:7px; font-size:20px; }
+.market-quotes-grid article > em { display:block; margin-top:2px; color:var(--muted); font-size:9px; font-style:normal; font-weight:700; }
+.market-quotes-grid article > em[data-direction="up"] { color:#327a42; }
+.market-quotes-grid article > em[data-direction="down"] { color:#a9473a; }
 .market-quotes-grid dl { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:9px 0 0; }
 .market-quotes-grid dl div { display:flex; justify-content:space-between; gap:6px; color:var(--muted); font-size:9px; }
 .market-quotes-grid dd { margin:0; color:var(--ink); font-weight:700; }

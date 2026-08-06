@@ -6,6 +6,8 @@ import {
   latestIndicators,
   type MarketIndicatorRow,
 } from "@/features/market/presentation";
+import type { BrapiQuote } from "@/features/market/brapi";
+import { getBrapiQuotes } from "@/server/market/brapi-quotes";
 import { createClient } from "@/server/supabase/client";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +21,19 @@ type MarketPriceRow = {
   market_instruments: { symbol: string; name: string } | null;
 };
 
+type DisplayQuote = {
+  symbol: string;
+  name: string;
+  close: string | number;
+  high: string | number | null;
+  low: string | number | null;
+  observedAt: string;
+  changePercent: number | null;
+  source: "brapi" | "b3";
+};
+
+const DEFAULT_QUOTE_SYMBOLS = ["PETR4", "VALE3", "ITUB4", "B3SA3", "WEGE3", "MGLU3"];
+
 function formatPrice(value: string | number | null) {
   if (value === null) return "—";
   return new Intl.NumberFormat("pt-BR", {
@@ -27,6 +42,37 @@ function formatPrice(value: string | number | null) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(Number(value));
+}
+
+function formatChange(value: number) {
+  const prefix = value > 0 ? "+" : "";
+  return `${prefix}${new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)}%`;
+}
+
+function formatQuoteTime(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date(value));
+}
+
+function displayBrapiQuote(quote: BrapiQuote): DisplayQuote {
+  return {
+    symbol: quote.symbol,
+    name: quote.name,
+    close: quote.close,
+    high: quote.high,
+    low: quote.low,
+    observedAt: quote.observedAt,
+    changePercent: quote.changePercent,
+    source: "brapi",
+  };
 }
 
 export default async function MercadoPage() {
@@ -52,11 +98,39 @@ export default async function MercadoPage() {
     : latestIndicators((data ?? []) as unknown as MarketIndicatorRow[]);
   const newestDate = indicators[0]?.observed_on;
   const quoteRows = priceError ? [] : (priceData ?? []) as unknown as MarketPriceRow[];
-  const quotes = Array.from(quoteRows.reduce((latest, row) => {
+  const latestB3Quotes = Array.from(quoteRows.reduce((latest, row) => {
     const symbol = row.market_instruments?.symbol;
     if (symbol && !latest.has(symbol)) latest.set(symbol, row);
     return latest;
   }, new Map<string, MarketPriceRow>()).values()).slice(0, 8);
+  const quoteSymbols = Array.from(new Set([
+    ...DEFAULT_QUOTE_SYMBOLS,
+    ...latestB3Quotes.flatMap((quote) => quote.market_instruments?.symbol ?? []),
+  ])).slice(0, 8);
+  const brapiQuotes = await getBrapiQuotes(quoteSymbols);
+  const brapiBySymbol = new Map(brapiQuotes.map((quote) => [quote.symbol, quote]));
+  const b3BySymbol = new Map(latestB3Quotes.flatMap((quote) => {
+    const instrument = quote.market_instruments;
+    if (!instrument) return [];
+    return [[instrument.symbol, quote] as const];
+  }));
+  const quotes: DisplayQuote[] = quoteSymbols.flatMap((symbol) => {
+    const live = brapiBySymbol.get(symbol);
+    if (live) return [displayBrapiQuote(live)];
+    const fallback = b3BySymbol.get(symbol);
+    if (!fallback?.market_instruments) return [];
+    return [{
+      symbol,
+      name: fallback.market_instruments.name,
+      close: fallback.close,
+      high: fallback.high,
+      low: fallback.low,
+      observedAt: fallback.observed_at,
+      changePercent: null,
+      source: "b3" as const,
+    }];
+  });
+  const hasBrapiQuotes = quotes.some((quote) => quote.source === "brapi");
 
   return <AppShell active="/mercado">
     <div className="market-heading">
@@ -93,20 +167,27 @@ export default async function MercadoPage() {
 
     <section className="section market-license-note">
       <p className="eyebrow">Cotações de ativos</p>
-      <h2>Fechamento público D‑1 da B3</h2>
+      <h2>{hasBrapiQuotes ? "Cotações com atraso" : "Fechamento público D‑1 da B3"}</h2>
       {quotes.length > 0 ? <div className="market-quotes-grid">
-        {quotes.map((quote) => <article key={quote.market_instruments!.symbol}>
-          <div><strong>{quote.market_instruments!.symbol}</strong><span>{quote.market_instruments!.name}</span></div>
+        {quotes.map((quote) => <article key={quote.symbol}>
+          <div><strong>{quote.symbol}</strong><span>{quote.name}</span></div>
           <b>{formatPrice(quote.close)}</b>
+          {quote.changePercent !== null ? <em data-direction={quote.changePercent >= 0 ? "up" : "down"}>
+            {formatChange(quote.changePercent)} no dia
+          </em> : null}
           <dl>
             <div><dt>Mín.</dt><dd>{formatPrice(quote.low)}</dd></div>
             <div><dt>Máx.</dt><dd>{formatPrice(quote.high)}</dd></div>
           </dl>
-          <small>Fechamento de {formatObservedDate(quote.observed_at.slice(0, 10))}</small>
+          <small>{quote.source === "brapi"
+            ? `brapi · atualização de ${formatQuoteTime(quote.observedAt)}`
+            : `B3 · fechamento de ${formatObservedDate(quote.observedAt.slice(0, 10))}`}</small>
         </article>)}
       </div> : <p>A coleta dos preços individuais está pronta e aparecerá aqui após a próxima rotina diária. Nenhum valor ilustrativo será usado.</p>}
-      <p>Dados gratuitos publicados após o fechamento. Não são cotações em tempo real.</p>
+      <p>{hasBrapiQuotes
+        ? "Plano gratuito da brapi: atraso aproximado de 30 minutos e cache do North por 30 minutos. Não use como cotação em tempo real."
+        : "Dados gratuitos publicados após o fechamento. Não são cotações em tempo real."}</p>
     </section>
-    <p className="status-note">Selic e IPCA: Banco Central do Brasil. Ibovespa e ativos listados: arquivos oficiais D‑1 da B3. A data observada é exibida em cada registro.</p>
+    <p className="status-note">Selic e IPCA: Banco Central do Brasil. Ibovespa: arquivo oficial D‑1 da B3. Ativos listados: brapi com atraso e B3 D‑1 como contingência. A data observada é exibida em cada registro.</p>
   </AppShell>;
 }
