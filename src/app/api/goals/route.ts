@@ -24,6 +24,9 @@ export async function POST(request: Request) {
   const input = await request.json().catch(() => null);
   const parsed = goalSchema.safeParse(input);
   if (!parsed.success) {
+    console.warn("[api/goals] validation_failed", {
+      issues: parsed.error.issues.map((issue) => ({ code: issue.code, path: issue.path })),
+    });
     return NextResponse.json(
       { error: "Revise os dados da meta e tente novamente." },
       { status: 400, headers: privateHeaders },
@@ -38,6 +41,7 @@ export async function POST(request: Request) {
     p_planned_monthly_amount: parsed.data.plannedMonthlyAmount,
   });
   if (error) {
+    console.error("[api/goals] create_failed", { code: error.code });
     return NextResponse.json(
       { error: "Não foi possível criar a meta agora." },
       { status: 500, headers: privateHeaders },

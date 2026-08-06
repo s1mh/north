@@ -52,18 +52,18 @@ export function AddAssetForm() {
     </div>
 
     <label className="auth-field"><span>Instituição</span>
-      <input name="institutionName" required minLength={2} maxLength={80} placeholder="Ex.: Nubank" autoComplete="organization" />
+      <input name="institutionName" required minLength={2} maxLength={80} placeholder="Ex.: Nubank" autoComplete="organization" autoCapitalize="words" autoCorrect="on" spellCheck />
     </label>
     <div className="portfolio-field-row">
       <label className="auth-field"><span>Código</span>
-        <input name="symbol" required maxLength={20} placeholder="PETR4" autoCapitalize="characters" />
+        <input name="symbol" required maxLength={20} placeholder="PETR4" autoCapitalize="characters" autoCorrect="off" spellCheck={false} />
       </label>
       <label className="auth-field"><span>Classe</span>
         <select name="assetClass" defaultValue="acoes">{classOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
       </label>
     </div>
     <label className="auth-field"><span>Nome do ativo</span>
-      <input name="name" required minLength={2} maxLength={100} placeholder="Ex.: Petrobras PN" />
+      <input name="name" required minLength={2} maxLength={100} placeholder="Ex.: Petrobras PN" autoCapitalize="words" autoCorrect="on" spellCheck />
     </label>
     <div className="portfolio-field-row">
       <label className="auth-field"><span>Quantidade</span>

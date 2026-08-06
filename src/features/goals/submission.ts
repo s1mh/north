@@ -14,6 +14,7 @@ const money = z.string()
   .trim()
   .refine((value) => (
     /^\d{1,15}(?:\.\d{1,2})?$/.test(value)
+    || /^\d{1,15}(?:,\d{1,2})?$/.test(value)
     || /^\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?$/.test(value)
   ))
   .transform((value) => {
