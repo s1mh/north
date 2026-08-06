@@ -74,7 +74,7 @@ provedor permitir.
 | chave secreta Supabase | Supabase e Vercel server-side | APIs administrativas e exclusão |
 | chave publicável Supabase | Vercel/cliente | login e leituras com RLS |
 | `AI_GATEWAY_API_KEY` | ambiente local, se necessário | resposta controlada do assistente |
-| `MARKET_DATA_API_KEY` | futuro provedor licenciado e Vercel | coleta permitida que exigir chave |
+| `MARKET_DATA_API_KEY` | brapi e Vercel server-side | cotação com atraso, sem expor o token |
 | `CRON_SECRET` | Vercel e agendador | cron rejeita antigo e aceita novo |
 | chave de Server Actions | Vercel | build e ação assinada, quando existir |
 | credencial de deploy | GitHub/Vercel | deploy do mesmo artefato revisado |

@@ -63,7 +63,7 @@ raiz. Configure separadamente os escopos Preview e Production:
 - `CRON_SECRET` para autenticar a coleta diária;
 - `AI_GATEWAY_API_KEY` server-side, com chave exclusiva por ambiente e orçamento
   rígido. O OIDC continua disponível para operações administrativas da Vercel;
-- `MARKET_DATA_API_KEY` somente quando um futuro provedor licenciado exigir;
+- `MARKET_DATA_API_KEY` para cotações com atraso da brapi, somente no servidor;
 - `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` antes de introduzir Server Actions.
 
 O Preview deve apontar exclusivamente para o projeto não produtivo. Ative
