@@ -110,7 +110,7 @@ docs/           arquitetura, segurança, plano e runbooks
 
 ### Status e próximos passos
 
-O app roda de ponta a ponta com o stack local. A coleta diária de mercado depende de fontes e chaves externas, então localmente você vê o estado "aguardando primeira coleta". Próximos passos: revisar o contraste do tema escuro na tela do Assistente, adicionar testes de ponta a ponta (Playwright) para as jornadas críticas e publicar uma demonstração com dados fictícios.
+O app roda de ponta a ponta com o stack local. A coleta diária de mercado depende de fontes e chaves externas, então localmente você vê o estado "aguardando primeira coleta". Próximos passos: adicionar testes de ponta a ponta (Playwright) para as jornadas críticas e publicar uma demonstração com dados fictícios.
 
 ---
 
@@ -176,7 +176,7 @@ supabase test db  # database tests and cross-account isolation (RLS)
 
 ### Status and next steps
 
-The app runs end to end on the local stack. The daily market ingestion needs external sources and keys, so locally you will see the "waiting for first collection" state. Next: review dark-theme contrast on the assistant screen, add end-to-end tests (Playwright) for the critical journeys, and publish a demo with fictional data.
+The app runs end to end on the local stack. The daily market ingestion needs external sources and keys, so locally you will see the "waiting for first collection" state. Next: add end-to-end tests (Playwright) for the critical journeys and publish a demo with fictional data.
 
 ---
 
