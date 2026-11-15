@@ -57,7 +57,7 @@ Há duas camadas, e é importante separar.
 
 **No produto.** O modelo de linguagem é tratado como um componente não confiável. Regras de suitability, cálculos, limites e avisos vivem em código e têm testes. O servidor monta o contexto só com agregados autorizados, sem nome nem e-mail. A resposta passa por validação, e existe um fallback determinístico se o provedor falhar. Há orçamento e limite por pessoa antes de qualquer consumo.
 
-**No processo.** O north foi construído com apoio de agentes de IA (Codex e Cursor), em marcos pequenos. Cada marco virou um pull request, com testes antes do merge. Os documentos de [arquitetura](docs/ARQUITETURA_E_DADOS.md) e de [segurança](docs/SEGURANCA.md) vieram antes do código e definem o que a IA pode e não pode fazer. A IA acelera, mas o que o produto precisa garantir está escrito e testado.
+**No processo.** Eu me considero um vibe coder com base técnica: construí o north com agentes de IA (Codex e Cursor), mas as decisões de produto, de dados e de segurança passam por mim. Os documentos de [arquitetura](docs/ARQUITETURA_E_DADOS.md) e de [segurança](docs/SEGURANCA.md) vieram antes do código e são a régua que uso para revisar o que a IA entrega. O trabalho foi dividido em marcos pequenos, cada um em um pull request com testes antes do merge.
 
 ### Segurança em primeiro lugar
 
@@ -137,7 +137,7 @@ The core rule is simple: **no invented numbers**. When data has not arrived yet,
 
 **In the product.** The language model is treated as an untrusted component. Suitability rules, calculations, limits and disclaimers live in code and are tested. The server builds context from authorized aggregates only, with no name or email. Output is validated, there is a deterministic fallback if the provider fails, and a budget plus per-user limits apply before any spend.
 
-**In the process.** north was built with the help of AI agents (Codex and Cursor), in small milestones. Each milestone became a pull request with tests before merging. The [architecture](docs/ARQUITETURA_E_DADOS.md) and [security](docs/SEGURANCA.md) documents came before the code and set what the AI can and cannot do. AI speeds things up, but what the product must guarantee is written down and tested.
+**In the process.** I consider myself a vibe coder with a technical foundation: I built north with AI agents (Codex and Cursor), but product, data and security decisions go through me. The [architecture](docs/ARQUITETURA_E_DADOS.md) and [security](docs/SEGURANCA.md) documents came before the code and are the yardstick I use to review what the AI delivers. The work was split into small milestones, each one a pull request with tests before merging.
 
 ### Security first
 
@@ -180,4 +180,4 @@ The app runs end to end on the local stack. The daily market ingestion needs ext
 
 ---
 
-<p align="center">Feito por <a href="https://github.com/s1mh">Samuel Rocha</a>.</p>
+<p align="center">Feito por <a href="https://github.com/s1mh">Samuel Rocha</a>, estudante de Gestão de TI.</p>
