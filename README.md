@@ -38,7 +38,7 @@ A regra central do app é simples: **nenhum número inventado**. Quando um dado 
   </tr>
 </table>
 
-As capturas usam uma conta fictícia, criada só para este README.
+As capturas usam uma conta fictícia, criada só para este README. Os valores de Selic e IPCA no Início são ilustrativos, inseridos no banco local para a imagem, porque a coleta real depende de fontes externas.
 
 ### O que já funciona
 
