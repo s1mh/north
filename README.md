@@ -57,7 +57,7 @@ Há duas camadas, e é importante separar.
 
 **No produto.** O modelo de linguagem é tratado como um componente não confiável. Regras de suitability, cálculos, limites e avisos vivem em código e têm testes. O servidor monta o contexto só com agregados autorizados, sem nome nem e-mail. A resposta passa por validação, e existe um fallback determinístico se o provedor falhar. Há orçamento e limite por pessoa antes de qualquer consumo.
 
-**No processo.** Eu me considero um vibe coder com base técnica: construí o north com agentes de IA (Codex e Cursor), mas as decisões de produto, de dados e de segurança passam por mim. Os documentos de [arquitetura](docs/ARQUITETURA_E_DADOS.md) e de [segurança](docs/SEGURANCA.md) vieram antes do código e são a régua que uso para revisar o que a IA entrega. O trabalho foi dividido em marcos pequenos, cada um em um pull request com testes antes do merge.
+**No processo.** Eu idealizei o north e o construí de ponta a ponta com agentes de IA (Codex e Cursor), guiados por prompts detalhados e por critérios claros. As decisões de produto, de dados e de segurança são minhas: os documentos de [arquitetura](docs/ARQUITETURA_E_DADOS.md) e de [segurança](docs/SEGURANCA.md) vieram antes do código e são a régua que uso para revisar o que a IA entrega. O trabalho foi dividido em marcos pequenos, cada um em um pull request com testes antes do merge.
 
 ### Segurança em primeiro lugar
 
@@ -137,7 +137,7 @@ The core rule is simple: **no invented numbers**. When data has not arrived yet,
 
 **In the product.** The language model is treated as an untrusted component. Suitability rules, calculations, limits and disclaimers live in code and are tested. The server builds context from authorized aggregates only, with no name or email. Output is validated, there is a deterministic fallback if the provider fails, and a budget plus per-user limits apply before any spend.
 
-**In the process.** I consider myself a vibe coder with a technical foundation: I built north with AI agents (Codex and Cursor), but product, data and security decisions go through me. The [architecture](docs/ARQUITETURA_E_DADOS.md) and [security](docs/SEGURANCA.md) documents came before the code and are the yardstick I use to review what the AI delivers. The work was split into small milestones, each one a pull request with tests before merging.
+**In the process.** I came up with north and built it end to end with AI agents (Codex and Cursor), guided by detailed prompts and clear criteria. Product, data and security decisions are mine: the [architecture](docs/ARQUITETURA_E_DADOS.md) and [security](docs/SEGURANCA.md) documents came before the code and are the yardstick I use to review what the AI delivers. The work was split into small milestones, each one a pull request with tests before merging.
 
 ### Security first
 
