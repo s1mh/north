@@ -58,5 +58,8 @@ describe("medição com consentimento", () => {
       .toEqual({ onde: "hero" });
     expect(track.safePath("/auth/callback?code=segredo", "faculdade")).toEqual({ page_path: "/auth/callback", origem: "faculdade" });
     expect(track.safePath("/inicio")).toEqual({ page_path: "/inicio" });
+    expect(track.safeLocation("https://usenorthapp.com.br/auth/callback?code=segredo&origem=reddit"))
+      .toBe("https://usenorthapp.com.br/auth/callback?origem=reddit");
+    expect(track.safeLocation("https://usenorthapp.com.br/inicio?token=x")).toBe("https://usenorthapp.com.br/inicio");
   });
 });

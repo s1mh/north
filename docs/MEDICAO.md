@@ -20,6 +20,8 @@ O north. mede só o funil, só com aceite, e nunca envia dado pessoal ou finance
 | `profile_completed` | Perfil de investidor concluído | nenhum |
 | `premium_interest` | Reservado para o botão "Premium em breve" | a definir |
 
+Todo evento leva `page_location` (endereço limpo, sem parâmetros de consulta, exceto `?origem=`). No GTM, a tag de eventos usa esse valor no lugar da URL do navegador.
+
 Nunca enviar: valores, instituições, ativos, metas, e-mail, nome, perguntas ao assistente.
 
 ## Para ligar (uma vez)

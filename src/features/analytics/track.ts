@@ -31,9 +31,20 @@ export function safePath(pathname: string, origin?: string | null): Record<strin
   return origin && SAFE_VALUE.test(origin) ? { page_path: path, origem: origin } : { page_path: path };
 }
 
+/**
+ * Endereço limpo da página atual: só origem do site, caminho e, se houver, `?origem=`.
+ * O GA4 usa este valor no lugar da URL completa, que pode trazer códigos de login ou convite.
+ */
+export function safeLocation(href: string) {
+  const url = new URL(href);
+  const origin = url.searchParams.get("origem");
+  const clean = `${url.origin}${url.pathname.slice(0, 80)}`;
+  return origin && SAFE_VALUE.test(origin) ? `${clean}?origem=${origin}` : clean;
+}
+
 export function track(event: TrackedEvent, params?: Record<string, string>) {
   if (!measurementAvailable || typeof window === "undefined") return;
   if (readChoice() !== "accepted") return;
   const layer = ((window as Window & { dataLayer?: unknown[] }).dataLayer ??= []);
-  layer.push({ event, ...sanitizeParams(params) });
+  layer.push({ event, ...sanitizeParams(params), page_location: safeLocation(window.location.href) });
 }
