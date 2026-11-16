@@ -15,6 +15,9 @@ const maximumAgeDays: Record<string, number> = {
   selic_target: 7,
   ipca_monthly: 70,
   ibovespa_close: 4,
+  tesouro_selic_preco: 6,
+  tesouro_prefixado_taxa: 6,
+  tesouro_ipca_taxa: 6,
 };
 
 export function latestIndicators(rows: MarketIndicatorRow[]) {

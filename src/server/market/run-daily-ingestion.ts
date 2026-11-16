@@ -1,6 +1,7 @@
 import "server-only";
 import { fetchLatestB3EquityPrices, fetchLatestB3Ibovespa } from "@/features/market/b3";
 import { fetchBcbSnapshot } from "@/features/market/bcb";
+import { fetchTesouroSnapshot } from "@/features/market/tesouro";
 import type { MarketIndicator, MarketPrice } from "@/features/market/types";
 import { createMarketAdminClient } from "@/server/market/admin-client";
 import { getPrivateEnv } from "@/server/env/private";
@@ -31,6 +32,10 @@ const SOURCES: Array<{
   {
     id: "bcb-sgs",
     fetchSnapshot: async () => ({ indicators: await fetchBcbSnapshot(), prices: [] }),
+  },
+  {
+    id: "tesouro-transparente",
+    fetchSnapshot: async (now) => ({ indicators: await fetchTesouroSnapshot({ now }), prices: [] }),
   },
   {
     id: "b3-public-eod",
@@ -70,6 +75,11 @@ const allowedErrorCodes = new Set([
   "bcb_payload_too_large",
   "bcb_unavailable",
   "bcb_value_out_of_range",
+  "tesouro_invalid_date",
+  "tesouro_invalid_payload",
+  "tesouro_payload_too_large",
+  "tesouro_unavailable",
+  "tesouro_value_out_of_range",
   "market_run_finish_failed",
   "market_portfolio_symbols_unavailable",
   "market_write_failed",
