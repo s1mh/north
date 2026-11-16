@@ -177,7 +177,7 @@ export default async function Home() {
 
     <section className="section">
       <div className="section-head">
-        <div><p className="eyebrow">North observa</p><h2>Próximo passo</h2></div>
+        <div><p className="eyebrow">Em destaque</p><h2>Próximo passo</h2></div>
       </div>
       <article className="editorial">
         <p className="eyebrow">{goalNeedsPace ? "Ritmo da meta" : "Carteira cadastrada"}</p>
@@ -190,7 +190,7 @@ export default async function Home() {
           ? "O North dividiu o valor restante pelo prazo, sem supor rentabilidade. Abra o assistente para entender os dados usados."
           : positions.length > 0
             ? "O patrimônio e a distribuição acima são derivados das movimentações registradas, sem estimativas inventadas."
-            : "Cadastre suas compras para transformar o protótipo em um retrato real do seu patrimônio."}</p>
+            : "Cadastre suas compras para ver um retrato real do seu patrimônio."}</p>
         <footer><span>Fato calculado pelo North</span><Link href="/assistente">Conversar →</Link></footer>
       </article>
     </section>
