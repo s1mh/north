@@ -598,7 +598,7 @@ h1, h2, h3, .wordmark, .welcome-wordmark { font-family: var(--font-display), var
   .lp-final { padding: 80px 64px; }
   .sim { grid-template-columns: 1.1fr .9fr; align-items: start; }
 }
-@media (max-width: 859px) { .lp-top nav a:not(.lp-btn) { display: none; } .lp-hero-art { min-height: 0; } .lp-card-goal { position: relative; right: auto; bottom: auto; margin: 16px 0 0 auto; } }
+@media (max-width: 859px) { .lp-top nav a[href="/simular"] { display: none; } .lp-top nav { gap: 16px; } .lp-top nav a:not(.lp-btn) { min-height: 44px; display: inline-flex; align-items: center; } .lp-hero-art { min-height: 0; } .lp-card-goal { position: relative; right: auto; bottom: auto; margin: 16px 0 0 auto; } }
 
 /* ===== Movimento (hero) ===== */
 @keyframes lp-rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
