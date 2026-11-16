@@ -19,7 +19,7 @@ port = 54323
 [auth]
 enabled = true
 site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://north-alpha.vercel.app/auth/callback", "https://north-alpha.vercel.app/**", "http://localhost:3000/**", "http://127.0.0.1:3000/**"]
+additional_redirect_urls = ["https://usenorthapp.com.br/auth/callback", "https://usenorthapp.com.br/**", "https://north-alpha.vercel.app/auth/callback", "https://north-alpha.vercel.app/**", "http://localhost:3000/**", "http://127.0.0.1:3000/**"]
 enable_signup = true
 minimum_password_length = 10
 

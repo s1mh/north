@@ -24,6 +24,8 @@ A regra central do app é simples: **nenhum número inventado**. Quando um dado 
 
 > Projeto de portfólio e de estudo. O conteúdo é educacional e não é recomendação de investimento.
 
+**App no ar:** [usenorthapp.com.br](https://usenorthapp.com.br)
+
 ### Como é por dentro
 
 <table>
@@ -121,6 +123,8 @@ O app roda de ponta a ponta com o stack local. A coleta diária de mercado depen
 The core rule is simple: **no invented numbers**. When data has not arrived yet, the screen says so, plainly.
 
 > Portfolio and learning project. The content is educational and is not investment advice.
+
+**Live app:** [usenorthapp.com.br](https://usenorthapp.com.br)
 
 ### What it does
 
