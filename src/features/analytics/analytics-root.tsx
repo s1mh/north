@@ -1,15 +1,26 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { setChoice, shouldShowBanner, startConsent, subscribe } from "@/features/analytics/consent";
+import { readChoice, setChoice, shouldShowBanner, startConsent, subscribe } from "@/features/analytics/consent";
 import { safePath, track } from "@/features/analytics/track";
 
 export function AnalyticsRoot() {
   const pathname = usePathname();
   const showBanner = useSyncExternalStore(subscribe, shouldShowBanner, () => false);
 
+  const wasShowing = useRef(false);
+
   useEffect(() => { startConsent(); }, []);
+
+  // Quem acaba de aceitar o banner: a página em que está conta como a primeira visita medida.
+  useEffect(() => {
+    if (wasShowing.current && !showBanner && readChoice() === "accepted") {
+      const origin = new URLSearchParams(window.location.search).get("origem");
+      track("page_view", safePath(window.location.pathname, origin));
+    }
+    wasShowing.current = showBanner;
+  }, [showBanner]);
 
   useEffect(() => {
     const origin = new URLSearchParams(window.location.search).get("origem");
