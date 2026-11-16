@@ -1,104 +1,133 @@
 import { NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import { assistantQuestionSchema, redactSensitiveText } from "@/features/assistant/policy";
-import { ASSISTANT_PROMPT_VERSION, runAssistantGateway } from "@/server/assistant/gateway";
-import { loadAssistantContext } from "@/server/assistant/context";
+import { describeAction, type ActionKind, type ActionStatus } from "@/features/assistant/actions";
 import {
-  createVercelAssistantProvider,
-  hasVercelAiGatewayCredentials,
-} from "@/server/assistant/vercel-provider";
+  assistantQuestionSchema,
+  classifyQuestionSafety,
+  isAssistantReplyInScope,
+  redactSensitiveText,
+} from "@/features/assistant/policy";
+import { deterministicAssistantReply } from "@/features/assistant/engine";
+import { runAssistantAgent } from "@/server/assistant/agent";
+import { loadAssistantContext } from "@/server/assistant/context";
+import { hasVercelAiGatewayCredentials } from "@/server/assistant/vercel-provider";
 import { createClient } from "@/server/supabase/client";
 
+export const maxDuration = 60;
+
 const privateHeaders = { "Cache-Control": "private, no-store" };
+const fail = (error: string, status: number) =>
+  NextResponse.json({ error }, { status, headers: privateHeaders });
+
+const blockedText = "Esse pedido não faz parte do north. Posso ajudar com a sua carteira, metas, indicadores e registros.";
 
 export async function POST(request: Request) {
   if (request.headers.get("origin") !== new URL(request.url).origin) {
-    return NextResponse.json(
-      { error: "Origem inválida." },
-      { status: 403, headers: privateHeaders },
-    );
+    return fail("Origem inválida.", 403);
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json(
-      { error: "Sessão inválida." },
-      { status: 401, headers: privateHeaders },
-    );
-  }
+  if (!user) return fail("Sessão inválida.", 401);
 
-  const input = await request.json().catch(() => null);
-  const parsed = assistantQuestionSchema.safeParse(input);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Escreva uma pergunta entre 2 e 500 caracteres." },
-      { status: 400, headers: privateHeaders },
-    );
-  }
+  const parsed = assistantQuestionSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return fail("Escreva uma mensagem entre 2 e 500 caracteres.", 400);
 
-  const redactedMessage = redactSensitiveText(parsed.data.message);
-  const { context, sourceRefs, contextHash } = await loadAssistantContext(supabase);
-  const { data: generationId, error: claimError } = await supabase.rpc(
-    "claim_assistant_generation",
-    {
-      p_prompt_version: ASSISTANT_PROMPT_VERSION,
-      p_context_hash: contextHash,
-      p_source_refs: sourceRefs,
-      p_input_chars: Array.from(redactedMessage).length,
-    },
-  );
+  const message = redactSensitiveText(parsed.data.message);
+  const { data: generationId, error: claimError } = await supabase.rpc("claim_assistant_turn", {
+    p_input_chars: Array.from(message).length,
+  });
   if (claimError || !generationId) {
     const rateLimited = claimError?.message.includes("assistant rate limit");
-    return NextResponse.json(
-      {
-        error: rateLimited
-          ? "Você atingiu o limite de 20 perguntas por hora. Tente novamente mais tarde."
-          : "Não foi possível reservar esta interação agora.",
-      },
-      { status: rateLimited ? 429 : 500, headers: privateHeaders },
+    return fail(
+      rateLimited
+        ? "Você atingiu o limite de 20 mensagens por hora. Tente novamente mais tarde."
+        : "Não foi possível reservar esta mensagem agora.",
+      rateLimited ? 429 : 500,
     );
   }
 
-  const generation = await runAssistantGateway({
-    question: redactedMessage,
-    context,
-    userRef: createHash("sha256").update(user.id).digest("hex"),
-    provider: hasVercelAiGatewayCredentials()
-      ? createVercelAssistantProvider()
-      : undefined,
-    timeoutMs: 15_000,
-  });
-  const title = redactedMessage.slice(0, 80);
-  const { data: threadId, error } = await supabase.rpc("save_claimed_assistant_exchange", {
+  // Memória da conversa: as últimas mensagens (só texto).
+  let history: Array<{ role: "user" | "assistant"; content: string }> = [];
+  if (parsed.data.threadId) {
+    const { data: rows } = await supabase
+      .from("assistant_messages")
+      .select("role, content")
+      .eq("thread_id", parsed.data.threadId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    history = ((rows ?? []) as Array<{ role: "user" | "assistant"; content: string }>).reverse();
+  }
+
+  let text = "";
+  let status: "generated" | "fallback" | "blocked" = "generated";
+  let model = "policy-v1";
+  let actionIds: string[] = [];
+
+  if (classifyQuestionSafety(message) === "blocked") {
+    text = blockedText;
+    status = "blocked";
+  } else if (hasVercelAiGatewayCredentials()) {
+    try {
+      const result = await runAssistantAgent({
+        supabase,
+        history,
+        question: message,
+        userRef: createHash("sha256").update(user.id).digest("hex"),
+      });
+      if (!result.text || !isAssistantReplyInScope(result.text)) throw new Error("empty_or_out_of_scope");
+      text = result.text.slice(0, 1900);
+      model = result.model;
+      actionIds = result.actionIds;
+    } catch {
+      status = "fallback";
+    }
+  } else {
+    status = "fallback";
+  }
+
+  if (status === "fallback") {
+    const { context } = await loadAssistantContext(supabase);
+    const reply = deterministicAssistantReply(message, context);
+    text = `Não consegui falar com o assistente completo agora, então segue um resumo:\n\n${reply.title}\n${reply.paragraphs.join("\n\n")}`.slice(0, 1900);
+    model = "deterministic-v1";
+    actionIds = [];
+  } else if (status === "blocked") {
+    model = "policy-v1";
+  }
+
+  const { data: saved, error: saveError } = await supabase.rpc("save_assistant_turn", {
     p_generation_id: generationId,
     p_thread_id: parsed.data.threadId,
-    p_title: title,
-    p_user_content: redactedMessage,
-    p_assistant_payload: generation.reply,
-    p_status: generation.status,
-    p_model: generation.model,
-    p_prompt_version: ASSISTANT_PROMPT_VERSION,
-    p_context_hash: contextHash,
-    p_source_refs: sourceRefs,
+    p_title: message.slice(0, 80),
+    p_user_content: message,
+    p_assistant_text: text,
+    p_assistant_payload: { v: 2, text },
+    p_status: status,
+    p_model: model,
+    p_action_ids: actionIds,
   });
-  if (error) {
-    const unavailableThread = error.code === "42501";
-    return NextResponse.json(
-      {
-        error: unavailableThread
-            ? "Essa conversa não está mais disponível."
-            : "Não foi possível responder agora.",
-      },
-      {
-        status: unavailableThread ? 404 : 500,
-        headers: privateHeaders,
-      },
-    );
+  if (saveError || !saved) {
+    const unavailable = saveError?.code === "42501";
+    return fail(unavailable ? "Essa conversa não está mais disponível." : "Não foi possível responder agora.", unavailable ? 404 : 500);
   }
+  const ids = saved as { thread_id: string; user_message_id: string; assistant_message_id: string };
+
+  const { data: actionRows } = actionIds.length > 0
+    ? await supabase.from("assistant_actions").select("id, kind, status, payload, result").in("id", actionIds)
+    : { data: [] };
+  const actions = ((actionRows ?? []) as Array<{
+    id: string; kind: ActionKind; status: ActionStatus; payload: unknown; result: unknown;
+  }>).map((row) => ({ id: row.id, kind: row.kind, status: row.status, view: describeAction(row.kind, row.payload) }));
 
   return NextResponse.json(
-    { threadId, userMessage: redactedMessage, reply: generation.reply },
+    {
+      threadId: ids.thread_id,
+      userMessage: message,
+      assistantMessageId: ids.assistant_message_id,
+      text,
+      actions,
+    },
     { status: 201, headers: privateHeaders },
   );
 }

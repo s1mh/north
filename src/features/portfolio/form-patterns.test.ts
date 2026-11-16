@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { portfolioTransactionSchema } from "./submission";
 
 // Regressão: dentro de um atributo JSX, "\\d" vira uma barra literal e o
 // navegador passa a recusar qualquer número válido.
@@ -33,4 +34,18 @@ describe("padrões de validação dos formulários numéricos", () => {
       }
     });
   }
+});
+
+describe("validação da movimentação", () => {
+  it("recusa texto nos números em vez de lançar erro", () => {
+    expect(portfolioTransactionSchema.safeParse({
+      instrumentId: "5d1c1a4e-5c53-4c8e-9a0e-5a1d3f6a2b10",
+      transactionType: "aporte",
+      quantity: "abc",
+      unitPrice: "1.00",
+      fees: "0",
+      cashAmount: "0",
+      tradeDate: "2020-01-01",
+    }).success).toBe(false);
+  });
 });
