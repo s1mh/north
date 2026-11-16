@@ -12,6 +12,7 @@ const privateEnvSchema = z.object({
   RESEND_API_KEY: optionalSecret(20),
   MARKET_DATA_API_KEY: optionalSecret(20),
   CRON_SECRET: optionalSecret(32),
+  OPS_ALERT_EMAIL: z.preprocess((value) => value === "" ? undefined : value, z.string().email().optional()),
 });
 
 export function getPrivateEnv() {
@@ -21,6 +22,7 @@ export function getPrivateEnv() {
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     MARKET_DATA_API_KEY: process.env.MARKET_DATA_API_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
+    OPS_ALERT_EMAIL: process.env.OPS_ALERT_EMAIL,
   });
 }
 

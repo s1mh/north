@@ -2,6 +2,9 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { accountDeletionSchema } from "@/features/profile/account";
 import { createAccountAdminClient } from "@/server/supabase/admin";
+import { sendEmail } from "@/server/email/send";
+import { renderAccountDeleted } from "@/server/email/templates";
+import { getPrivateEnv } from "@/server/env/private";
 import { sessionSatisfiesMfa } from "@/server/auth/mfa";
 import { createClient } from "@/server/supabase/client";
 
@@ -62,6 +65,15 @@ export async function POST(request: Request) {
       { status: 500, headers: privateHeaders },
     );
   }
+
+  // Aviso final de que a conta foi apagada (não derruba a exclusão se falhar).
+  await sendEmail({
+    apiKey: getPrivateEnv().RESEND_API_KEY,
+    to: user.email,
+    subject: "Sua conta no north. foi apagada",
+    html: renderAccountDeleted(),
+    idempotencyKey: `north-account-deleted-${user.id}`,
+  });
 
   const response = NextResponse.json(
     { deleted: true },

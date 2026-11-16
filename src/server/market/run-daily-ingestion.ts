@@ -3,6 +3,8 @@ import { fetchLatestB3EquityPrices, fetchLatestB3Ibovespa } from "@/features/mar
 import { fetchBcbSnapshot } from "@/features/market/bcb";
 import type { MarketIndicator, MarketPrice } from "@/features/market/types";
 import { createMarketAdminClient } from "@/server/market/admin-client";
+import { getPrivateEnv } from "@/server/env/private";
+import { notifyIngestionFailure } from "@/server/market/notify-failure";
 import { settleSequentially } from "@/server/market/settle-sequentially";
 
 type MarketSnapshot = {
@@ -234,6 +236,15 @@ async function runSourceIngestion({
         summary: "O snapshot diário esperado não foi persistido.",
       }),
     ]);
+    const { RESEND_API_KEY, OPS_ALERT_EMAIL } = getPrivateEnv();
+    await notifyIngestionFailure({
+      apiKey: RESEND_API_KEY,
+      to: OPS_ALERT_EMAIL,
+      siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://usenorthapp.com.br",
+      sourceId,
+      errorCode,
+      jobKey,
+    }).catch(() => "failed");
     throw new Error(errorCode);
   }
 }
