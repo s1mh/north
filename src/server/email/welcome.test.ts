@@ -8,7 +8,7 @@ describe("welcome email", () => {
     const html = renderWelcomeEmail("https://north-alpha.vercel.app/onboarding/perfil");
 
     expect(html).toContain("north.");
-    expect(html).toContain("Sua vida financeira, mais clara.");
+    expect(html).toContain("Comece a investir sabendo o que faz.");
     expect(html).toContain('href="https://north-alpha.vercel.app/inicio"');
   });
 
@@ -40,6 +40,6 @@ describe("welcome email", () => {
     expect(request.headers).toMatchObject({
       "Idempotency-Key": "north-welcome-user-1",
     });
-    expect(request.body).toContain("Seu North está pronto");
+    expect(request.body).toContain("Seu north. está pronto");
   });
 });

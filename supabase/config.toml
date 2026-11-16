@@ -35,9 +35,17 @@ max_frequency = "1m"
 otp_length = 8
 
 [auth.email.template.confirmation]
-subject = "Confirme seu e-mail no North"
+subject = "Confirme seu e-mail no north."
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "Redefina sua senha no North"
+subject = "Redefina sua senha no north."
 content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirme o novo e-mail da sua conta no north."
+content_path = "./supabase/templates/email_change.html"
+
+[auth.email.template.reauthentication]
+subject = "Seu código de confirmação do north."
+content_path = "./supabase/templates/reauthentication.html"

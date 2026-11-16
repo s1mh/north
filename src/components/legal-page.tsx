@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteFooter } from "@/components/site-footer";
 
 export function LegalPage({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -8,6 +9,7 @@ export function LegalPage({ title, children }: { title: string; children: React.
       <h1>{title}</h1>
       {children}
       <p className="legal-review">Texto inicial sujeito à revisão jurídica antes do beta público.</p>
+      <SiteFooter compact />
     </main>
   );
 }

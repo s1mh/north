@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
   title: { absolute: "north. Comece a investir sabendo o que faz" },
@@ -42,7 +43,7 @@ export default function WelcomePage() {
         <section className="lp-hero">
           <div className="lp-hero-copy">
             <p className="lp-eyebrow">Educação financeira, no seu ritmo</p>
-            <h1>Comece a investir sabendo o que faz.</h1>
+            <h1 className="lp-h1"><span>Comece a</span> <span>investir</span> <span>sabendo o</span> <span>que faz.</span></h1>
             <p className="lp-lead">Para quem está começando: entenda Tesouro, CDB e ação, simule um aporte pequeno e acompanhe a sua carteira, no seu ritmo.</p>
             <div className="lp-actions">
               <Link className="lp-btn" href="/cadastro">Criar minha conta (grátis)</Link>
@@ -54,13 +55,13 @@ export default function WelcomePage() {
             <div className="lp-card lp-card-main">
               <small>Seu patrimônio</small>
               <strong>R$ 12.480,00</strong>
-              <div className="lp-bar"><i style={{ width: "62%", background: "var(--rf)" }} /><i style={{ width: "18%", background: "var(--ac)" }} /><i style={{ width: "12%", background: "var(--fi)" }} /><i style={{ width: "8%", background: "var(--cr)" }} /></div>
+              <div className="lp-bar"><i style={{ "--w": "62%", background: "var(--rf)" } as React.CSSProperties} /><i style={{ "--w": "18%", background: "var(--ac)" } as React.CSSProperties} /><i style={{ "--w": "12%", background: "var(--fi)" } as React.CSSProperties} /><i style={{ "--w": "8%", background: "var(--cr)" } as React.CSSProperties} /></div>
               <ul><li><b style={{ background: "var(--rf)" }} />Renda fixa 62%</li><li><b style={{ background: "var(--ac)" }} />Ações 18%</li><li><b style={{ background: "var(--fi)" }} />FIIs 12%</li><li><b style={{ background: "var(--cr)" }} />Outros 8%</li></ul>
             </div>
             <div className="lp-card lp-card-goal">
               <small>Meta: reserva de emergência</small>
               <strong>R$ 3.000 de R$ 10.000</strong>
-              <div className="lp-track"><i style={{ width: "30%" }} /></div>
+              <div className="lp-track"><i style={{ "--w": "30%" } as React.CSSProperties} /></div>
               <span>Exemplo ilustrativo</span>
             </div>
           </div>
@@ -94,11 +95,7 @@ export default function WelcomePage() {
         </section>
       </main>
 
-      <footer className="lp-foot">
-        <p><b>north.</b> Seu dinheiro, numa direção só.</p>
-        <p>Conteúdo educacional. Não é recomendação de investimento, consultoria nem oferta de produto. Uso para maiores de 18 anos.</p>
-        <p><Link href="/termos">Termos</Link> · <Link href="/privacidade">Privacidade</Link> · <Link href="/simular">Simulador</Link></p>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteFooter } from "@/components/site-footer";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { SignOutButton } from "@/features/auth/sign-out-button";
 import { profileInitials } from "@/features/profile/initials";
@@ -12,5 +13,5 @@ export async function AppShell({ active, children }: { active: string; children:
     .maybeSingle();
   const initials = profileInitials(profile?.display_name);
 
-  return <><main className="shell"><header className="topbar"><span className="wordmark">north.</span><div className="topbar-actions"><SignOutButton /><Link className="avatar" href="/perfil" aria-label={`Abrir conta e ajustes de ${profile?.display_name ?? "seu perfil"}`}>{initials}</Link></div></header>{children}</main><BottomNav active={active} /></>;
+  return <><main className="shell"><header className="topbar"><span className="wordmark">north.</span><div className="topbar-actions"><SignOutButton /><Link className="avatar" href="/perfil" aria-label={`Abrir conta e ajustes de ${profile?.display_name ?? "seu perfil"}`}>{initials}</Link></div></header>{children}<SiteFooter compact /></main><BottomNav active={active} /></>;
 }

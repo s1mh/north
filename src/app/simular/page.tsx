@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteFooter } from "@/components/site-footer";
 import { PublicSimulator } from "@/features/public/public-simulator";
 
 export const metadata: Metadata = {
@@ -19,5 +20,6 @@ export default function SimularPage() {
       <p className="lp-note">Simulação educacional com juros compostos e aportes mensais, sem impostos e sem taxas. Não é recomendação de investimento nem promessa de resultado. Rentabilidade passada ou imaginada não garante rentabilidade futura.</p>
       <div className="lp-final lp-final-inline"><h2>Quer guardar essa simulação e acompanhar a sua carteira?</h2><Link className="lp-btn" href="/cadastro">Criar minha conta (grátis)</Link></div>
     </main>
+    <SiteFooter />
   </div>;
 }
