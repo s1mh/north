@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { isBalanceProduct } from "@/features/portfolio/terms";
 import {
   derivePosition,
   formatMoneyFromCents,
@@ -17,6 +18,8 @@ type Instrument = {
   latest_price: string | number | null;
   price_observed_at: string | null;
   portfolio_institutions: { name: string } | null;
+  portfolio_instrument_terms: { product_type: string | null } | { product_type: string | null }[] | null;
+  portfolio_valuations: Array<{ valued_on: string }> | null;
   portfolio_transactions: PortfolioTransaction[];
 };
 
@@ -39,6 +42,8 @@ export default async function CarteiraPage() {
     .select(`
       id, symbol, name, asset_class, latest_price, price_observed_at,
       portfolio_institutions(name),
+      portfolio_instrument_terms(product_type),
+      portfolio_valuations(valued_on),
       portfolio_transactions(
         id, transaction_type, quantity, unit_price, fees, cash_amount,
         reverses_transaction_id, corrects_transaction_id, audit_reason,
@@ -46,6 +51,8 @@ export default async function CarteiraPage() {
       )
     `)
     .order("created_at", { ascending: true })
+    .order("valued_on", { referencedTable: "portfolio_valuations", ascending: false })
+    .limit(1, { referencedTable: "portfolio_valuations" })
     .order("trade_date", { referencedTable: "portfolio_transactions", ascending: true })
     .order("created_at", { referencedTable: "portfolio_transactions", ascending: true });
 
@@ -102,13 +109,20 @@ export default async function CarteiraPage() {
                 ? new Intl.DateTimeFormat("pt-BR").format(new Date(instrument.price_observed_at))
                 : null;
               const priceStatus = getPriceStatus(instrument.latest_price, instrument.price_observed_at);
+              const terms = Array.isArray(instrument.portfolio_instrument_terms)
+                ? instrument.portfolio_instrument_terms[0]
+                : instrument.portfolio_instrument_terms;
+              const balance = isBalanceProduct(terms?.product_type);
+              const informed = instrument.portfolio_valuations?.[0]?.valued_on;
               const priceLabel = priceStatus === "missing"
                 ? "sem preço atual"
-                : priceStatus === "stale"
-                  ? `preço desatualizado · ${observed}`
-                  : `preço de ${observed}`;
+                : informed && instrument.price_observed_at?.slice(0, 10) === informed
+                  ? `valor informado em ${observed}`
+                  : priceStatus === "stale"
+                    ? `preço desatualizado · ${observed}`
+                    : `preço de ${observed}`;
               return <Link className="portfolio-item" href={`/carteira/${instrument.id}`} key={instrument.id}>
-                <div><strong>{instrument.symbol}</strong><span>{instrument.name} · {formatQuantity(quantity)} cotas</span></div>
+                <div><strong>{instrument.symbol}</strong><span>{instrument.name}{balance ? "" : ` · ${formatQuantity(quantity)} cotas`}</span></div>
                 <div><strong>{formatMoneyFromCents(currentValueCents ?? costBasisCents)}</strong><span>{instrument.portfolio_institutions?.name} · {priceLabel}</span></div>
               </Link>;
             })}

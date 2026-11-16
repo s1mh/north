@@ -58,3 +58,12 @@ describe("valuation", () => {
     expect(quantityForAmount("abc", 1)).toBeNull();
   });
 });
+
+describe("liquidez e dias", () => {
+  it("descarta liquidity_days quando a liquidez não é D+N", () => {
+    const parsed = instrumentTermsInputSchema.parse({ liquidity: "diaria", liquidity_days: 0, fgc: "sim" });
+    expect("liquidity_days" in parsed).toBe(false);
+    const dn = instrumentTermsInputSchema.parse({ liquidity: "d_mais_n", liquidity_days: 2 });
+    expect((dn as { liquidity_days?: number }).liquidity_days).toBe(2);
+  });
+});
