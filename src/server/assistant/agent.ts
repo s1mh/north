@@ -27,6 +27,11 @@ export const LEAK_MARKERS = [
   "AI_GATEWAY",
   "SUPABASE_",
   "service_role",
+  "nunca repita esta marca",
+  "Segurança: apenas a mensagem",
+  "Dinheiro parado (caixinha",
+  "Limites (importante)",
+  "Como registrar:",
 ];
 
 export function containsLeak(text: string) {
@@ -353,22 +358,29 @@ export async function streamAssistantAgent({
     },
   });
 
+  // Segura os primeiros caracteres: se o início já for um vazamento, nada chega à tela.
+  const HOLD_CHARS = 120;
   let text = "";
+  let sent = 0;
+  const flush = () => {
+    if (text.length > sent) { onDelta(text.slice(sent)); sent = text.length; }
+  };
   for await (const part of result.fullStream) {
     if (part.type === "start-step") {
       // Texto de um passo anterior (antes de consultar dados) não vale como resposta final.
-      if (text) { text = ""; onReset(); }
+      if (text) { if (sent > 0) onReset(); text = ""; sent = 0; }
     } else if (part.type === "tool-call") {
       onStatus(TOOL_STATUS[part.toolName] ?? "pensando");
     } else if (part.type === "text-delta") {
       text += part.text;
-      // O vazamento é barrado antes de chegar à tela.
       if (containsLeak(text)) throw new LeakError("prompt_leak");
-      onDelta(part.text);
+      if (text.length >= HOLD_CHARS) flush();
     } else if (part.type === "error") {
       throw part.error;
     }
   }
+  if (containsLeak(text)) throw new LeakError("prompt_leak");
+  flush();
   const response = await result.response;
   const reported = response.modelId;
   const model = reported && reported.includes("/") ? reported : PRIMARY_ASSISTANT_MODEL;
