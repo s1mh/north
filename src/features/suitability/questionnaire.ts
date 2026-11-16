@@ -174,7 +174,7 @@ export const targetAllocations: Record<InvestorProfile, readonly TargetAllocatio
 
 export const profileCopy: Record<InvestorProfile, string> = {
   conservador:
-    "Você prioriza segurança e previsibilidade. Sua carteira-alvo protege a maior parte do patrimônio sem deixar de buscar crescimento gradual.",
+    "Você prioriza segurança e previsibilidade. Perfis como o seu costumam priorizar segurança, sem deixar de considerar crescimento gradual.",
   moderado:
     "Você aceita alguma oscilação em troca de retorno melhor, mantendo boa parte em segurança. Equilíbrio entre proteger e crescer.",
   arrojado:

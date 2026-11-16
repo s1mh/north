@@ -95,7 +95,7 @@ export function SuitabilityFlow({ initialResult = null }: { initialResult?: Suit
             <span>Conservador</span><span>Moderado</span><span>Arrojado</span>
           </div>
 
-          <p className="eyebrow allocation-title">Carteira-alvo sugerida</p>
+          <p className="eyebrow allocation-title">Modelo de referência (educacional)</p>
           <div className="allocation-bar" aria-label="Distribuição sugerida">
             {allocation.map((item) => (
               <span key={item.label} style={{ background: item.color, width: `${item.value}%` }} />

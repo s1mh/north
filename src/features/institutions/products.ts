@@ -51,7 +51,7 @@ export function isProductReviewOverdue(reviewDueAt: string, today: string) {
 
 export function comparisonPrompt(profile: InvestorProfile, liquidity: string) {
   const profileCopy = {
-    conservador: "No perfil Conservador, dê peso especial a liquidez, proteção e risco de crédito.",
+    conservador: "Para quem tem perfil Conservador, costuma importar olhar liquidez, proteção e risco de crédito.",
     moderado: "No perfil Moderado, compare o papel do produto com prazo, liquidez e diversificação.",
     arrojado: "Mesmo no perfil Arrojado, liquidez, risco de crédito e concentração continuam relevantes.",
   }[profile];

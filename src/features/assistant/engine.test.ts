@@ -44,13 +44,13 @@ describe("assistant deterministic engine", () => {
   it("derives only signals supported by known context", () => {
     const insights = deriveAssistantInsights(assistantContextFixture);
     expect(insights.map((item) => item.kind)).toEqual(["allocation", "goal", "market"]);
-    expect(insights[0]?.title).toContain("10%");
+    expect(insights[0]?.title).toContain("20%");
   });
 
   it("explains allocation without issuing a trade order", () => {
     const reply = deterministicAssistantReply("Como está minha carteira?", assistantContextFixture);
     expect(reply.title).toContain("Cripto");
-    expect(reply.paragraphs.join(" ")).toContain("não uma ordem");
+    expect(reply.paragraphs.join(" ")).toContain("não indica o que comprar ou vender");
   });
 
   it("uses the recorded goal amounts without assuming return", () => {

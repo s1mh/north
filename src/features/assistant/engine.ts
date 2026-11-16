@@ -29,14 +29,13 @@ export function deriveAssistantInsights(context: AssistantContext): AssistantIns
   const deviation = largestAllocationDeviation(context);
 
   if (deviation && Math.abs(deviation.difference) >= 5) {
-    const direction = deviation.difference > 0 ? "acima" : "abaixo";
     insights.push({
       kind: "allocation",
       eyebrow: "Distribuição da carteira",
-      title: `${deviation.label} está ${percentage(Math.abs(deviation.difference))} ${direction} do alvo.`,
-      body: `Sua carteira registrada tem ${percentage(deviation.actual)} nessa classe; o perfil ${context.profile.label} usa ${percentage(deviation.target)} como referência educacional.`,
+      title: `${deviation.label} é ${percentage(deviation.actual)} da sua carteira registrada.`,
+      body: `No modelo de referência educacional do perfil ${context.profile.label}, essa classe aparece com ${percentage(deviation.target)}. É só uma comparação, não uma orientação.`,
       href: "/carteira",
-      action: "Revisar carteira →",
+      action: "Ver carteira →",
       color: "var(--cr)",
     });
   }
@@ -95,7 +94,7 @@ export function deterministicAssistantReply(
         eyebrow: "Carteira",
         title: "Ainda não há posição suficiente para comparar.",
         paragraphs: [
-          "Cadastre seus ativos e movimentações. Depois disso, o North compara a distribuição registrada com o alvo educacional do seu perfil.",
+          "Cadastre seus ativos e movimentações. Depois disso, o North compara a distribuição registrada com o modelo de referência educacional do seu perfil.",
         ],
         facts: [{ label: "Perfil atual", value: context.profile.label }],
         actions: [{ label: "Cadastrar carteira", href: "/carteira" }],
@@ -103,10 +102,10 @@ export function deterministicAssistantReply(
     }
     return {
       eyebrow: "Distribuição registrada",
-      title: `${deviation.label} é hoje o maior desvio em relação ao perfil.`,
+      title: `${deviation.label} é a classe que mais difere do modelo de referência.`,
       paragraphs: [
-        `A classe representa ${percentage(deviation.actual)} da carteira cadastrada, enquanto o alvo do perfil ${context.profile.label} é ${percentage(deviation.target)}.`,
-        "Isso é um sinal para revisar a distribuição, não uma ordem para comprar ou vender.",
+        `A classe representa ${percentage(deviation.actual)} da carteira cadastrada, enquanto no modelo de referência do perfil ${context.profile.label} é ${percentage(deviation.target)}.`,
+        "É só uma comparação educacional: o North não indica o que comprar ou vender.",
       ],
       facts: [
         { label: "Diferença", value: percentage(deviation.difference) },
