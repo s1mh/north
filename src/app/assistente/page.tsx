@@ -28,7 +28,7 @@ export default async function AssistantPage({
   const { c } = await searchParams;
   const supabase = await createClient();
   const now = new Date().toISOString();
-  const [{ data: claimsData }, { context }, threadsResult] = await Promise.all([
+  const [{ data: claimsData }, { context }, threadsResult, assetsResult, goalsResult] = await Promise.all([
     supabase.auth.getClaims(),
     loadAssistantContext(supabase),
     supabase
@@ -37,6 +37,8 @@ export default async function AssistantPage({
       .gt("expires_at", now)
       .order("updated_at", { ascending: false })
       .limit(30),
+    supabase.from("portfolio_instruments").select("id", { count: "exact", head: true }),
+    supabase.from("goals").select("id", { count: "exact", head: true }).eq("status", "active"),
   ]);
   const threads = (threadsResult.data ?? []) as ThreadItem[];
   // O primeiro nome só é usado na tela (saudação); nunca vai para o provedor de IA.
@@ -82,6 +84,8 @@ export default async function AssistantPage({
   return <main className="assistant-shell">
     <AssistantChat
       key={selected?.id ?? "nova"}
+      hasAssets={(assetsResult.count ?? 0) > 0}
+      hasGoals={(goalsResult.count ?? 0) > 0}
       firstName={firstName}
       threads={threads}
       initialThreadId={selected?.id ?? null}

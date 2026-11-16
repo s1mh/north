@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { describeAction, type ActionKind } from "@/features/assistant/actions";
+import { canUndo, describeAction, type ActionKind } from "@/features/assistant/actions";
 import { ActionError, executeAction, undoAction } from "@/server/assistant/actions";
 import { createClient } from "@/server/supabase/client";
 
@@ -59,6 +59,10 @@ export async function POST(
     }
   }
 
+  const { data: current } = await supabase.from("assistant_actions").select("kind").eq("id", actionId.data).maybeSingle();
+  if (!current || !canUndo((current as { kind: ActionKind }).kind)) {
+    return fail("Esse registro não pode ser desfeito por aqui.", 409);
+  }
   const undoing = await transition("confirmed", "undoing");
   if (!undoing) return fail("Não é possível desfazer esse registro.", 409);
   try {

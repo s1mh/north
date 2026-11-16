@@ -3,7 +3,7 @@ set local role postgres;
 set local search_path = public, extensions;
 
 create extension if not exists pgtap;
-select plan(16);
+select plan(18);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -66,6 +66,10 @@ select throws_ok(
   $$ select public.save_assistant_turn((select id from t_gen), (select (r->>'thread_id')::uuid from t_turn), 'X1', 'Pergunta', 'Resposta', '{}'::jsonb, 'generated', 'openai/gpt-5.6-luna', null) $$,
   '42501', null, 'não grava em conversa de outra pessoa'
 );
+
+-- tipos da fase 4
+select lives_ok($$ select public.create_assistant_action('reverse_transaction', '{"x":1}'::jsonb) $$, 'aceita proposta de estorno');
+select lives_ok($$ select public.create_assistant_action('create_goal', '{"x":1}'::jsonb) $$, 'aceita proposta de meta');
 
 -- limite de uso
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000041","role":"authenticated","aal":"aal1"}', true);

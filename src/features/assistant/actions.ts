@@ -1,8 +1,10 @@
 import { z } from "zod";
-import { goalContributionSchema } from "@/features/goals/submission";
-import { portfolioAssetSchema, portfolioTransactionSchema } from "@/features/portfolio/submission";
+import { goalContributionSchema, goalSchema } from "@/features/goals/submission";
+import { portfolioAssetSchema, portfolioReversalSchema, portfolioTransactionSchema } from "@/features/portfolio/submission";
 
-export const actionKinds = ["record_transaction", "create_asset", "goal_contribution"] as const;
+export const actionKinds = [
+  "record_transaction", "create_asset", "goal_contribution", "reverse_transaction", "create_goal",
+] as const;
 export type ActionKind = typeof actionKinds[number];
 
 export const actionStatuses = [
@@ -25,7 +27,23 @@ export const goalContributionPayloadSchema = z.object({
   goalName: z.string().trim().min(1).max(120),
 }).strict();
 
+export const reverseTransactionPayloadSchema = z.object({
+  data: portfolioReversalSchema,
+  label: z.string().trim().min(1).max(160),
+}).strict();
+
+export const createGoalPayloadSchema = z.object({
+  data: goalSchema,
+}).strict();
+
+/** Só o que cria um registro simples tem "Desfazer"; estorno e meta ficam auditados e se tratam nas telas. */
+export function canUndo(kind: ActionKind) {
+  return kind === "record_transaction" || kind === "create_asset" || kind === "goal_contribution";
+}
+
 export const payloadSchemas = {
+  reverse_transaction: reverseTransactionPayloadSchema,
+  create_goal: createGoalPayloadSchema,
   record_transaction: recordTransactionPayloadSchema,
   create_asset: createAssetPayloadSchema,
   goal_contribution: goalContributionPayloadSchema,
@@ -98,6 +116,31 @@ export function describeAction(kind: ActionKind, payload: unknown): ActionView |
         { label: "Data", value: formatDate(data.tradeDate) },
       ],
     };
+  }
+  if (kind === "reverse_transaction") {
+    const parsed = reverseTransactionPayloadSchema.safeParse(payload);
+    if (!parsed.success) return null;
+    return {
+      title: "Estornar lançamento",
+      rows: [
+        { label: "Lançamento", value: parsed.data.label },
+        { label: "Motivo", value: parsed.data.data.reason },
+      ],
+    };
+  }
+  if (kind === "create_goal") {
+    const parsed = createGoalPayloadSchema.safeParse(payload);
+    if (!parsed.success) return null;
+    const { data } = parsed.data;
+    const rows = [
+      { label: "Meta", value: data.name },
+      { label: "Valor alvo", value: money(Number(data.targetAmount)) },
+      { label: "Até", value: formatDate(data.targetDate) },
+    ];
+    if (Number(data.plannedMonthlyAmount) > 0) {
+      rows.push({ label: "Aporte mensal", value: money(Number(data.plannedMonthlyAmount)) });
+    }
+    return { title: "Criar meta", rows };
   }
   const parsed = goalContributionPayloadSchema.safeParse(payload);
   if (!parsed.success) return null;
