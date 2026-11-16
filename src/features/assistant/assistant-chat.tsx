@@ -18,6 +18,13 @@ const suggestions = [
 
 const DISCLAIMER = "Conteúdo educacional. O north. não recomenda investimentos, não executa ordens e não move dinheiro: só registra o seu controle manual.";
 
+/** Mostra **negrito** como negrito, sem outros recursos de markdown. */
+function renderInline(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => part.startsWith("**") && part.endsWith("**") && part.length > 4
+    ? <strong key={index}>{part.slice(2, -2)}</strong>
+    : part);
+}
+
 function dayLabel(iso: string) {
   const date = new Date(iso);
   const today = new Date();
@@ -214,7 +221,7 @@ export function AssistantChat({
       {messages.map((item) => item.role === "user"
         ? <p className="assistant-user-message" key={item.id}>{item.text}</p>
         : <div className="asst-assistant" key={item.id}>
-          <p className="asst-bubble">{item.text}</p>
+          <p className="asst-bubble">{renderInline(item.text)}</p>
           {item.actions.map((action) => <ActionCard key={action.id} action={action} onChange={setActionStatus} />)}
         </div>)}
       {pending ? <p className="assistant-thinking">North está pensando…</p> : null}
