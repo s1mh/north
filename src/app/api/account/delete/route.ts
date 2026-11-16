@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { accountDeletionSchema } from "@/features/profile/account";
 import { createAccountAdminClient } from "@/server/supabase/admin";
+import { sessionSatisfiesMfa } from "@/server/auth/mfa";
 import { createClient } from "@/server/supabase/client";
 
 const privateHeaders = { "Cache-Control": "private, no-store" };
@@ -30,6 +31,13 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Não foi possível confirmar sua conta." },
       { status: 401, headers: privateHeaders },
+    );
+  }
+
+  if (!(await sessionSatisfiesMfa(supabase))) {
+    return NextResponse.json(
+      { error: "Confirme a verificação em duas etapas para continuar." },
+      { status: 403, headers: privateHeaders },
     );
   }
 

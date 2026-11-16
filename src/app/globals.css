@@ -638,3 +638,19 @@ h1, h2, h3, .wordmark, .welcome-wordmark { font-family: var(--font-display), var
 .cookie-primary { color: var(--oncta); background: var(--ink); } .cookie-secondary { color: var(--ink); background: transparent; }
 .cookie-link { min-height: 44px; padding: 0; border: 0; color: var(--ink); background: transparent; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 @media (min-width: 1024px) { .cookie-banner { left: auto; right: 24px; bottom: 24px; } }
+
+/* ===== Verificação em duas etapas ===== */
+.mfa-card { margin-top: 28px; padding: 22px; border: 1.5px solid var(--ink); border-radius: 18px; }
+.mfa-card h2 { margin: 0 0 10px; font-size: 22px; letter-spacing: -.03em; }
+.mfa-help { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.mfa-help b { color: var(--ink); }
+.mfa-notice { margin: 0 0 14px; padding: 12px 14px; border-radius: 12px; background: var(--ac); color: #12110e; font-size: 14px; line-height: 1.5; }
+.mfa-steps { margin: 0 0 14px; padding-left: 20px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.mfa-qr { display: block; margin: 8px 0 12px; padding: 8px; border-radius: 12px; background: #fff; }
+.mfa-secret { margin: 0 0 16px; font-size: 13px; color: var(--muted); word-break: break-all; }
+.mfa-secret code, .mfa-codes code { font-family: ui-monospace, Menlo, monospace; color: var(--ink); }
+.mfa-codes { margin: 0 0 16px; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mfa-codes li { padding: 10px 12px; border-radius: 10px; background: var(--surface); text-align: center; font-size: 15px; }
+.mfa-actions { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.mfa-check { margin: 16px 0 12px; display: flex; gap: 10px; align-items: center; font-size: 14px; }
+.mfa-check input { width: 22px; height: 22px; accent-color: var(--ink); }

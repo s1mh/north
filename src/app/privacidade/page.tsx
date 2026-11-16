@@ -25,7 +25,7 @@ export default function PrivacyPage() {
       <h2>Seus direitos</h2>
       <p>Você pode acessar, corrigir, exportar e apagar os seus dados no próprio aplicativo (tela Perfil) ou pedindo por e-mail. Você também pode pedir informações sobre o tratamento e revogar o consentimento de medição a qualquer momento.</p>
       <h2>Segurança e incidentes</h2>
-      <p>Usamos conexão protegida, controle de acesso por conta e boas práticas de segurança. Se houver um incidente que possa causar risco ou dano relevante, comunicaremos você e a autoridade competente, conforme a lei.</p>
+      <p>Usamos conexão protegida, controle de acesso por conta, verificação em duas etapas opcional (com códigos de recuperação guardados somente como hash) e boas práticas de segurança. Se houver um incidente que possa causar risco ou dano relevante, comunicaremos você e a autoridade competente, conforme a lei.</p>
       <h2>Menores de idade</h2>
       <p>O north. é para maiores de 18 anos e não é direcionado a crianças ou adolescentes.</p>
     </LegalPage>

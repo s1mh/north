@@ -33,6 +33,15 @@ export async function middleware(request: NextRequest) {
     }
     return redirect;
   }
+  // Conta com segundo fator e sessão que ainda só passou pela senha: pede o código antes de tudo.
+  if (data.claims.aal !== "aal2") {
+    const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (assurance?.nextLevel === "aal2" && assurance.currentLevel !== "aal2") {
+      const redirect = NextResponse.redirect(new URL("/entrar/verificar", request.url));
+      for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+      return redirect;
+    }
+  }
   const isOnboardingRoute = request.nextUrl.pathname.startsWith("/onboarding/");
   const isPasswordResetRoute = request.nextUrl.pathname.startsWith("/redefinir-senha");
   const skippedOnboarding = request.cookies.get("north-onboarding-skip")?.value === "1";
