@@ -14,8 +14,17 @@ export async function destinationAfterSignIn(supabase: SupabaseClient) {
   });
 }
 
+export type SecondFactorStatus = { method: "totp" | "email" | null; satisfied: boolean };
+
+/** Qual segundo fator a conta usa e se esta sessão já o cumpriu. */
+export async function getSecondFactorStatus(supabase: SupabaseClient): Promise<SecondFactorStatus> {
+  const { data } = await supabase.rpc("second_factor_status");
+  const status = data as Partial<SecondFactorStatus> | null;
+  return { method: status?.method ?? null, satisfied: status?.satisfied !== false };
+}
+
 /** True quando a conta tem segundo fator e esta sessão ainda não passou por ele. */
 export async function needsSecondFactor(supabase: SupabaseClient) {
-  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  return data?.nextLevel === "aal2" && data.currentLevel !== "aal2";
+  const status = await getSecondFactorStatus(supabase);
+  return status.method !== null && !status.satisfied;
 }

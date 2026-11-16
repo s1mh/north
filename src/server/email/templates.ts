@@ -128,3 +128,23 @@ export function renderOpsAlert(input: { source: string; reason: string; since: s
     reason: "Você recebeu esta mensagem porque é responsável pela operação do north.",
   });
 }
+
+/** Código de 6 números para a verificação em duas etapas por e-mail. */
+export function renderLoginCode(code: string, purpose: "login" | "enable") {
+  const enabling = purpose === "enable";
+  return renderEmail({
+    preheader: `Seu código: ${code}. Vale por 10 minutos.`,
+    accent: "#a8e2dc",
+    eyebrow: enabling ? "Verificação em duas etapas" : "Código de acesso",
+    title: enabling ? "Confirme para ativar." : "Seu código de acesso.",
+    blocks: [
+      { kind: "p", text: enabling
+        ? "Digite este código no north. para ligar a verificação em duas etapas por e-mail. Ele vale por 10 minutos."
+        : "Digite este código no north. para terminar de entrar. Ele vale por 10 minutos e só funciona uma vez." },
+      { kind: "code", value: code },
+      { kind: "note", title: "Não foi você?", text: "Ignore este e-mail e troque a sua senha. Ninguém do north. vai pedir esse código por mensagem ou telefone." },
+    ],
+    reason: "Você recebeu esta mensagem porque alguém tentou entrar na sua conta ou ativar a verificação em duas etapas.",
+    service: true,
+  });
+}

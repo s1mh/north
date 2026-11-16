@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sessionSatisfiesMfa } from "@/server/auth/mfa";
 import { createClient } from "@/server/supabase/client";
 
 const privateHeaders = {
@@ -14,6 +15,13 @@ export async function GET() {
     return NextResponse.json(
       { error: "Sessão inválida." },
       { status: 401, headers: privateHeaders },
+    );
+  }
+
+  if (!(await sessionSatisfiesMfa(supabase))) {
+    return NextResponse.json(
+      { error: "Confirme a verificação em duas etapas para continuar." },
+      { status: 403, headers: privateHeaders },
     );
   }
 

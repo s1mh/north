@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Suspense } from "react";
+import { EmailMfaSettings } from "@/features/auth/email-mfa-settings";
 import { MfaSettings } from "@/features/auth/mfa-settings";
 import { AccountControls } from "@/features/profile/account-controls";
 import type { ThemePreference } from "@/features/profile/theme";
@@ -65,7 +66,7 @@ export default async function ProfilePage() {
       </Link>
     </section>
 
-    <Suspense fallback={null}><MfaSettings /></Suspense>
+    <Suspense fallback={null}><EmailMfaSettings /><MfaSettings /></Suspense>
 
     <section className="profile-pwa">
       <p className="eyebrow">Aplicativo instalável</p>

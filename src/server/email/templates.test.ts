@@ -1,12 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { authTemplates, renderAccountDeleted, renderOpsAlert, renderWelcome } from "./templates.ts";
+import { authTemplates, renderAccountDeleted, renderLoginCode, renderOpsAlert, renderWelcome } from "./templates.ts";
 import { CONTACT_EMAIL } from "./layout.ts";
 
 const all = {
   ...Object.fromEntries(Object.entries(authTemplates).map(([k, v]) => [k, v.html])),
   welcome: renderWelcome("https://usenorthapp.com.br/inicio"),
   deleted: renderAccountDeleted(),
+  loginCode: renderLoginCode("123456", "login"),
+  enableCode: renderLoginCode("123456", "enable"),
   ops: renderOpsAlert({ source: "bcb-sgs", reason: "x", since: "hoje", adminUrl: "https://usenorthapp.com.br" }),
 };
 

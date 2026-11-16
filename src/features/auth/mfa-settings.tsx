@@ -106,14 +106,14 @@ export function MfaSettings() {
   }
 
   return <section className="mfa-card" aria-labelledby="mfa-title">
-    <p className="eyebrow">Segurança</p>
-    <h2 id="mfa-title">Verificação em duas etapas</h2>
+    <p className="eyebrow">Segurança · mais forte</p>
+    <h2 id="mfa-title">Aplicativo autenticador</h2>
     {params.get("mfa") === "reativar" && state.step === "off" && <p className="mfa-notice">Você entrou com um código de recuperação e a verificação foi desligada. Ative de novo abaixo.</p>}
 
     {state.step === "loading" && <p className="mfa-help">Carregando…</p>}
 
     {state.step === "off" && <>
-      <p className="mfa-help">Além da senha, o north. pede um código de 6 números gerado por um aplicativo no seu celular (Google Authenticator, Microsoft Authenticator, Authy, 1Password e outros). É a forma mais simples de proteger a sua conta.</p>
+      <p className="mfa-help">Além da senha, o north. pede um código de 6 números gerado por um aplicativo no seu celular (Google Authenticator, Microsoft Authenticator, Authy, 1Password e outros). Protege a conta mesmo que alguém tenha acesso ao seu e-mail.</p>
       <button className="button" type="button" disabled={busy} onClick={start}>{busy ? "Preparando…" : "Ativar"}</button>
     </>}
 
