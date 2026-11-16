@@ -878,3 +878,6 @@ h1, h2, h3, .wordmark, .welcome-wordmark { font-family: var(--font-display), var
 .terms-field .select-list { max-width: min(380px, calc(100vw - 40px)); }
 .terms-hint { margin: 4px 0 0; }
 .terms-form .portfolio-field-row { margin-top: 0; }
+.date-nav { display: inline-flex; gap: 4px; }
+.date-head button { width: 36px; height: 36px; font-size: 18px; }
+.date-popover { width: min(340px, calc(100vw - 40px)); }

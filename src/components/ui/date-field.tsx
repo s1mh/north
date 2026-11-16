@@ -43,7 +43,8 @@ export function DateField({ label, name, defaultValue = "", min, max, required, 
   const [value, setValue] = useState(defaultValue);
   const [open, setOpen] = useState(false);
   const [up, setUp] = useState(false);
-  const start = parse(value) ?? parse(max) ?? parse(today) ?? { y: 2026, m: 0, d: 1 };
+  const now = new Date();
+  const start = parse(value) ?? parse(max) ?? parse(today) ?? { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
   const [view, setView] = useState({ y: start.y, m: start.m });
 
   useEffect(() => {
@@ -107,9 +108,15 @@ export function DateField({ label, name, defaultValue = "", min, max, required, 
 
     {open && <div className="date-popover" data-up={up} role="dialog" aria-label={`Escolher ${label.toLowerCase()}`}>
       <div className="date-head">
-        <button type="button" onClick={() => move(-1)} aria-label="Mês anterior">‹</button>
+        <span className="date-nav">
+          <button type="button" onClick={() => move(-12)} aria-label="Ano anterior">«</button>
+          <button type="button" onClick={() => move(-1)} aria-label="Mês anterior">‹</button>
+        </span>
         <strong>{monthLabel}</strong>
-        <button type="button" onClick={() => move(1)} aria-label="Próximo mês">›</button>
+        <span className="date-nav">
+          <button type="button" onClick={() => move(1)} aria-label="Próximo mês">›</button>
+          <button type="button" onClick={() => move(12)} aria-label="Próximo ano">»</button>
+        </span>
       </div>
       <div className="date-grid" role="grid">
         {weekdays.map((day, index) => <span className="date-wd" key={`${day}-${index}`} aria-hidden="true">{day}</span>)}
