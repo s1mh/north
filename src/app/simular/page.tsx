@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TrackedLink } from "@/features/analytics/tracked-link";
 import { SiteFooter } from "@/components/site-footer";
 import { PublicSimulator } from "@/features/public/public-simulator";
 
@@ -18,7 +19,7 @@ export default function SimularPage() {
       <p className="lp-lead">Mexa nos controles e veja a conta. As premissas são suas: o north não prevê rentabilidade.</p>
       <PublicSimulator />
       <p className="lp-note">Simulação educacional com juros compostos e aportes mensais, sem impostos e sem taxas. Não é recomendação de investimento nem promessa de resultado. Rentabilidade passada ou imaginada não garante rentabilidade futura.</p>
-      <div className="lp-final lp-final-inline"><h2>Quer guardar essa simulação e acompanhar a sua carteira?</h2><Link className="lp-btn" href="/cadastro">Criar minha conta (grátis)</Link></div>
+      <div className="lp-final lp-final-inline"><h2>Quer guardar essa simulação e acompanhar a sua carteira?</h2><TrackedLink event="cta_signup_click" where="simulador" className="lp-btn" href="/cadastro">Criar minha conta (grátis)</TrackedLink></div>
     </main>
     <SiteFooter />
   </div>;

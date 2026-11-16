@@ -629,3 +629,12 @@ h1, h2, h3, .wordmark, .welcome-wordmark { font-family: var(--font-display), var
 .site-foot a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .site-foot[data-compact="true"] { margin-top: 40px; padding: 24px 0 8px; font-size: 12px; }
 .legal-shell .site-foot { padding-left: 0; padding-right: 0; }
+
+/* ===== Banner de cookies ===== */
+.cookie-banner { position: fixed; z-index: 50; left: 16px; right: 16px; bottom: 16px; max-width: 640px; margin: 0 auto; padding: 18px 20px; display: grid; gap: 14px; border: 1.5px solid var(--ink); border-radius: 18px; background: var(--surface); box-shadow: 6px 6px 0 var(--ink); font-size: 13px; line-height: 1.55; }
+.cookie-banner p { margin: 0; color: var(--muted); } .cookie-banner b { color: var(--ink); } .cookie-banner a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.cookie-banner div { display: flex; gap: 10px; justify-content: flex-end; }
+.cookie-banner button { min-height: 44px; padding: 0 22px; border: 2px solid var(--ink); border-radius: 999px; font-size: 14px; font-weight: 800; cursor: pointer; }
+.cookie-primary { color: var(--oncta); background: var(--ink); } .cookie-secondary { color: var(--ink); background: transparent; }
+.cookie-link { min-height: 44px; padding: 0; border: 0; color: var(--ink); background: transparent; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+@media (min-width: 1024px) { .cookie-banner { left: auto; right: 24px; bottom: 24px; } }

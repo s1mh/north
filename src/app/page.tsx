@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TrackedLink } from "@/features/analytics/tracked-link";
 import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
@@ -35,7 +36,7 @@ export default function WelcomePage() {
         <nav aria-label="Principal">
           <Link href="/simular">Simulador</Link>
           <Link href="/entrar">Entrar</Link>
-          <Link className="lp-btn lp-btn-small" href="/cadastro">Criar conta</Link>
+          <TrackedLink event="cta_signup_click" where="topo" className="lp-btn lp-btn-small" href="/cadastro">Criar conta</TrackedLink>
         </nav>
       </header>
 
@@ -46,7 +47,7 @@ export default function WelcomePage() {
             <h1 className="lp-h1"><span>Comece a</span> <span>investir</span> <span>sabendo o</span> <span>que faz.</span></h1>
             <p className="lp-lead">Para quem está começando: entenda Tesouro, CDB e ação, simule um aporte pequeno e acompanhe a sua carteira, no seu ritmo.</p>
             <div className="lp-actions">
-              <Link className="lp-btn" href="/cadastro">Criar minha conta (grátis)</Link>
+              <TrackedLink event="cta_signup_click" where="hero" className="lp-btn" href="/cadastro">Criar minha conta (grátis)</TrackedLink>
               <Link className="lp-btn lp-btn-ghost" href="/simular">Simular um aporte</Link>
             </div>
             <p className="lp-note">Educacional. O north não executa ordens e não recomenda ativos.</p>
@@ -91,7 +92,7 @@ export default function WelcomePage() {
 
         <section className="lp-final">
           <h2>Um jeito calmo de começar.</h2>
-          <Link className="lp-btn" href="/cadastro">Criar minha conta (grátis)</Link>
+          <TrackedLink event="cta_signup_click" where="final" className="lp-btn" href="/cadastro">Criar minha conta (grátis)</TrackedLink>
         </section>
       </main>
 

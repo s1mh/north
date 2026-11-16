@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { track } from "@/features/analytics/track";
 import { useMemo, useState } from "react";
 import {
   profileCopy,
@@ -61,6 +62,7 @@ export function SuitabilityFlow({ initialResult = null }: { initialResult?: Suit
         throw new Error("error" in payload ? payload.error : undefined);
       }
       setResult(payload);
+      track("profile_completed");
     } catch (submissionError) {
       setError(submissionError instanceof Error && submissionError.message
         ? submissionError.message
@@ -159,7 +161,7 @@ export function SuitabilityFlow({ initialResult = null }: { initialResult?: Suit
         <button className="button onboarding-action" type="button" onClick={next} disabled={!selected || saving}>
           {saving ? "Salvando seu perfil…" : current === suitabilityQuestions.length - 1 ? "Ver meu perfil" : "Próxima"}
         </button>
-        <a className="text-action" href="/onboarding/pular">Pular por enquanto</a>
+        <a className="text-action" href="/onboarding/pular" onClick={() => track("onboarding_skip", { onde: "perfil" })}>Pular por enquanto</a>
       </section>
     </main>
   );

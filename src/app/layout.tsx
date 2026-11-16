@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
+import { AnalyticsRoot } from "@/features/analytics/analytics-root";
 import { PwaClient } from "@/features/pwa/pwa-client";
 import "./globals.css";
 
@@ -46,6 +47,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     : "system";
 
   return <html lang="pt-BR" data-theme={theme} className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
-    <body>{children}<PwaClient /></body>
+    <body>{children}<PwaClient /><AnalyticsRoot /></body>
   </html>;
 }

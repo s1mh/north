@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@/features/analytics/track";
 import { useRouter } from "next/navigation";
 import type { Institution, ResearchRequest } from "@/features/institutions/types";
 
@@ -118,7 +119,7 @@ export function BankSelection({
               ? "Selecione pelo menos um"
               : `Continuar · ${selected.length} selecionado${selected.length > 1 ? "s" : ""}`}
         </button>
-        <a className="text-action" href="/onboarding/pular">Pular por enquanto</a>
+        <a className="text-action" href="/onboarding/pular" onClick={() => track("onboarding_skip", { onde: "bancos" })}>Pular por enquanto</a>
       </section>
     </main>
   );
