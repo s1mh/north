@@ -9,6 +9,7 @@ import {
   investmentMoneyToCents,
   type ContributionFrequency,
 } from "@/features/investment/calculation";
+import { SelectField } from "@/components/ui/select-field";
 import { formatMoneyFromCents } from "@/features/portfolio/ledger";
 import type { InvestorProfile } from "@/features/suitability/score";
 
@@ -193,14 +194,17 @@ export function InvestmentSimulator({
       <strong>Criar uma meta</strong><span>Simule um plano ligado a um objetivo</span><b aria-hidden="true">→</b>
     </Link> : null}
 
-    {mode === "goal" && selectedGoal ? <label className="investment-goal">
+    {mode === "goal" && selectedGoal ? <div className="investment-goal">
       <span><small>Meta</small>
-        <select value={selectedGoal.id} onChange={(event) => chooseGoal(event.target.value)}>
-          {goals.map((goal) => <option value={goal.id} key={goal.id}>{goal.name}</option>)}
-        </select>
+        <SelectField
+          label="Meta"
+          value={selectedGoal.id}
+          options={goals.map((goal) => ({ value: goal.id, label: goal.name }))}
+          onChange={chooseGoal}
+        />
       </span>
       <strong><small>faltam</small>{formatMoneyFromCents(BigInt(selectedGoal.remainingCents))}</strong>
-    </label> : null}
+    </div> : null}
 
     <label className="investment-amount">
       <span>R$</span>
@@ -217,16 +221,22 @@ export function InvestmentSimulator({
       <button type="button" data-selected={frequency === "monthly"} onClick={() => setFrequency("monthly")}>Todo mês</button>
     </div>
 
-    {mode === "free" ? <label className="investment-horizon">
+    {mode === "free" ? <div className="investment-horizon">
       <span>Horizonte</span>
-      <select value={horizonMonths} onChange={(event) => setHorizonMonths(Number(event.target.value))}>
-        <option value={12}>12 meses</option>
-        <option value={36}>3 anos</option>
-        <option value={60}>5 anos</option>
-        <option value={120}>10 anos</option>
-        <option value={240}>20 anos</option>
-      </select>
-    </label> : null}
+      <SelectField
+        label="Horizonte"
+        value={horizonMonths}
+        align="right"
+        options={[
+          { value: 12, label: "12 meses" },
+          { value: 36, label: "3 anos" },
+          { value: 60, label: "5 anos" },
+          { value: 120, label: "10 anos" },
+          { value: 240, label: "20 anos" },
+        ]}
+        onChange={setHorizonMonths}
+      />
+    </div> : null}
 
     <div className="investment-allocation-head">
       <span>Modelo de referência · perfil</span>

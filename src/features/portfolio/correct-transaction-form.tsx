@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { transactionTypes } from "./submission";
+import { DateField } from "@/components/ui/date-field";
+import { todayInSaoPaulo, transactionTypes } from "./submission";
 
 type TransactionType = typeof transactionTypes[number];
 
@@ -140,9 +141,7 @@ export function CorrectTransactionForm({
       <input type="hidden" name="fees" value="0" />
     </>}
 
-    <label className="auth-field"><span>Data corrigida</span>
-      <input name="tradeDate" type="date" required defaultValue={transaction.trade_date} />
-    </label>
+    <DateField label="Data corrigida" name="tradeDate" required max={todayInSaoPaulo()} today={todayInSaoPaulo()} defaultValue={transaction.trade_date} />
     <label className="auth-field"><span>Motivo da alteração</span>
       <input name="reason" required minLength={3} maxLength={200} placeholder="Ex.: preço digitado incorretamente" autoCapitalize="sentences" autoCorrect="on" spellCheck />
     </label>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { DateField } from "@/components/ui/date-field";
 import { todayInSaoPaulo, transactionTypes } from "./submission";
 
 type TransactionType = typeof transactionTypes[number];
@@ -97,9 +98,7 @@ export function AddTransactionForm({
       <input type="hidden" name="fees" value="0" />
     </>}
 
-    <label className="auth-field"><span>Data</span>
-      <input name="tradeDate" type="date" required max={today} defaultValue={today} />
-    </label>
+    <DateField label="Data" name="tradeDate" required max={today} today={today} defaultValue={today} />
 
     <p className="portfolio-disclaimer">
       {transactionType === "venda" || transactionType === "resgate"

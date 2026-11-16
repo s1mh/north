@@ -7,14 +7,15 @@ import { CredentialSettings } from "@/features/profile/credential-settings";
 import { AccountControls } from "@/features/profile/account-controls";
 import type { ThemePreference } from "@/features/profile/theme";
 import { ThemeControl } from "@/features/profile/theme-control";
+import { profileInitials } from "@/features/profile/initials";
 import { createClient } from "@/server/supabase/client";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const [{ data: profile }, { count: institutionCount }] = await Promise.all([
+  const [{ data: { user } }, { data: profile }, { count: institutionCount }] = await Promise.all([
+    supabase.auth.getUser(),
     supabase
       .from("profiles")
       .select("display_name, theme, current_assessment_id")
@@ -39,45 +40,55 @@ export default async function ProfilePage() {
     : "não concluído";
 
   return <AppShell active="">
-    <div className="profile-heading">
-      <p className="eyebrow">Conta e ajustes</p>
-      <h1>{profile?.display_name ?? "Seu perfil"}</h1>
-      <p>Preferências do aplicativo e caminhos para revisar seus dados.</p>
+    <header className="pf-hero">
+      <span className="pf-avatar" aria-hidden="true">{profileInitials(profile?.display_name)}</span>
+      <div>
+        <p className="eyebrow">Conta e ajustes</p>
+        <h1>{profile?.display_name ?? "Seu perfil"}</h1>
+        {user?.email && <p className="pf-email">{user.email}</p>}
+      </div>
+      <Link className="pf-investor" href="/onboarding/perfil">
+        <span>Perfil de investidor</span>
+        <strong>{profileLabel}</strong>
+        <small>Refazer questionário →</small>
+      </Link>
+    </header>
+
+    <div className="pf-grid">
+      <div className="pf-col">
+        <div className="pf-card"><ThemeControl initialTheme={theme as ThemePreference} /></div>
+
+        <section className="pf-card profile-links" aria-labelledby="org-title">
+          <p className="eyebrow">Organização</p>
+          <h2 id="org-title" className="sr-only">Atalhos</h2>
+          <Link href="/onboarding/bancos?next=/perfil">
+            <span><strong>Bancos e corretoras</strong><small>{institutionCount ?? 0} vinculados</small></span>
+            <b>›</b>
+          </Link>
+          <Link href="/produtos">
+            <span><strong>Produtos revisados</strong><small>fontes e condições</small></span>
+            <b>›</b>
+          </Link>
+          <Link href="/metas">
+            <span><strong>Metas</strong><small>planos e aportes</small></span>
+            <b>›</b>
+          </Link>
+        </section>
+
+        <section className="pf-card profile-pwa">
+          <p className="eyebrow">Aplicativo instalável</p>
+          <h2>North no seu aparelho</h2>
+          <p>Use “Adicionar à Tela de Início” no menu do navegador. Sem internet, o North não exibe cópias antigas dos seus dados.</p>
+        </section>
+      </div>
+
+      <div className="pf-col">
+        <div className="pf-card pf-security">
+          {user?.email && <CredentialSettings currentEmail={user.email} />}
+          <Suspense fallback={null}><EmailMfaSettings /><MfaSettings /></Suspense>
+        </div>
+        <div className="pf-card"><AccountControls /></div>
+      </div>
     </div>
-
-    <section className="profile-summary">
-      <div><span>Perfil de investidor</span><strong>{profileLabel}</strong></div>
-      <Link href="/onboarding/perfil">Refazer questionário →</Link>
-    </section>
-
-    <ThemeControl initialTheme={theme as ThemePreference} />
-
-    <section className="profile-links">
-      <p className="eyebrow">Organização</p>
-      <Link href="/onboarding/bancos?next=/perfil">
-        <span><strong>Bancos e corretoras</strong><small>{institutionCount ?? 0} vinculados</small></span>
-        <b>›</b>
-      </Link>
-      <Link href="/produtos">
-        <span><strong>Produtos revisados</strong><small>fontes e condições</small></span>
-        <b>›</b>
-      </Link>
-      <Link href="/metas">
-        <span><strong>Metas</strong><small>planos e aportes</small></span>
-        <b>›</b>
-      </Link>
-    </section>
-
-    {user?.email && <CredentialSettings currentEmail={user.email} />}
-
-    <Suspense fallback={null}><EmailMfaSettings /><MfaSettings /></Suspense>
-
-    <section className="profile-pwa">
-      <p className="eyebrow">Aplicativo instalável</p>
-      <h2>North no seu aparelho</h2>
-      <p>Use “Adicionar à Tela de Início” no menu do navegador. Sem internet, o North não exibe cópias antigas dos seus dados.</p>
-    </section>
-
-    <AccountControls />
   </AppShell>;
 }
