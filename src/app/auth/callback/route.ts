@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      if (destination === "/redefinir-senha") {
+      if (destination === "/redefinir-senha" || destination === "/perfil") {
         return NextResponse.redirect(new URL(destination, request.url));
       }
       const [{ data: profile }, { count: linkedInstitutionCount }] = await Promise.all([
