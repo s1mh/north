@@ -7,6 +7,7 @@ import { derivePosition, formatMoneyFromCents, type PortfolioTransaction } from 
 import { portfolioAssetSchema, portfolioReversalSchema, portfolioTransactionSchema, todayInSaoPaulo, valuationSchema } from "@/features/portfolio/submission";
 import { describeTerms, fgcOptions, indexers, instrumentTermsInputSchema, liquidities, productTypes, taxRegimes, type InstrumentTerms } from "@/features/portfolio/terms";
 import { quantityForAmount } from "@/features/portfolio/valuation";
+import { estimateInstrument } from "@/server/estimates/instrument";
 import { isIndicatorStale, latestIndicators, type MarketIndicatorRow } from "@/features/market/presentation";
 import { deriveGoalProgress, getActiveContributionPlan } from "@/features/goals/calculation";
 import { loadAssistantContext } from "@/server/assistant/context";
@@ -74,6 +75,7 @@ Como registrar:
 - Corrigir ou apagar um lançamento: use "consultar_movimentacoes" para achar o lançamento certo e "propor_estorno" (o histórico original continua visível). Para corrigir um valor, proponha o estorno do lançamento errado E, em seguida, o novo registro correto, e avise que são duas confirmações. Nunca estorne sem a pessoa ter pedido.
 - Valor atual: se a pessoa disser quanto um ativo vale HOJE ("o Turbo está em 507,39"), use "propor_atualizar_valor" (é o valor total do ativo no banco ou corretora dela, não um aporte). O north. não consulta bancos: o valor vem dela.
 - Ficha do contrato: se a pessoa descrever como o investimento rende (tipo, emissor, % do CDI, vencimento, liquidez, FGC, imposto), use "propor_ficha" só com o que ela disse; a ficha pode ficar incompleta, então NÃO pergunte campos que ela não deu (se o ativo tem data de início, pode usá-la). Para taxa: 120% do CDI = indexer cdi_pct e rate 120; IPCA+6% = ipca_mais e rate 6; prefixado 11% = pre e rate 11.
+- Se "consultar_carteira" trouxer "estimativaHoje", use-a ao falar de quanto a pessoa deve ter hoje ou de rendimento; diga sempre que é ESTIMATIVA pelo contrato e pelo índice público, que o banco mostra o valor real e que o valor que vale na carteira é o que a pessoa informa. Nunca prometa rendimento futuro.
 - Aporte num ativo que já tem valor atualizado: informe "valorEmReais" em propor_movimentacao (o app calcula as cotas ao preço de hoje); não use quantidade nem preço nesse caso.
 - Criar meta: use "propor_meta" com nome, tipo (aposentadoria, viagem, imovel, carro, reserva ou personalizada), valor alvo, data futura e aporte mensal planejado (0 se não souber, mas pergunte antes se faltar o valor ou a data). Metas não são pedidos de compra: é só planejamento.
 - Aportes e compras aumentam a posição; resgates e vendas reduzem. Rendimento e taxa usam o valor em dinheiro (cashAmount), sem quantidade.
@@ -105,6 +107,31 @@ async function createAction(supabase: SupabaseClient, kind: string, payload: unk
   return data as string;
 }
 
+/** Estimativa pelo contrato em uma frase (só quando a ficha permite). */
+async function estimateText(
+  instrument: {
+    portfolio_instrument_terms: InstrumentTerms | InstrumentTerms[] | null;
+    portfolio_valuations: Array<{ valued_on: string; source: string }> | null;
+    portfolio_transactions: PortfolioTransaction[];
+  },
+  today: string,
+) {
+  const terms = Array.isArray(instrument.portfolio_instrument_terms)
+    ? instrument.portfolio_instrument_terms[0] ?? null
+    : instrument.portfolio_instrument_terms;
+  const estimate = await estimateInstrument({
+    transactions: instrument.portfolio_transactions as unknown as Parameters<typeof estimateInstrument>[0]["transactions"],
+    terms,
+    asOf: today,
+    informedOn: instrument.portfolio_valuations?.[0]?.valued_on ?? null,
+  }).catch(() => null);
+  if (!estimate) return null;
+  const brl = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return estimate.net !== null
+    ? `ESTIMATIVA (não é o valor do banco): cerca de ${brl(estimate.net)} líquido hoje (bruto ${brl(estimate.gross)}), pelo contrato ${estimate.rateText} e o índice do Banco Central até ${estimate.throughDate}`
+    : `ESTIMATIVA (não é o valor do banco): cerca de ${brl(estimate.gross)} bruto, antes de impostos, pelo contrato ${estimate.rateText} até ${estimate.throughDate}`;
+}
+
 export function buildTools(supabase: SupabaseClient, collected: Collected) {
   return {
     consultar_carteira: tool({
@@ -128,7 +155,8 @@ export function buildTools(supabase: SupabaseClient, collected: Collected) {
           .order("valued_on", { referencedTable: "portfolio_valuations", ascending: false })
           .limit(1, { referencedTable: "portfolio_valuations" });
         let totalCents = 0n;
-        const instruments = (data ?? []).map((row) => {
+        const today = todayInSaoPaulo();
+        const instruments = await Promise.all((data ?? []).map(async (row) => {
           const instrument = row as unknown as {
             id: string; symbol: string; name: string; asset_class: string;
             latest_price: string | number | null;
@@ -158,8 +186,9 @@ export function buildTools(supabase: SupabaseClient, collected: Collected) {
               ? instrument.portfolio_instrument_terms[0] ?? null
               : instrument.portfolio_instrument_terms ?? null)
               .map((row) => `${row.label}: ${row.value}`),
+            estimativaHoje: await estimateText(instrument, today),
           };
-        });
+        }));
         return { total: formatMoneyFromCents(totalCents), ativos: instruments };
       },
     }),
