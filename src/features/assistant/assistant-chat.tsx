@@ -88,12 +88,27 @@ function ActionCard({ action, onChange }: {
   </article>;
 }
 
+const greetings = ["Eaí", "Fala", "Opa", "Olá"] as const;
+
+const registerIntent = /\b(coloquei|coloquei|guardei|apliquei|investi|comprei|vendi|resgatei|saquei|tirei|recebi|paguei|depositei|aportei|registr\w*|anot\w*|lanç\w*|adicion\w*)\b/i;
+
+/** Mensagem instantânea do app (não vai para o provedor de IA e não fica salva). */
+function acknowledgement(question: string, firstName: string) {
+  const who = firstName ? `, ${firstName}` : "";
+  const options = registerIntent.test(question)
+    ? [`Certo${who}! Vou preparar esse registro`, `Beleza${who}, deixa comigo`, `Pode deixar${who}, já organizo isso`]
+    : [`Boa${who}! Deixa eu olhar aqui`, `Já te respondo${who}`, `Certo${who}, vou ver isso`];
+  return options[Math.floor(Math.random() * options.length)] ?? options[0]!;
+}
+
 export function AssistantChat({
+  firstName,
   threads: initialThreads,
   initialThreadId,
   initialMessages,
   insights,
 }: {
+  firstName: string;
   threads: ThreadItem[];
   initialThreadId: string | null;
   initialMessages: ChatMessage[];
@@ -108,11 +123,15 @@ export function AssistantChat({
   const [error, setError] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [ack, setAck] = useState("");
+  const [status, setStatus] = useState("");
+  const [streaming, setStreaming] = useState("");
+  const [greeting] = useState(() => greetings[Math.floor(Math.random() * greetings.length)] ?? "Eaí");
   const bottom = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: "end" });
-  }, [messages, pending]);
+  }, [messages, pending, streaming, status]);
 
   function setActionStatus(actionId: string, status: ActionStatus) {
     setMessages((current) => current.map((item) => ({
@@ -130,23 +149,68 @@ export function AssistantChat({
     const optimisticId = `local-${Date.now()}`;
     setMessages((current) => [...current, { id: optimisticId, role: "user", text: trimmed, actions: [] }]);
 
+    setAck(acknowledgement(trimmed, firstName));
+    setStatus("");
+    setStreaming("");
+
     const response = await fetch("/api/assistant", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ threadId, message: trimmed }),
     }).catch(() => null);
-    const result = await response?.json().catch(() => null);
-    if (!response?.ok || !result?.threadId) {
+
+    const undo = (message: string) => {
       setMessages((current) => current.filter((item) => item.id !== optimisticId));
       setMessage(trimmed);
-      setError(result?.error ?? "Não foi possível conversar agora.");
+      setError(message);
       setPending(false);
+      setAck("");
+      setStatus("");
+      setStreaming("");
+    };
+
+    if (!response?.ok || !response.body) {
+      const result = await response?.json().catch(() => null);
+      undo(result?.error ?? "Não foi possível conversar agora.");
       return;
     }
 
+    type Done = {
+      threadId: string; userMessage: string; assistantMessageId: string; text: string; actions: ChatAction[];
+    };
+    let done: Done | null = null;
+    let failure = "";
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let shown = "";
+    for (;;) {
+      const { value, done: finished } = await reader.read().catch(() => ({ value: undefined, done: true }));
+      if (finished) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        let event: { t: string; text?: string; error?: string } & Partial<Done>;
+        try { event = JSON.parse(line); } catch { continue; }
+        if (event.t === "status") setStatus(event.text ?? "");
+        else if (event.t === "reset") { shown = ""; setStreaming(""); }
+        else if (event.t === "delta") { shown += event.text ?? ""; setStreaming(shown); setStatus(""); }
+        else if (event.t === "error") failure = event.error ?? "Não foi possível responder agora.";
+        else if (event.t === "done") done = event as Done;
+      }
+    }
+
+    if (!done) {
+      undo(failure || "Não foi possível responder agora.");
+      return;
+    }
+    const finalReply: Done = done;
+
     if (!threadId) {
       setThreads((current) => [
-        { id: result.threadId, title: trimmed.slice(0, 80), updated_at: new Date().toISOString() },
+        { id: finalReply.threadId, title: trimmed.slice(0, 80), updated_at: new Date().toISOString() },
         ...current,
       ]);
     } else {
@@ -154,11 +218,14 @@ export function AssistantChat({
         .map((thread) => thread.id === threadId ? { ...thread, updated_at: new Date().toISOString() } : thread)
         .sort((a, b) => b.updated_at.localeCompare(a.updated_at)));
     }
-    setThreadId(result.threadId);
+    setThreadId(finalReply.threadId);
     setMessages((current) => [
-      ...current.map((item) => item.id === optimisticId ? { ...item, text: result.userMessage } : item),
-      { id: result.assistantMessageId, role: "assistant", text: result.text, actions: result.actions ?? [] },
+      ...current.map((item) => item.id === optimisticId ? { ...item, text: finalReply.userMessage } : item),
+      { id: finalReply.assistantMessageId, role: "assistant", text: finalReply.text, actions: finalReply.actions ?? [] },
     ]);
+    setAck("");
+    setStatus("");
+    setStreaming("");
     setPending(false);
   }
 
@@ -201,8 +268,8 @@ export function AssistantChat({
 
     {messages.length === 0 ? <section className="assistant-intro">
       <p className="eyebrow">Seu assistente</p>
-      <h1>O que vamos resolver hoje?</h1>
-      <p className="asst-lead">Tire dúvidas sobre a sua carteira e metas ou diga o que você fez, por exemplo: “coloquei 500 reais nas caixinhas do Nu”. Eu preparo o registro e você confirma.</p>
+      <h1>{greeting}{firstName ? `, ${firstName}` : ""}! Como vai hoje?</h1>
+      <p className="asst-lead">Pode me perguntar sobre a sua carteira e metas, ou me contar o que você fez, tipo “coloquei 500 reais nas caixinhas do Nu”. Eu preparo o registro e você confirma.</p>
       <div className="assistant-quick-questions">
         {suggestions.map((question) => <button type="button" key={question} disabled={pending} onClick={() => ask(question)}>
           {question}
@@ -224,7 +291,12 @@ export function AssistantChat({
           <p className="asst-bubble">{renderInline(item.text)}</p>
           {item.actions.map((action) => <ActionCard key={action.id} action={action} onChange={setActionStatus} />)}
         </div>)}
-      {pending ? <p className="assistant-thinking">North está pensando…</p> : null}
+      {pending ? <div className="asst-assistant" aria-live="polite">
+        {ack ? <p className="asst-bubble">{ack}</p> : null}
+        {streaming ? <p className="asst-bubble">{renderInline(streaming)}</p> : <p className="asst-typing" aria-label="North está digitando">
+          <span /><span /><span />{status ? <em>{status}</em> : null}
+        </p>}
+      </div> : null}
       <div ref={bottom} />
     </section>}
 
@@ -267,7 +339,9 @@ export function AssistantChat({
                 <button type="button" onClick={() => removeThread(thread.id)}>Apagar</button>
                 <button type="button" onClick={() => setDeleting(null)}>Não</button>
               </span>
-              : <button type="button" className="asst-del" aria-label={`Apagar conversa ${thread.title}`} onClick={() => setDeleting(thread.id)}>🗑</button>}
+              : <button type="button" className="asst-del" aria-label={`Apagar conversa ${thread.title}`} onClick={() => setDeleting(thread.id)}>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h16" /><path d="M9.5 7V4.8c0-.4.3-.8.8-.8h3.4c.5 0 .8.4.8.8V7" /><path d="M6.5 7l.7 11.4c.1 1 .9 1.6 1.8 1.6h6c.9 0 1.7-.7 1.8-1.6L17.5 7" /><path d="M10 11v5.5M14 11v5.5" /></svg>
+              </button>}
           </li>)}
         </ul>}
         <p className="assistant-retention">As conversas ficam por até 30 dias e podem ser apagadas a qualquer momento.</p>

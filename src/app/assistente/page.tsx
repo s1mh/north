@@ -28,7 +28,8 @@ export default async function AssistantPage({
   const { c } = await searchParams;
   const supabase = await createClient();
   const now = new Date().toISOString();
-  const [{ context }, threadsResult] = await Promise.all([
+  const [{ data: claimsData }, { context }, threadsResult] = await Promise.all([
+    supabase.auth.getClaims(),
     loadAssistantContext(supabase),
     supabase
       .from("assistant_threads")
@@ -38,6 +39,9 @@ export default async function AssistantPage({
       .limit(30),
   ]);
   const threads = (threadsResult.data ?? []) as ThreadItem[];
+  // O primeiro nome só é usado na tela (saudação); nunca vai para o provedor de IA.
+  const fullName = (claimsData?.claims?.user_metadata as { display_name?: unknown } | undefined)?.display_name;
+  const firstName = typeof fullName === "string" ? fullName.trim().split(/\s+/)[0] ?? "" : "";
 
   // "nova" abre uma conversa vazia; sem parâmetro, retoma a mais recente.
   const wantsNew = c === "nova";
@@ -78,6 +82,7 @@ export default async function AssistantPage({
   return <main className="assistant-shell">
     <AssistantChat
       key={selected?.id ?? "nova"}
+      firstName={firstName}
       threads={threads}
       initialThreadId={selected?.id ?? null}
       initialMessages={messages}

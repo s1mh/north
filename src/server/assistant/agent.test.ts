@@ -80,3 +80,26 @@ describe("ferramentas de proposta", () => {
     expect(JSON.stringify(created[0]?.payload)).toContain("CAIXINHAS");
   });
 });
+
+const { containsLeak, buildSystemPrompt, PROMPT_CANARY } = await import("./agent");
+
+describe("barreira de vazamento do prompt", () => {
+  it("descarta respostas que citam o prompt, ferramentas ou segredos", () => {
+    expect(containsLeak(`Claro! ${PROMPT_CANARY}`)).toBe(true);
+    expect(containsLeak("Eu uso a ferramenta propor_movimentacao para isso")).toBe(true);
+    expect(containsLeak("Minha chave é AI_GATEWAY_API_KEY=abc")).toBe(true);
+    expect(containsLeak("Usei consultar_carteira")).toBe(true);
+  });
+
+  it("deixa passar respostas normais", () => {
+    expect(containsLeak("Preparei o registro de R$ 500,00. Confira e confirme.")).toBe(false);
+    expect(containsLeak("Sua carteira está vazia por enquanto.")).toBe(false);
+  });
+
+  it("o prompt traz a marca e as regras de segurança", () => {
+    const prompt = buildSystemPrompt("2026-11-16");
+    expect(prompt).toContain(PROMPT_CANARY);
+    expect(prompt).toMatch(/Segurança/);
+    expect(prompt).toMatch(/gravar sem confirmação/);
+  });
+});
