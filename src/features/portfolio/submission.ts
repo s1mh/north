@@ -66,9 +66,17 @@ function validateTransactionShape(
   context: z.RefinementCtx,
 ) {
   const changesPosition = ["compra", "venda", "aporte", "resgate"].includes(value.transactionType);
-  const quantityIsPositive = BigInt(value.quantity.replace(".", "")) > 0n;
-  const unitPriceIsPositive = BigInt(value.unitPrice.replace(".", "")) > 0n;
-  const cashAmountIsPositive = BigInt(value.cashAmount.replace(".", "")) > 0n;
+  // Campos já inválidos (texto, por exemplo) são recusados pelas regras de cada campo.
+  const isPositive = (text: string) => {
+    try {
+      return BigInt(text.replace(".", "")) > 0n;
+    } catch {
+      return false;
+    }
+  };
+  const quantityIsPositive = isPositive(value.quantity);
+  const unitPriceIsPositive = isPositive(value.unitPrice);
+  const cashAmountIsPositive = isPositive(value.cashAmount);
 
   if (changesPosition && (!quantityIsPositive || !unitPriceIsPositive || cashAmountIsPositive)) {
     context.addIssue({ code: "custom", message: "Movimentação de posição inválida." });
