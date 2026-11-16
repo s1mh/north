@@ -14,6 +14,7 @@ import { TermsCard } from "@/features/portfolio/terms-card";
 import { isBalanceProduct, type InstrumentTerms } from "@/features/portfolio/terms";
 import { todayInSaoPaulo } from "@/features/portfolio/submission";
 import { daysBetween, gainFromCents } from "@/features/portfolio/valuation";
+import { estimateInstrument } from "@/server/estimates/instrument";
 import { createClient } from "@/server/supabase/client";
 
 type DetailedTransaction = PortfolioTransaction & {
@@ -108,6 +109,12 @@ export default async function PortfolioInstrumentPage({
     : null;
   const priceStatus = getPriceStatus(instrument.latest_price, instrument.price_observed_at);
   const today = todayInSaoPaulo();
+  const estimate = await estimateInstrument({
+    transactions: instrument.portfolio_transactions,
+    terms,
+    asOf: today,
+    informedOn: lastValuation?.valued_on ?? null,
+  });
   const balance = isBalanceProduct(terms?.product_type);
   const hasInformedValue = Boolean(lastValuation);
   const rawGain = priceStatus === "missing" ? null : gainFromCents(position.costBasisCents, currentValue);
@@ -116,6 +123,7 @@ export default async function PortfolioInstrumentPage({
   const informedToday = lastValuation && instrument.price_observed_at
     && lastValuation.valued_on === instrument.price_observed_at.slice(0, 10);
   const informedAge = lastValuation ? daysBetween(lastValuation.valued_on) : 0;
+  const informedValueCents = lastValuation && informedToday ? currentValue : null;
   const money = formatMoneyFromCents;
   const reversedIds = new Set(
     instrument.portfolio_transactions
@@ -158,6 +166,30 @@ export default async function PortfolioInstrumentPage({
       </p>
       <InstrumentValue instrumentId={instrument.id} today={today} />
     </section>
+
+    {estimate ? <section className="estimate-card" aria-labelledby="estimate-title">
+      <p className="eyebrow">Estimativa pelo contrato · {estimate.rateText}</p>
+      <h2 id="estimate-title">
+        ≈ {money(BigInt(Math.round((estimate.net ?? estimate.gross) * 100)))}
+        <small>{estimate.net !== null ? " líquido estimado hoje" : " bruto estimado hoje (antes de impostos)"}</small>
+      </h2>
+      <dl>
+        <div><dt>Rendimento bruto estimado</dt><dd>{money(BigInt(Math.round((estimate.gross - estimate.principal) * 100)))}</dd></div>
+        {estimate.regime === "isento"
+          ? <div><dt>Imposto de renda</dt><dd>Isento (pessoa física)</dd></div>
+          : estimate.taxes !== null
+            ? <div><dt>Impostos estimados (IR{estimate.taxes > 0 ? " e IOF, se houver" : ""})</dt><dd>−{money(BigInt(Math.round(estimate.taxes * 100)))}</dd></div>
+            : null}
+        {estimate.atInformed && informedValueCents !== null ? <div>
+          <dt>Em {formatTradeDate(estimate.atInformed.date)}: estimado × informado</dt>
+          <dd>{money(BigInt(Math.round((estimate.atInformed.net ?? estimate.atInformed.gross) * 100)))} × {money(informedValueCents)}</dd>
+        </div> : null}
+      </dl>
+      <p className="estimate-note">
+        Calculado com o {terms?.indexer === "selic_pct" ? "Selic" : "CDI"} do Banco Central até {formatTradeDate(estimate.throughDate)}
+        ({estimate.businessDays} dias úteis). É uma estimativa, não o valor do seu banco: pequenas diferenças de dias e arredondamento são normais, e o valor que vale na carteira é o que você informa.
+      </p>
+    </section> : null}
 
     <TermsCard instrumentId={instrument.id} terms={terms} today={today} />
 

@@ -881,3 +881,13 @@ h1, h2, h3, .wordmark, .welcome-wordmark { font-family: var(--font-display), var
 .date-nav { display: inline-flex; gap: 4px; }
 .date-head button { width: 36px; height: 36px; font-size: 18px; }
 .date-popover { width: min(340px, calc(100vw - 40px)); }
+
+/* ===== Estimativa pelo contrato ===== */
+.estimate-card { margin-top: 18px; padding: 20px; border: 1px dashed var(--ink); border-radius: 20px; background: var(--bg); }
+.estimate-card h2 { margin: 4px 0 0; font-size: 28px; letter-spacing: -.04em; }
+.estimate-card h2 small { color: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: 0; }
+.estimate-card dl { margin: 12px 0 0; display: grid; }
+.estimate-card dl div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-top: 1px solid var(--hair); }
+.estimate-card dt { color: var(--muted); font-size: 13px; }
+.estimate-card dd { margin: 0; text-align: right; font-size: 14px; font-weight: 800; }
+.estimate-note { margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
