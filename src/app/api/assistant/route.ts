@@ -8,7 +8,7 @@ import {
   redactSensitiveText,
 } from "@/features/assistant/policy";
 import { deterministicAssistantReply } from "@/features/assistant/engine";
-import { containsLeak, streamAssistantAgent } from "@/server/assistant/agent";
+import { containsLeak, LeakError, streamAssistantAgent } from "@/server/assistant/agent";
 import { loadAssistantContext } from "@/server/assistant/context";
 import { hasVercelAiGatewayCredentials } from "@/server/assistant/vercel-provider";
 import { createClient } from "@/server/supabase/client";
@@ -19,6 +19,7 @@ const privateHeaders = { "Cache-Control": "private, no-store" };
 const fail = (error: string, status: number) =>
   NextResponse.json({ error }, { status, headers: privateHeaders });
 
+const guardedText = "Isso eu não consigo compartilhar, mas posso ajudar com a sua carteira, metas, indicadores e registros. O que você quer fazer?";
 const blockedText = "Esse pedido não faz parte do north. Posso ajudar com a sua carteira, metas, indicadores e registros.";
 
 export async function POST(request: Request) {
@@ -89,14 +90,23 @@ export async function POST(request: Request) {
               onDelta: (delta) => send({ t: "delta", text: delta }),
               onReset: () => send({ t: "reset" }),
             });
-            if (!result.text || !isAssistantReplyInScope(result.text) || containsLeak(result.text)) {
-              throw new Error("empty_or_out_of_scope");
-            }
+            if (!result.text) throw new Error("empty");
+            if (!isAssistantReplyInScope(result.text) || containsLeak(result.text)) throw new LeakError("guard");
             text = result.text.slice(0, 1900);
             model = result.model;
             actionIds = result.actionIds;
-          } catch {
-            status = "fallback";
+          } catch (failure) {
+            if (failure instanceof LeakError) {
+              // Resposta barrada pela guarda: recusa clara, sem resumo aleatório.
+              status = "blocked";
+              text = guardedText;
+              model = "policy-v1";
+              actionIds = [];
+              send({ t: "reset" });
+              send({ t: "delta", text });
+            } else {
+              status = "fallback";
+            }
           }
         } else {
           status = "fallback";
