@@ -1,2 +1,5 @@
 # Known false positive from the original test fixture, removed in the next commit.
 a40ea21c3d6081078e3b84067605ac8585f2e9d7:src/server/env/public.test.ts:generic-api-key:4
+
+# Test fixture: an idempotency key string in a unit test (not a credential).
+61da383fad717e36776714ee62910761282b1eea:src/server/email/send.test.ts:generic-api-key:39
