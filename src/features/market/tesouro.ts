@@ -1,4 +1,5 @@
-import type { MarketIndicator } from "@/features/market/types";
+import type { MarketIndicator, MarketPrice } from "@/features/market/types";
+import { treasurySlug, treasurySourceId } from "@/features/market/treasury-titles";
 
 export const TESOURO_CSV_URL =
   "https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv";
@@ -13,7 +14,7 @@ const HEADER = [
 const MAX_BYTES_READ = 1_000_000;
 const TARGET_YEARS = 5;
 
-type Row = { type: string; maturity: string; base: string; rateBuy: number; puBuy: number };
+type Row = { type: string; maturity: string; base: string; rateBuy: number; puBuy: number; puSell: number; puBase: number };
 
 function isoDate(value: string) {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
@@ -40,6 +41,8 @@ export function parseTesouroLine(line: string): Row {
     // Na base do Tesouro, "Compra" é o lado do investidor que compra o título.
     rateBuy: number(cells[3]!),
     puBuy: number(cells[5]!),
+    puSell: number(cells[6]!),
+    puBase: number(cells[7]!),
   };
 }
 
@@ -80,11 +83,41 @@ export function buildTesouroIndicators(rows: Row[], now = new Date()): MarketInd
   return indicators;
 }
 
-export async function fetchTesouroSnapshot({
+/** Preço de cada título vigente no dia mais recente: o PU de venda (o que o investidor recebe ao vender). */
+export function buildTesouroPrices(rows: Row[], now = new Date()): MarketPrice[] {
+  if (rows.length === 0) throw new Error("tesouro_invalid_payload");
+  const base = rows[0]!.base;
+  if (new Date(`${base}T12:00:00Z`).valueOf() > now.valueOf() + 86_400_000) throw new Error("tesouro_invalid_date");
+  const prices: MarketPrice[] = [];
+  for (const row of rows) {
+    if (row.base !== base || row.maturity <= base) continue;
+    const price = row.puSell > 0 ? row.puSell : row.puBase;
+    if (price <= 0 || price > 1_000_000) throw new Error("tesouro_value_out_of_range");
+    prices.push({
+      sourceInstrumentId: treasurySourceId(row.type, row.maturity),
+      symbol: `${treasurySlug(row.type)}-${row.maturity}`.slice(0, 30),
+      name: `${row.type} ${row.maturity.slice(0, 4)}`.slice(0, 120),
+      open: null,
+      high: null,
+      low: null,
+      close: price,
+      observedOn: base,
+      market: "Tesouro Direto",
+      assetClass: "tesouro_direto",
+    });
+  }
+  return prices;
+}
+
+export async function fetchTesouroSnapshot(options: Parameters<typeof fetchTesouroData>[0] = {}): Promise<MarketIndicator[]> {
+  return (await fetchTesouroData(options)).indicators;
+}
+
+export async function fetchTesouroData({
   fetcher = fetch,
   timeoutMs = 15_000,
   now = new Date(),
-}: { fetcher?: typeof fetch; timeoutMs?: number; now?: Date } = {}): Promise<MarketIndicator[]> {
+}: { fetcher?: typeof fetch; timeoutMs?: number; now?: Date } = {}): Promise<{ indicators: MarketIndicator[]; prices: MarketPrice[] }> {
   const response = await fetcher(TESOURO_CSV_URL, {
     headers: { accept: "text/csv" },
     signal: AbortSignal.timeout(timeoutMs),
@@ -124,5 +157,5 @@ export async function fetchTesouroSnapshot({
   } finally {
     await reader.cancel().catch(() => undefined);
   }
-  return buildTesouroIndicators(rows, now);
+  return { indicators: buildTesouroIndicators(rows, now), prices: buildTesouroPrices(rows, now) };
 }

@@ -1,7 +1,7 @@
 import "server-only";
 import { fetchLatestB3EquityPrices, fetchLatestB3Ibovespa } from "@/features/market/b3";
 import { fetchBcbSnapshot } from "@/features/market/bcb";
-import { fetchTesouroSnapshot } from "@/features/market/tesouro";
+import { fetchTesouroData } from "@/features/market/tesouro";
 import type { MarketIndicator, MarketPrice } from "@/features/market/types";
 import { createMarketAdminClient } from "@/server/market/admin-client";
 import { getPrivateEnv } from "@/server/env/private";
@@ -35,7 +35,7 @@ const SOURCES: Array<{
   },
   {
     id: "tesouro-transparente",
-    fetchSnapshot: async (now) => ({ indicators: await fetchTesouroSnapshot({ now }), prices: [] }),
+    fetchSnapshot: async (now) => fetchTesouroData({ now }),
   },
   {
     id: "b3-public-eod",
@@ -183,9 +183,9 @@ async function runSourceIngestion({
           source_instrument_id: price.sourceInstrumentId,
           symbol: price.symbol,
           name: price.name,
-          asset_class: "b3_listed",
+          asset_class: price.assetClass ?? "b3_listed",
           currency: "BRL",
-          market: "B3",
+          market: price.market ?? "B3",
           active: true,
         })), { onConflict: "source_id,source_instrument_id" })
         .select("id,source_instrument_id");

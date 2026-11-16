@@ -7,7 +7,9 @@ import { derivePosition, formatMoneyFromCents, type PortfolioTransaction } from 
 import { portfolioAssetSchema, portfolioReversalSchema, portfolioTransactionSchema, todayInSaoPaulo, valuationSchema } from "@/features/portfolio/submission";
 import { describeTerms, fgcOptions, indexers, instrumentTermsInputSchema, liquidities, productTypes, taxRegimes, type InstrumentTerms } from "@/features/portfolio/terms";
 import { quantityForAmount } from "@/features/portfolio/valuation";
+import { ESTIMATE_DISCLAIMER, valueSourceLabel } from "@/features/portfolio/value";
 import { estimateInstrument } from "@/server/estimates/instrument";
+import { PORTFOLIO_VALUE_SELECT, valuePortfolio, type ValuableInstrument } from "@/server/portfolio/values";
 import { isIndicatorStale, latestIndicators, type MarketIndicatorRow } from "@/features/market/presentation";
 import { deriveGoalProgress, getActiveContributionPlan } from "@/features/goals/calculation";
 import { loadAssistantContext } from "@/server/assistant/context";
@@ -75,6 +77,7 @@ Como registrar:
 - Corrigir ou apagar um lançamento: use "consultar_movimentacoes" para achar o lançamento certo e "propor_estorno" (o histórico original continua visível). Para corrigir um valor, proponha o estorno do lançamento errado E, em seguida, o novo registro correto, e avise que são duas confirmações. Nunca estorne sem a pessoa ter pedido.
 - Valor atual: se a pessoa disser quanto um ativo vale HOJE ("o Turbo está em 507,39"), use "propor_atualizar_valor" (é o valor total do ativo no banco ou corretora dela, não um aporte). O north. não consulta bancos: o valor vem dela.
 - Ficha do contrato: se a pessoa descrever como o investimento rende (tipo, emissor, % do CDI, vencimento, liquidez, FGC, imposto), use "propor_ficha" só com o que ela disse; a ficha pode ficar incompleta, então NÃO pergunte campos que ela não deu (se o ativo tem data de início, pode usá-la). Para taxa: 120% do CDI = indexer cdi_pct e rate 120; IPCA+6% = ipca_mais e rate 6; prefixado 11% = pre e rate 11.
+- Valor atual: cada ativo traz "origemDoValor" (fechamento de mercado com data e fonte, valor informado pela pessoa, estimativa com ≈ ou preço do último lançamento). Sempre cite a data e a origem quando falar de valores; valores com ≈ são ESTIMATIVAS e você deve avisar que o valor real é o do banco ou corretora. Preço de mercado é fechamento do dia, não tempo real.
 - Se "consultar_carteira" trouxer "estimativaHoje", use-a ao falar de quanto a pessoa deve ter hoje ou de rendimento; diga sempre que é ESTIMATIVA pelo contrato e pelo índice público, que o banco mostra o valor real e que o valor que vale na carteira é o que a pessoa informa. Nunca prometa rendimento futuro.
 - Aporte num ativo que já tem valor atualizado: informe "valorEmReais" em propor_movimentacao (o app calcula as cotas ao preço de hoje); não use quantidade nem preço nesse caso.
 - Criar meta: use "propor_meta" com nome, tipo (aposentadoria, viagem, imovel, carro, reserva ou personalizada), valor alvo, data futura e aporte mensal planejado (0 se não souber, mas pergunte antes se faltar o valor ou a data). Metas não são pedidos de compra: é só planejamento.
@@ -135,43 +138,23 @@ async function estimateText(
 export function buildTools(supabase: SupabaseClient, collected: Collected) {
   return {
     consultar_carteira: tool({
-      description: "Lista os ativos da carteira manual da pessoa (id, instituição, nome, código, classe, quantidade e valor atual) e o total.",
+      description: "Lista os ativos da carteira manual da pessoa (id, instituição, nome, código, classe, quantidade, valor atual com a origem e a data do preço) e o total.",
       inputSchema: z.object({}),
       execute: async () => {
         const { data } = await supabase
           .from("portfolio_instruments")
-          .select(`
-            id, symbol, name, asset_class, latest_price, price_observed_at,
-            portfolio_institutions(name),
-            portfolio_instrument_terms(*),
-            portfolio_valuations(valued_on, source),
-            portfolio_transactions(
-              id, transaction_type, quantity, unit_price, fees, cash_amount,
-              reverses_transaction_id, corrects_transaction_id, audit_reason,
-              trade_date, created_at
-            )
-          `)
+          .select(PORTFOLIO_VALUE_SELECT)
           .order("created_at", { ascending: true })
           .order("valued_on", { referencedTable: "portfolio_valuations", ascending: false })
           .limit(1, { referencedTable: "portfolio_valuations" });
-        let totalCents = 0n;
         const today = todayInSaoPaulo();
-        const instruments = await Promise.all((data ?? []).map(async (row) => {
-          const instrument = row as unknown as {
-            id: string; symbol: string; name: string; asset_class: string;
-            latest_price: string | number | null;
-            price_observed_at: string | null;
-            portfolio_institutions: { name: string } | { name: string }[] | null;
-            portfolio_instrument_terms: InstrumentTerms | InstrumentTerms[] | null;
-            portfolio_valuations: Array<{ valued_on: string; source: string }> | null;
-            portfolio_transactions: PortfolioTransaction[];
-          };
-          const position = derivePosition(instrument.portfolio_transactions, instrument.latest_price);
-          const value = position.currentValueCents ?? position.costBasisCents;
-          totalCents += value;
-          const institution = Array.isArray(instrument.portfolio_institutions)
-            ? instrument.portfolio_institutions[0]?.name
-            : instrument.portfolio_institutions?.name;
+        const valued = await valuePortfolio(supabase, (data ?? []) as unknown as ValuableInstrument[], today);
+        let totalCents = 0n;
+        let hasEstimate = false;
+        const instruments = await Promise.all(valued.map(async ({ instrument, terms, position, resolved }) => {
+          totalCents += resolved.valueCents;
+          hasEstimate = hasEstimate || resolved.estimated;
+          const institution = instrument.portfolio_institutions?.name;
           return {
             id: instrument.id,
             instituicao: institution ?? "",
@@ -179,17 +162,20 @@ export function buildTools(supabase: SupabaseClient, collected: Collected) {
             codigo: instrument.symbol,
             classe: instrument.asset_class,
             quantidade: String(Number(position.quantity) / 1e8),
-            valorAtual: formatMoneyFromCents(value),
+            valorAtual: `${resolved.estimated ? "≈ " : ""}${formatMoneyFromCents(resolved.valueCents)}`,
+            origemDoValor: valueSourceLabel(resolved),
+            valorEstimado: resolved.estimated,
             precoAtualPorCota: instrument.latest_price === null ? null : String(instrument.latest_price),
             valorInformadoEm: instrument.portfolio_valuations?.[0]?.valued_on ?? null,
-            ficha: describeTerms(Array.isArray(instrument.portfolio_instrument_terms)
-              ? instrument.portfolio_instrument_terms[0] ?? null
-              : instrument.portfolio_instrument_terms ?? null)
-              .map((row) => `${row.label}: ${row.value}`),
-            estimativaHoje: await estimateText(instrument, today),
+            ficha: describeTerms(terms).map((row) => `${row.label}: ${row.value}`),
+            estimativaHoje: await estimateText({ ...instrument, portfolio_instrument_terms: terms }, today),
           };
         }));
-        return { total: formatMoneyFromCents(totalCents), ativos: instruments };
+        return {
+          total: `${hasEstimate ? "≈ " : ""}${formatMoneyFromCents(totalCents)}`,
+          avisoDeEstimativa: hasEstimate ? ESTIMATE_DISCLAIMER : null,
+          ativos: instruments,
+        };
       },
     }),
 

@@ -2,26 +2,13 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { isBalanceProduct } from "@/features/portfolio/terms";
 import {
-  derivePosition,
   formatMoneyFromCents,
   formatQuantity,
-  getPriceStatus,
-  type PortfolioTransaction,
 } from "@/features/portfolio/ledger";
+import { todayInSaoPaulo } from "@/features/portfolio/submission";
+import { ESTIMATE_DISCLAIMER, valueSourceLabel } from "@/features/portfolio/value";
+import { PORTFOLIO_VALUE_SELECT, valuePortfolio, type ValuableInstrument } from "@/server/portfolio/values";
 import { createClient } from "@/server/supabase/client";
-
-type Instrument = {
-  id: string;
-  symbol: string;
-  name: string;
-  asset_class: string;
-  latest_price: string | number | null;
-  price_observed_at: string | null;
-  portfolio_institutions: { name: string } | null;
-  portfolio_instrument_terms: { product_type: string | null } | { product_type: string | null }[] | null;
-  portfolio_valuations: Array<{ valued_on: string }> | null;
-  portfolio_transactions: PortfolioTransaction[];
-};
 
 const classes: Record<string, { label: string; color: string }> = {
   renda_fixa: { label: "Renda fixa", color: "var(--rf)" },
@@ -39,29 +26,25 @@ export default async function CarteiraPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("portfolio_instruments")
-    .select(`
-      id, symbol, name, asset_class, latest_price, price_observed_at,
-      portfolio_institutions(name),
-      portfolio_instrument_terms(product_type),
-      portfolio_valuations(valued_on),
-      portfolio_transactions(
-        id, transaction_type, quantity, unit_price, fees, cash_amount,
-        reverses_transaction_id, corrects_transaction_id, audit_reason,
-        trade_date, created_at
-      )
-    `)
+    .select(PORTFOLIO_VALUE_SELECT)
     .order("created_at", { ascending: true })
     .order("valued_on", { referencedTable: "portfolio_valuations", ascending: false })
     .limit(1, { referencedTable: "portfolio_valuations" })
     .order("trade_date", { referencedTable: "portfolio_transactions", ascending: true })
     .order("created_at", { referencedTable: "portfolio_transactions", ascending: true });
 
-  const allPositions = ((data ?? []) as unknown as Instrument[]).map((instrument) => ({
-    instrument,
-    ...derivePosition(instrument.portfolio_transactions, instrument.latest_price),
+  const valued = await valuePortfolio(supabase, (data ?? []) as unknown as ValuableInstrument[], todayInSaoPaulo());
+  const allPositions = valued.map((item) => ({
+    instrument: item.instrument,
+    terms: item.terms,
+    resolved: item.resolved,
+    quantity: item.position.quantity,
+    currentValueCents: item.resolved.valueCents as bigint | null,
+    costBasisCents: item.position.costBasisCents,
   }));
   const positions = allPositions.filter((position) => position.quantity > 0n);
   const closedPositions = allPositions.filter((position) => position.quantity === 0n);
+  const hasEstimate = positions.some((position) => position.resolved.estimated);
 
   const totalCents = positions.reduce(
     (total, position) => total + (position.currentValueCents ?? position.costBasisCents),
@@ -77,7 +60,7 @@ export default async function CarteiraPage() {
     <div className="portfolio-summary">
       <div>
         <p className="eyebrow">Carteira · manual</p>
-        <h1>{formatMoneyFromCents(totalCents)}</h1>
+        <h1>{hasEstimate ? "≈ " : ""}{formatMoneyFromCents(totalCents)}</h1>
         <p>Posição calculada pelo seu histórico</p>
       </div>
       <Link className="portfolio-add" href="/carteira/novo">+ Ativo</Link>
@@ -104,26 +87,12 @@ export default async function CarteiraPage() {
               <span>{classes[assetClass]?.label ?? "Outros"} <small>{percentage.toLocaleString("pt-BR")}%</small></span>
               <strong>{formatMoneyFromCents(classTotal)}</strong>
             </header>
-            {items.map(({ instrument, quantity, currentValueCents, costBasisCents }) => {
-              const observed = instrument.price_observed_at
-                ? new Intl.DateTimeFormat("pt-BR").format(new Date(instrument.price_observed_at))
-                : null;
-              const priceStatus = getPriceStatus(instrument.latest_price, instrument.price_observed_at);
-              const terms = Array.isArray(instrument.portfolio_instrument_terms)
-                ? instrument.portfolio_instrument_terms[0]
-                : instrument.portfolio_instrument_terms;
+            {items.map(({ instrument, terms, resolved, quantity, currentValueCents, costBasisCents }) => {
               const balance = isBalanceProduct(terms?.product_type);
-              const informed = instrument.portfolio_valuations?.[0]?.valued_on;
-              const priceLabel = priceStatus === "missing"
-                ? "sem preço atual"
-                : informed && instrument.price_observed_at?.slice(0, 10) === informed
-                  ? `valor informado em ${observed}`
-                  : priceStatus === "stale"
-                    ? `preço desatualizado · ${observed}`
-                    : `preço de ${observed}`;
+              const priceLabel = valueSourceLabel(resolved);
               return <Link className="portfolio-item" href={`/carteira/${instrument.id}`} key={instrument.id}>
-                <div><strong>{instrument.symbol}</strong><span>{instrument.name}{balance ? "" : ` · ${formatQuantity(quantity)} cotas`}</span></div>
-                <div><strong>{formatMoneyFromCents(currentValueCents ?? costBasisCents)}</strong><span>{instrument.portfolio_institutions?.name} · {priceLabel}</span></div>
+                <div><strong>{instrument.symbol}</strong><span>{instrument.name}{balance ? "" : ` · ${formatQuantity(quantity)} ${terms?.product_type?.startsWith("tesouro") ? "títulos" : "cotas"}`}</span></div>
+                <div><strong>{resolved.estimated ? "≈ " : ""}{formatMoneyFromCents(currentValueCents ?? costBasisCents)}</strong><span>{instrument.portfolio_institutions?.name} · {priceLabel}</span></div>
               </Link>;
             })}
           </section>;
@@ -137,6 +106,6 @@ export default async function CarteiraPage() {
       </section> : null}
     </>}
 
-    <p className="status-note">Valores factuais vêm das movimentações registradas por você. O preço manual sempre exibe sua data; futuras cotações mostrarão também a fonte.</p>
+    <p className="status-note">Cada valor mostra a origem e a data do preço: fechamento de mercado, valor informado por você ou o preço do último lançamento. {hasEstimate ? ESTIMATE_DISCLAIMER : ""}</p>
   </AppShell>;
 }

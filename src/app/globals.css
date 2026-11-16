@@ -891,3 +891,4 @@ h1, h2, h3, .wordmark, .welcome-wordmark { font-family: var(--font-display), var
 .estimate-card dt { color: var(--muted); font-size: 13px; }
 .estimate-card dd { margin: 0; text-align: right; font-size: 14px; font-weight: 800; }
 .estimate-note { margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.estimate-disclaimer { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }

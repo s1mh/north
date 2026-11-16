@@ -2,9 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { deriveGoalProgress, getActiveContributionPlan } from "@/features/goals/calculation";
 import {
-  derivePosition,
   formatMoneyFromCents,
-  type PortfolioTransaction,
 } from "@/features/portfolio/ledger";
 import {
   formatIndicatorValue,
@@ -13,14 +11,10 @@ import {
   latestIndicators,
   type MarketIndicatorRow,
 } from "@/features/market/presentation";
+import { ESTIMATE_DISCLAIMER } from "@/features/portfolio/value";
+import { todayInSaoPaulo } from "@/features/portfolio/submission";
+import { PORTFOLIO_VALUE_SELECT, valuePortfolio, type ValuableInstrument } from "@/server/portfolio/values";
 import { createClient } from "@/server/supabase/client";
-
-type Instrument = {
-  id: string;
-  asset_class: string;
-  latest_price: string | number | null;
-  portfolio_transactions: PortfolioTransaction[];
-};
 
 type Goal = {
   id: string;
@@ -57,14 +51,9 @@ export default async function Home() {
   const [portfolioResult, indicatorResult, goalResult] = await Promise.all([
     supabase
       .from("portfolio_instruments")
-      .select(`
-        id, asset_class, latest_price,
-        portfolio_transactions(
-          id, transaction_type, quantity, unit_price, fees, cash_amount,
-          reverses_transaction_id, corrects_transaction_id, audit_reason,
-          trade_date, created_at
-        )
-      `)
+      .select(PORTFOLIO_VALUE_SELECT)
+      .order("valued_on", { referencedTable: "portfolio_valuations", ascending: false })
+      .limit(1, { referencedTable: "portfolio_valuations" })
       .order("trade_date", { referencedTable: "portfolio_transactions", ascending: true })
       .order("created_at", { referencedTable: "portfolio_transactions", ascending: true }),
     supabase
@@ -88,19 +77,18 @@ export default async function Home() {
       .maybeSingle(),
   ]);
 
-  const positions = ((portfolioResult.data ?? []) as unknown as Instrument[])
-    .map((instrument) => ({
-      instrument,
-      ...derivePosition(instrument.portfolio_transactions, instrument.latest_price),
-    }))
-    .filter((position) => position.quantity > 0n);
-  const totalCents = positions.reduce(
-    (total, position) => total + (position.currentValueCents ?? position.costBasisCents),
-    0n,
+  const valued = await valuePortfolio(
+    supabase,
+    (portfolioResult.data ?? []) as unknown as ValuableInstrument[],
+    todayInSaoPaulo(),
   );
+  const positions = valued
+    .filter((item) => item.position.quantity > 0n)
+    .map((item) => ({ instrument: item.instrument, value: item.resolved.valueCents, estimated: item.resolved.estimated }));
+  const totalCents = positions.reduce((total, position) => total + position.value, 0n);
+  const hasEstimate = positions.some((position) => position.estimated);
   const allocation = Object.entries(positions.reduce<Record<string, bigint>>((result, position) => {
-    result[position.instrument.asset_class] = (result[position.instrument.asset_class] ?? 0n)
-      + (position.currentValueCents ?? position.costBasisCents);
+    result[position.instrument.asset_class] = (result[position.instrument.asset_class] ?? 0n) + position.value;
     return result;
   }, {})).map(([assetClass, value]) => ({
     label: classes[assetClass]?.label ?? "Outros",
@@ -125,7 +113,7 @@ export default async function Home() {
   return <AppShell active="/inicio">
     <p className="eyebrow">Seu patrimônio</p>
     <div className="balance-row">
-      <h1 className="display">{formatMoneyFromCents(totalCents)}</h1>
+      <h1 className="display">{hasEstimate ? "≈ " : ""}{formatMoneyFromCents(totalCents)}</h1>
       <Link className="home-detail-link" href="/carteira">Ver carteira</Link>
     </div>
     {allocation.length > 0 ? <>
@@ -141,6 +129,7 @@ export default async function Home() {
           {item.label} <b>{item.percentage.toLocaleString("pt-BR")}%</b>
         </div>)}
       </div>
+      {hasEstimate ? <p className="estimate-disclaimer">{ESTIMATE_DISCLAIMER}</p> : null}
     </> : <p className="home-empty-line">
       Nenhum ativo cadastrado. <Link href="/carteira/novo">Adicionar primeiro ativo →</Link>
     </p>}
