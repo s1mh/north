@@ -9,6 +9,7 @@ export const BCB_SERIES = [
     unit: "percent_year" as const,
     minimum: 0,
     maximum: 100,
+    windowDays: 45,
   },
   {
     code: "ipca_monthly",
@@ -17,13 +18,14 @@ export const BCB_SERIES = [
     unit: "percent_month" as const,
     minimum: -10,
     maximum: 50,
+    windowDays: 150,
   },
 ] as const;
 
 const bcbPayloadSchema = z.array(z.object({
   data: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/),
   valor: z.string().regex(/^-?\d+(?:[.,]\d+)?$/),
-}).strict()).min(1).max(20);
+}).strict()).min(1).max(400);
 
 function dateInSaoPaulo(now: Date) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -75,6 +77,25 @@ export function parseBcbPayload(
   };
 }
 
+function brDate(date: Date) {
+  const [year, month, day] = dateInSaoPaulo(date).split("-");
+  return `${day}/${month}/${year}`;
+}
+
+/**
+ * Pede uma janela de datas terminando hoje. A série 432 (Selic meta) vem preenchida
+ * com datas futuras quando se pede "os últimos N", o que fazia toda coleta falhar.
+ */
+export function bcbSeriesUrl(series: (typeof BCB_SERIES)[number], now = new Date()) {
+  const start = new Date(now.valueOf() - series.windowDays * 86_400_000);
+  const params = new URLSearchParams({
+    formato: "json",
+    dataInicial: brDate(start),
+    dataFinal: brDate(now),
+  });
+  return `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${series.sourceSeries}/dados?${params}`;
+}
+
 type FetchLatestOptions = {
   fetcher?: typeof fetch;
   attempts?: number;
@@ -91,7 +112,7 @@ export async function fetchLatestBcbIndicator(
     retryDelayMs = 150,
   }: FetchLatestOptions = {},
 ) {
-  const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${series.sourceSeries}/dados/ultimos/10?formato=json`;
+  const url = bcbSeriesUrl(series);
   let lastError: unknown;
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -103,10 +124,10 @@ export async function fetchLatestBcbIndicator(
       if (!response.ok) throw new Error("bcb_unavailable");
 
       const declaredSize = Number(response.headers.get("content-length") ?? "0");
-      if (declaredSize > 10_000) throw new Error("bcb_payload_too_large");
+      if (declaredSize > 40_000) throw new Error("bcb_payload_too_large");
 
       const body = await response.text();
-      if (Buffer.byteLength(body, "utf8") > 10_000) {
+      if (Buffer.byteLength(body, "utf8") > 40_000) {
         throw new Error("bcb_payload_too_large");
       }
 
@@ -122,6 +143,18 @@ export async function fetchLatestBcbIndicator(
   throw lastError instanceof Error ? lastError : new Error("bcb_unavailable");
 }
 
+/**
+ * Cada série é independente: se uma falhar, a outra ainda é gravada.
+ * Só falha a coleta inteira quando nenhuma série foi obtida.
+ */
 export async function fetchBcbSnapshot(options: FetchLatestOptions = {}) {
-  return Promise.all(BCB_SERIES.map((series) => fetchLatestBcbIndicator(series, options)));
+  const results = await Promise.allSettled(
+    BCB_SERIES.map((series) => fetchLatestBcbIndicator(series, options)),
+  );
+  const indicators = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+  if (indicators.length === 0) {
+    const failure = results.find((result): result is PromiseRejectedResult => result.status === "rejected");
+    throw failure?.reason instanceof Error ? failure.reason : new Error("bcb_unavailable");
+  }
+  return indicators;
 }
