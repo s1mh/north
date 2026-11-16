@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { Suspense } from "react";
 import { EmailMfaSettings } from "@/features/auth/email-mfa-settings";
 import { MfaSettings } from "@/features/auth/mfa-settings";
+import { CredentialSettings } from "@/features/profile/credential-settings";
 import { AccountControls } from "@/features/profile/account-controls";
 import type { ThemePreference } from "@/features/profile/theme";
 import { ThemeControl } from "@/features/profile/theme-control";
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const [{ data: profile }, { count: institutionCount }] = await Promise.all([
     supabase
       .from("profiles")
@@ -65,6 +67,8 @@ export default async function ProfilePage() {
         <b>›</b>
       </Link>
     </section>
+
+    {user?.email && <CredentialSettings currentEmail={user.email} />}
 
     <Suspense fallback={null}><EmailMfaSettings /><MfaSettings /></Suspense>
 
