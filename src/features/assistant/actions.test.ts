@@ -92,3 +92,41 @@ describe("fase 4: estorno e meta", () => {
     expect(canUndo("create_goal")).toBe(false);
   });
 });
+
+describe("fase 5a: valor atual e ficha", () => {
+  const id = "5d1c1a4e-5c53-4c8e-9a0e-5a1d3f6a2b10";
+  const hoje = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Sao_Paulo" }).format(new Date());
+
+  it("descreve a atualização de valor", () => {
+    const view = describeAction("update_valuation", {
+      data: { instrumentId: id, totalValue: "507.39", valuedOn: hoje },
+      label: "Nubank › Caixinha Turbo",
+    });
+    expect(view?.title).toBe("Atualizar valor atual");
+    expect(view?.rows.find((row) => row.label === "Vale hoje")?.value).toMatch(/507,39/);
+  });
+
+  it("descreve a ficha só com o que foi dito", () => {
+    const view = describeAction("set_terms", {
+      instrumentId: id,
+      terms: { product_type: "rdb", indexer: "cdi_pct", rate: 120, maturity_date: "2028-09-29", fgc: "sim" },
+      label: "Nubank › Caixinha Turbo",
+    });
+    expect(view?.title).toBe("Preencher a ficha do ativo");
+    expect(view?.rows.map((row) => row.value)).toContain("120% do CDI");
+    expect(view?.rows.map((row) => row.value)).toContain("29/09/2028");
+    expect(view?.rows.find((row) => row.label === "Liquidez")).toBeUndefined();
+  });
+
+  it("os dois têm Desfazer", () => {
+    expect(canUndo("update_valuation")).toBe(true);
+    expect(canUndo("set_terms")).toBe(true);
+  });
+
+  it("recusa valor futuro e ficha com campo estranho", () => {
+    expect(describeAction("update_valuation", {
+      data: { instrumentId: id, totalValue: "507.39", valuedOn: "2099-01-01" }, label: "x",
+    })).toBeNull();
+    expect(describeAction("set_terms", { instrumentId: id, terms: { preco: 1 }, label: "x" })).toBeNull();
+  });
+});

@@ -4,7 +4,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { goalContributionSchema, goalKinds, goalSchema } from "@/features/goals/submission";
 import { derivePosition, formatMoneyFromCents, type PortfolioTransaction } from "@/features/portfolio/ledger";
-import { portfolioAssetSchema, portfolioReversalSchema, portfolioTransactionSchema, todayInSaoPaulo } from "@/features/portfolio/submission";
+import { portfolioAssetSchema, portfolioReversalSchema, portfolioTransactionSchema, todayInSaoPaulo, valuationSchema } from "@/features/portfolio/submission";
+import { describeTerms, fgcOptions, indexers, instrumentTermsInputSchema, liquidities, productTypes, taxRegimes, type InstrumentTerms } from "@/features/portfolio/terms";
+import { quantityForAmount } from "@/features/portfolio/valuation";
 import { isIndicatorStale, latestIndicators, type MarketIndicatorRow } from "@/features/market/presentation";
 import { deriveGoalProgress, getActiveContributionPlan } from "@/features/goals/calculation";
 import { loadAssistantContext } from "@/server/assistant/context";
@@ -27,6 +29,8 @@ export const LEAK_MARKERS = [
   "consultar_movimentacoes",
   "propor_estorno",
   "propor_meta",
+  "propor_atualizar_valor",
+  "propor_ficha",
   "AI_GATEWAY",
   "SUPABASE_",
   "service_role",
@@ -63,6 +67,9 @@ Como registrar:
 - Dinheiro parado (caixinha, conta remunerada, saldo): o ativo é "Instituição › Nome" na classe renda_fixa; quantidade = valor em reais e preço unitário = 1.00. Exemplo: 500 reais = quantidade 500 e preço 1.00. Se o ativo já existe, use um aporte nele. Se não existe, proponha criar o ativo (que já registra o valor inicial).
 - Valores com ponto decimal nas ferramentas (ex.: 500.00). Taxas: 0 se não houver.
 - Corrigir ou apagar um lançamento: use "consultar_movimentacoes" para achar o lançamento certo e "propor_estorno" (o histórico original continua visível). Para corrigir um valor, proponha o estorno do lançamento errado E, em seguida, o novo registro correto, e avise que são duas confirmações. Nunca estorne sem a pessoa ter pedido.
+- Valor atual: se a pessoa disser quanto um ativo vale HOJE ("o Turbo está em 507,39"), use "propor_atualizar_valor" (é o valor total do ativo no banco ou corretora dela, não um aporte). O north. não consulta bancos: o valor vem dela.
+- Ficha do contrato: se a pessoa descrever como o investimento rende (tipo, emissor, % do CDI, vencimento, liquidez, FGC, imposto), use "propor_ficha" só com o que ela disse. Para taxa: 120% do CDI = indexer cdi_pct e rate 120; IPCA+6% = ipca_mais e rate 6; prefixado 11% = pre e rate 11.
+- Aporte num ativo que já tem valor atualizado: informe "valorEmReais" em propor_movimentacao (o app calcula as cotas ao preço de hoje); não use quantidade nem preço nesse caso.
 - Criar meta: use "propor_meta" com nome, tipo (aposentadoria, viagem, imovel, carro, reserva ou personalizada), valor alvo, data futura e aporte mensal planejado (0 se não souber, mas pergunte antes se faltar o valor ou a data). Metas não são pedidos de compra: é só planejamento.
 - Aportes e compras aumentam a posição; resgates e vendas reduzem. Rendimento e taxa usam o valor em dinheiro (cashAmount), sem quantidade.
 
@@ -102,21 +109,28 @@ export function buildTools(supabase: SupabaseClient, collected: Collected) {
         const { data } = await supabase
           .from("portfolio_instruments")
           .select(`
-            id, symbol, name, asset_class, latest_price,
+            id, symbol, name, asset_class, latest_price, price_observed_at,
             portfolio_institutions(name),
+            portfolio_instrument_terms(*),
+            portfolio_valuations(valued_on, source),
             portfolio_transactions(
               id, transaction_type, quantity, unit_price, fees, cash_amount,
               reverses_transaction_id, corrects_transaction_id, audit_reason,
               trade_date, created_at
             )
           `)
-          .order("created_at", { ascending: true });
+          .order("created_at", { ascending: true })
+          .order("valued_on", { referencedTable: "portfolio_valuations", ascending: false })
+          .limit(1, { referencedTable: "portfolio_valuations" });
         let totalCents = 0n;
         const instruments = (data ?? []).map((row) => {
           const instrument = row as unknown as {
             id: string; symbol: string; name: string; asset_class: string;
             latest_price: string | number | null;
+            price_observed_at: string | null;
             portfolio_institutions: { name: string } | { name: string }[] | null;
+            portfolio_instrument_terms: InstrumentTerms | InstrumentTerms[] | null;
+            portfolio_valuations: Array<{ valued_on: string; source: string }> | null;
             portfolio_transactions: PortfolioTransaction[];
           };
           const position = derivePosition(instrument.portfolio_transactions, instrument.latest_price);
@@ -133,6 +147,12 @@ export function buildTools(supabase: SupabaseClient, collected: Collected) {
             classe: instrument.asset_class,
             quantidade: String(Number(position.quantity) / 1e8),
             valorAtual: formatMoneyFromCents(value),
+            precoAtualPorCota: instrument.latest_price === null ? null : String(instrument.latest_price),
+            valorInformadoEm: instrument.portfolio_valuations?.[0]?.valued_on ?? null,
+            ficha: describeTerms(Array.isArray(instrument.portfolio_instrument_terms)
+              ? instrument.portfolio_instrument_terms[0] ?? null
+              : instrument.portfolio_instrument_terms ?? null)
+              .map((row) => `${row.label}: ${row.value}`),
           };
         });
         return { total: formatMoneyFromCents(totalCents), ativos: instruments };
@@ -276,6 +296,78 @@ export function buildTools(supabase: SupabaseClient, collected: Collected) {
       },
     }),
 
+    propor_atualizar_valor: tool({
+      description: "Propõe atualizar o valor atual (total) de um ativo que a pessoa informou, ex.: 'hoje está 507,39' (ela confirma depois). Não grava nada.",
+      inputSchema: z.object({
+        instrumentId: z.string().describe("id do ativo, vindo de consultar_carteira"),
+        totalValue: decimalText.describe("valor total do ativo hoje em reais, ex.: 507.39"),
+        valuedOn: z.string().optional().describe("AAAA-MM-DD; padrão: hoje"),
+      }),
+      execute: async (input) => {
+        const parsed = valuationSchema.safeParse({
+          instrumentId: input.instrumentId,
+          totalValue: normalizeDecimal(input.totalValue),
+          valuedOn: input.valuedOn ?? todayInSaoPaulo(),
+        });
+        if (!parsed.success) return { erro: "Dados inválidos. O valor precisa ser positivo e a data não pode ser futura." };
+        const { data: instrument } = await supabase
+          .from("portfolio_instruments")
+          .select("name, portfolio_institutions(name)")
+          .eq("id", parsed.data.instrumentId)
+          .maybeSingle();
+        if (!instrument) return { erro: "Ativo não encontrado. Use consultar_carteira." };
+        const row = instrument as unknown as { name: string; portfolio_institutions: { name: string } | { name: string }[] | null };
+        const institution = Array.isArray(row.portfolio_institutions) ? row.portfolio_institutions[0]?.name : row.portfolio_institutions?.name;
+        const id = await createAction(supabase, "update_valuation", {
+          data: parsed.data,
+          label: institution ? `${institution} › ${row.name}` : row.name,
+        });
+        collected.actionIds.push(id);
+        return { ok: true, proposta: "criada; aguarda confirmação da pessoa" };
+      },
+    }),
+
+    propor_ficha: tool({
+      description: "Propõe preencher a ficha do contrato de um ativo (tipo, emissor, rendimento, datas, liquidez, FGC, imposto) só com o que a pessoa disse (ela confirma depois). Não grava nada.",
+      inputSchema: z.object({
+        instrumentId: z.string().describe("id do ativo, vindo de consultar_carteira"),
+        product_type: z.enum(productTypes).optional(),
+        issuer: z.string().min(2).max(80).optional().describe("quem emitiu, ex.: Nu Financeira"),
+        indexer: z.enum(indexers).optional().describe("cdi_pct = % do CDI; ipca_mais = IPCA + taxa; pre = prefixado"),
+        rate: decimalText.optional().describe("120 para 120% do CDI; 6 para IPCA+6%; 11.5 para prefixado de 11,5%"),
+        start_date: z.string().optional().describe("AAAA-MM-DD"),
+        maturity_date: z.string().optional().describe("AAAA-MM-DD"),
+        liquidity: z.enum(liquidities).optional(),
+        liquidity_days: z.number().int().min(0).max(365).optional(),
+        fgc: z.enum(fgcOptions).optional(),
+        tax_regime: z.enum(taxRegimes).optional(),
+      }),
+      execute: async (input) => {
+        const { instrumentId, rate, ...rest } = input;
+        const parsed = instrumentTermsInputSchema.safeParse({
+          ...rest,
+          ...(rate ? { rate: normalizeDecimal(rate) } : {}),
+        });
+        if (!parsed.success) return { erro: "Dados inválidos para a ficha. Revise taxa e datas." };
+        if (Object.keys(parsed.data).length === 0) return { erro: "Nenhum campo da ficha foi informado." };
+        const { data: instrument } = await supabase
+          .from("portfolio_instruments")
+          .select("name, portfolio_institutions(name)")
+          .eq("id", instrumentId)
+          .maybeSingle();
+        if (!instrument) return { erro: "Ativo não encontrado. Use consultar_carteira." };
+        const row = instrument as unknown as { name: string; portfolio_institutions: { name: string } | { name: string }[] | null };
+        const institution = Array.isArray(row.portfolio_institutions) ? row.portfolio_institutions[0]?.name : row.portfolio_institutions?.name;
+        const id = await createAction(supabase, "set_terms", {
+          instrumentId,
+          terms: parsed.data,
+          label: institution ? `${institution} › ${row.name}` : row.name,
+        });
+        collected.actionIds.push(id);
+        return { ok: true, proposta: "criada; aguarda confirmação da pessoa" };
+      },
+    }),
+
     propor_meta: tool({
       description: "Propõe criar uma meta financeira (a pessoa confirma depois). Não grava nada.",
       inputSchema: z.object({
@@ -309,14 +401,45 @@ export function buildTools(supabase: SupabaseClient, collected: Collected) {
         unitPrice: decimalText.describe("preço unitário; 0 para rendimento e taxa. Dinheiro parado: 1.00"),
         fees: decimalText.default("0"),
         cashAmount: decimalText.default("0").describe("valor em dinheiro, só para rendimento e taxa"),
+        valorEmReais: decimalText.optional().describe("use em ativos de saldo que já têm valor atualizado: o app calcula quantidade e preço"),
         tradeDate: z.string().optional().describe("AAAA-MM-DD; padrão: hoje"),
       }),
       execute: async (input) => {
+        let quantityText = normalizeDecimal(input.quantity);
+        let unitPriceText = normalizeDecimal(input.unitPrice);
+        if (input.valorEmReais) {
+          const { data: priced } = await supabase
+            .from("portfolio_instruments")
+            .select(`
+              latest_price,
+              portfolio_transactions(
+                id, transaction_type, quantity, unit_price, fees, cash_amount,
+                reverses_transaction_id, corrects_transaction_id, audit_reason, trade_date, created_at
+              )
+            `)
+            .eq("id", input.instrumentId)
+            .maybeSingle();
+          const row = priced as unknown as { latest_price: string | number | null; portfolio_transactions: PortfolioTransaction[] } | null;
+          if (!row) return { erro: "Ativo não encontrado. Use consultar_carteira." };
+          const price = row.latest_price ?? "1";
+          const amountText = normalizeDecimal(input.valorEmReais);
+          let quantity = quantityForAmount(amountText, price);
+          if (input.transactionType === "venda" || input.transactionType === "resgate") {
+            try {
+              const position = derivePosition(row.portfolio_transactions, row.latest_price);
+              const value = Number(position.currentValueCents ?? position.costBasisCents) / 100;
+              if (Number(amountText) >= value - 0.005) quantity = (Number(position.quantity) / 1e8).toFixed(8);
+            } catch { /* mantém o cálculo por preço */ }
+          }
+          if (!quantity) return { erro: "Valor inválido." };
+          quantityText = quantity;
+          unitPriceText = String(price);
+        }
         const parsed = portfolioTransactionSchema.safeParse({
           instrumentId: input.instrumentId,
           transactionType: input.transactionType,
-          quantity: normalizeDecimal(input.quantity),
-          unitPrice: normalizeDecimal(input.unitPrice),
+          quantity: quantityText,
+          unitPrice: unitPriceText,
           fees: normalizeDecimal(input.fees),
           cashAmount: normalizeDecimal(input.cashAmount),
           tradeDate: input.tradeDate ?? todayInSaoPaulo(),
@@ -419,6 +542,8 @@ const TOOL_STATUS: Record<string, string> = {
   consultar_movimentacoes: "olhando seus lançamentos",
   propor_estorno: "preparando o estorno",
   propor_meta: "montando a meta",
+  propor_atualizar_valor: "preparando a atualização do valor",
+  propor_ficha: "preparando a ficha",
 };
 
 export class LeakError extends Error {}

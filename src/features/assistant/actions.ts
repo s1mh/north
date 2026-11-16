@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { goalContributionSchema, goalSchema } from "@/features/goals/submission";
-import { portfolioAssetSchema, portfolioReversalSchema, portfolioTransactionSchema } from "@/features/portfolio/submission";
+import { portfolioAssetSchema, portfolioReversalSchema, portfolioTransactionSchema, valuationSchema } from "@/features/portfolio/submission";
+import { describeTerms, instrumentTermsInputSchema, type InstrumentTerms } from "@/features/portfolio/terms";
 
 export const actionKinds = [
   "record_transaction", "create_asset", "goal_contribution", "reverse_transaction", "create_goal",
+  "update_valuation", "set_terms",
 ] as const;
 export type ActionKind = typeof actionKinds[number];
 
@@ -32,16 +34,30 @@ export const reverseTransactionPayloadSchema = z.object({
   label: z.string().trim().min(1).max(160),
 }).strict();
 
+export const updateValuationPayloadSchema = z.object({
+  data: valuationSchema,
+  label: z.string().trim().min(1).max(160),
+}).strict();
+
+export const setTermsPayloadSchema = z.object({
+  instrumentId: z.uuid(),
+  terms: instrumentTermsInputSchema,
+  label: z.string().trim().min(1).max(160),
+}).strict();
+
 export const createGoalPayloadSchema = z.object({
   data: goalSchema,
 }).strict();
 
 /** Só o que cria um registro simples tem "Desfazer"; estorno e meta ficam auditados e se tratam nas telas. */
 export function canUndo(kind: ActionKind) {
-  return kind === "record_transaction" || kind === "create_asset" || kind === "goal_contribution";
+  return kind === "record_transaction" || kind === "create_asset" || kind === "goal_contribution"
+    || kind === "update_valuation" || kind === "set_terms";
 }
 
 export const payloadSchemas = {
+  update_valuation: updateValuationPayloadSchema,
+  set_terms: setTermsPayloadSchema,
   reverse_transaction: reverseTransactionPayloadSchema,
   create_goal: createGoalPayloadSchema,
   record_transaction: recordTransactionPayloadSchema,
@@ -115,6 +131,31 @@ export function describeAction(kind: ActionKind, payload: unknown): ActionView |
         { label: "Valor", value: money(Number(data.quantity) * Number(data.unitPrice) + Number(data.fees)) },
         { label: "Data", value: formatDate(data.tradeDate) },
       ],
+    };
+  }
+  if (kind === "update_valuation") {
+    const parsed = updateValuationPayloadSchema.safeParse(payload);
+    if (!parsed.success) return null;
+    return {
+      title: "Atualizar valor atual",
+      rows: [
+        { label: "Ativo", value: parsed.data.label },
+        { label: "Vale hoje", value: money(Number(parsed.data.data.totalValue)) },
+        { label: "Data do valor", value: formatDate(parsed.data.data.valuedOn) },
+      ],
+    };
+  }
+  if (kind === "set_terms") {
+    const parsed = setTermsPayloadSchema.safeParse(payload);
+    if (!parsed.success) return null;
+    const filled = describeTerms({
+      product_type: null, issuer: null, indexer: null, rate: null, start_date: null, maturity_date: null,
+      liquidity: null, liquidity_days: null, fgc: null, tax_regime: null,
+      ...Object.fromEntries(Object.entries(parsed.data.terms).filter(([, value]) => value !== undefined)),
+    } as InstrumentTerms);
+    return {
+      title: "Preencher a ficha do ativo",
+      rows: [{ label: "Ativo", value: parsed.data.label }, ...filled],
     };
   }
   if (kind === "reverse_transaction") {

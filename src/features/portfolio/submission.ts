@@ -102,3 +102,15 @@ export const portfolioReversalSchema = z.object({
   transactionId: z.uuid(),
   reason: z.string().trim().min(3).max(200),
 }).strict();
+
+const positiveMoneyText = z.string()
+  .trim()
+  .regex(/^\d{1,12}([.,]\d{1,2})?$/)
+  .transform((value) => value.replace(",", "."))
+  .refine((value) => Number(value) > 0);
+
+export const valuationSchema = z.object({
+  instrumentId: z.uuid(),
+  totalValue: positiveMoneyText,
+  valuedOn: z.iso.date().refine((value) => value <= todayInSaoPaulo()),
+}).strict();

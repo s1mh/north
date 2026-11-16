@@ -72,7 +72,7 @@ select set_config('request.jwt.claim.role', 'authenticated', true);
 
 select is(
   public.export_current_user_data() ->> 'schema_version',
-  '2026-07-31',
+  '2026-11-16',
   'export identifies its schema version'
 );
 select is(
