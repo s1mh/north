@@ -41,6 +41,11 @@ export const LEAK_MARKERS = [
   "Como registrar:",
 ];
 
+/** O modelo às vezes solta letras de outros alfabetos no fim do texto: mantém só alfabeto latino e símbolos comuns. */
+export function sanitizeReply(text: string) {
+  return text.replace(/(?!\p{Script=Latin})[\p{L}\p{M}]/gu, "").replace(/[ \t]+$/gm, "").replace(/ {2,}/g, " ");
+}
+
 export function containsLeak(text: string) {
   const lower = text.toLowerCase();
   return LEAK_MARKERS.some((marker) => lower.includes(marker.toLowerCase()));
@@ -604,7 +609,7 @@ export async function streamAssistantAgent({
     } else if (part.type === "tool-call") {
       onStatus(TOOL_STATUS[part.toolName] ?? "pensando");
     } else if (part.type === "text-delta") {
-      text += part.text;
+      text += sanitizeReply(part.text);
       if (containsLeak(text)) throw new LeakError("prompt_leak");
       if (text.length >= HOLD_CHARS) flush();
     } else if (part.type === "error") {
@@ -616,7 +621,7 @@ export async function streamAssistantAgent({
   const response = await result.response;
   const reported = response.modelId;
   const model = reported && reported.includes("/") ? reported : PRIMARY_ASSISTANT_MODEL;
-  return { text: text.trim(), actionIds: collected.actionIds, model };
+  return { text: sanitizeReply(text).trim(), actionIds: collected.actionIds, model };
 }
 
 export { loadAssistantContext };

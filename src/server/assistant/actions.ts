@@ -21,6 +21,8 @@ export class ActionError extends Error {
 }
 
 function friendly(error: { code?: string; message?: string } | null, fallback: string): never {
+  console.error("[assistant-action] failed", { code: error?.code, message: error?.message?.slice(0, 120) });
+  if (error?.code === "23514") throw new ActionError("Alguns dados não combinam entre si. Revise e tente de novo.", error.code);
   if (error?.code === "22003") throw new ActionError("Isso deixaria a posição negativa nessa data.", error.code);
   if (error?.code === "23505") throw new ActionError("Esse ativo já existe nessa instituição.", error.code);
   if (error?.code === "42501") throw new ActionError("Esse item não está disponível.", error.code);

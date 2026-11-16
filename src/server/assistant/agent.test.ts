@@ -177,3 +177,11 @@ describe("ferramentas da fase 5a", () => {
     expect(payload).toContain('"unitPrice":"1"');
   });
 });
+
+const { sanitizeReply } = await import("./agent");
+describe("sanitizeReply", () => {
+  it("remove letras de outros alfabetos e mantém acentos e símbolos", () => {
+    expect(sanitizeReply("Pronto para conferir e confirmar. સમાવ")).toBe("Pronto para conferir e confirmar.");
+    expect(sanitizeReply("Está com R$ 507,39 — ação, coração, você 😀")).toBe("Está com R$ 507,39 — ação, coração, você 😀");
+  });
+});

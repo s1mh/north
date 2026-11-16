@@ -95,9 +95,17 @@ export const instrumentTermsInputSchema = z.object({
 }).strict().refine(
   (terms) => !terms.start_date || !terms.maturity_date || terms.maturity_date >= terms.start_date,
   { message: "O vencimento não pode ser antes do início." },
-);
+).transform((terms) => {
+  // Dias de liquidez só fazem sentido em "D+N"; o modelo às vezes manda 0 junto com "diária".
+  if (terms.liquidity !== undefined && terms.liquidity !== "d_mais_n" && "liquidity_days" in terms) {
+    const { liquidity_days: _ignored, ...rest } = terms;
+    void _ignored;
+    return rest;
+  }
+  return terms;
+});
 
-export type InstrumentTermsInput = z.infer<typeof instrumentTermsInputSchema>;
+export type InstrumentTermsInput = z.output<typeof instrumentTermsInputSchema>;
 
 function formatDate(iso: string) {
   const [year, month, day] = iso.split("-");
