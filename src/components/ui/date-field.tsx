@@ -33,9 +33,11 @@ type Props = {
   required?: boolean;
   /** Data de hoje (America/Sao_Paulo), usada nos atalhos "Hoje" e "Ontem". */
   today?: string;
+  /** Mostra o botão "Limpar data" (campos opcionais). */
+  clearable?: boolean;
 };
 
-export function DateField({ label, name, defaultValue = "", min, max, required, today }: Props) {
+export function DateField({ label, name, defaultValue = "", min, max, required, today, clearable }: Props) {
   const id = useId();
   const root = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState(defaultValue);
@@ -126,6 +128,9 @@ export function DateField({ label, name, defaultValue = "", min, max, required, 
           >{day}</button>;
         })}
       </div>
+      {clearable && value ? <div className="date-quick">
+        <button type="button" onClick={() => { setValue(""); setOpen(false); }}>Limpar data</button>
+      </div> : null}
       {today && <div className="date-quick">
         <button type="button" disabled={!allowed(yesterday)} onClick={() => pick(yesterday)}>Ontem</button>
         <button type="button" disabled={!allowed(today)} onClick={() => pick(today)}>Hoje</button>

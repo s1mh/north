@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { DateField } from "@/components/ui/date-field";
 import { todayInSaoPaulo, transactionTypes } from "./submission";
+import { quantityForAmount } from "./valuation";
 
 type TransactionType = typeof transactionTypes[number];
 
@@ -19,10 +20,20 @@ const options: { value: TransactionType; label: string }[] = [
 
 const positionTypes: TransactionType[] = ["compra", "venda", "aporte", "resgate"];
 
+export type AmountMode = {
+  /** Preço atual por cota (ex.: 1.01478 numa caixinha que já rendeu). */
+  price: string;
+  /** Quantidade atual e valor atual em reais, para resgatar tudo sem sobra. */
+  quantity: string;
+  value: number;
+};
+
 export function AddTransactionForm({
   instrument,
+  amountMode,
 }: {
   instrument: { id: string; symbol: string; name: string };
+  amountMode?: AmountMode | null;
 }) {
   const router = useRouter();
   const [transactionType, setTransactionType] = useState<TransactionType>("compra");
@@ -36,7 +47,24 @@ export function AddTransactionForm({
     setPending(true);
     setError("");
     const form = new FormData(event.currentTarget);
-    const payload = Object.fromEntries(form.entries());
+    const payload: Record<string, FormDataEntryValue> = Object.fromEntries(form.entries());
+
+    // Ativos de saldo: a pessoa informa o valor em reais; o app calcula as cotas ao preço atual.
+    if (amountMode && changesPosition) {
+      const amountText = String(form.get("amount") ?? "").replace(/\./g, "").replace(",", ".");
+      const amountNumber = Number(amountText);
+      const closesPosition = (transactionType === "resgate" || transactionType === "venda")
+        && amountNumber >= amountMode.value - 0.005;
+      const quantity = closesPosition ? amountMode.quantity : quantityForAmount(amountText, amountMode.price);
+      if (!quantity) {
+        setError("Digite o valor em reais.");
+        setPending(false);
+        return;
+      }
+      payload.quantity = quantity;
+      payload.unitPrice = amountMode.price;
+      delete payload.amount;
+    }
 
     const response = await fetch("/api/portfolio/transactions", {
       method: "POST",
@@ -76,7 +104,16 @@ export function AddTransactionForm({
       >{option.label}</button>)}
     </fieldset>
 
-    {changesPosition ? <>
+    {changesPosition && amountMode ? <>
+      <label className="auth-field"><span>Valor (R$)</span>
+        <input name="amount" required inputMode="decimal" pattern="^\d+(?:[,.]\d{1,2})?$" title="Use um valor positivo com até duas casas decimais" placeholder="200,00" />
+        <small className="field-hint">O north. calcula a parte do seu saldo com o valor de hoje ({amountMode.value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}).</small>
+      </label>
+      <label className="auth-field"><span>Taxas da operação</span>
+        <input name="fees" required inputMode="decimal" pattern="^\d+(?:[,.]\d{1,2})?$" title="Informe uma taxa igual ou maior que zero" defaultValue="0,00" />
+      </label>
+      <input type="hidden" name="cashAmount" value="0" />
+    </> : changesPosition ? <>
       <div className="portfolio-field-row">
         <label className="auth-field"><span>Quantidade</span>
           <input name="quantity" required inputMode="decimal" pattern="^\d+(?:[,.]\d+)?$" title="Use apenas números e um separador decimal" placeholder="10" />

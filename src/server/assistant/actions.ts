@@ -6,6 +6,8 @@ import {
   goalContributionPayloadSchema,
   recordTransactionPayloadSchema,
   reverseTransactionPayloadSchema,
+  setTermsPayloadSchema,
+  updateValuationPayloadSchema,
   canUndo,
   type ActionKind,
 } from "@/features/assistant/actions";
@@ -69,6 +71,33 @@ export async function executeAction(
     };
   }
 
+  if (kind === "update_valuation") {
+    const parsed = updateValuationPayloadSchema.parse(payload);
+    const { data, error } = await supabase.rpc("record_instrument_valuation", {
+      p_instrument_id: parsed.data.instrumentId,
+      p_total_value: parsed.data.totalValue,
+      p_valued_on: parsed.data.valuedOn,
+    });
+    if (error || !data) friendly(error, "Não foi possível atualizar o valor agora.");
+    const value = data as { previous_price: number | null; previous_observed_at: string | null };
+    return {
+      instrumentId: parsed.data.instrumentId,
+      valuedOn: parsed.data.valuedOn,
+      previousPrice: value.previous_price,
+      previousObservedAt: value.previous_observed_at,
+    };
+  }
+
+  if (kind === "set_terms") {
+    const parsed = setTermsPayloadSchema.parse(payload);
+    const { data, error } = await supabase.rpc("set_instrument_terms", {
+      p_instrument_id: parsed.instrumentId,
+      p_terms: parsed.terms,
+    });
+    if (error || !data) friendly(error, "Não foi possível salvar a ficha agora.");
+    return { instrumentId: parsed.instrumentId, previous: (data as { previous: unknown }).previous ?? null };
+  }
+
   if (kind === "reverse_transaction") {
     const parsed = reverseTransactionPayloadSchema.parse(payload);
     const { data, error } = await supabase.rpc("reverse_portfolio_transaction", {
@@ -112,6 +141,32 @@ export async function undoAction(
   result: unknown,
 ): Promise<void> {
   if (!canUndo(kind)) throw new ActionError("Esse registro não pode ser desfeito por aqui.");
+  if (kind === "update_valuation") {
+    const value = (result ?? {}) as {
+      instrumentId?: string; valuedOn?: string; previousPrice?: number | null; previousObservedAt?: string | null;
+    };
+    if (!value.instrumentId || !value.valuedOn || value.previousPrice == null) {
+      throw new ActionError("Não há o que desfazer.");
+    }
+    const { error } = await supabase.rpc("restore_instrument_valuation", {
+      p_instrument_id: value.instrumentId,
+      p_valued_on: value.valuedOn,
+      p_previous_price: value.previousPrice,
+      p_previous_observed_at: value.previousObservedAt ?? null,
+    });
+    if (error) friendly(error, "Não foi possível desfazer agora.");
+    return;
+  }
+  if (kind === "set_terms") {
+    const value = (result ?? {}) as { instrumentId?: string; previous?: unknown };
+    if (!value.instrumentId) throw new ActionError("Não há o que desfazer.");
+    const { error } = await supabase.rpc("restore_instrument_terms", {
+      p_instrument_id: value.instrumentId,
+      p_previous: value.previous ?? null,
+    });
+    if (error) friendly(error, "Não foi possível desfazer agora.");
+    return;
+  }
   const value = (result ?? {}) as { transactionIds?: string[]; contributionId?: string };
   if (kind === "goal_contribution") {
     if (!value.contributionId) throw new ActionError("Não há o que desfazer.");

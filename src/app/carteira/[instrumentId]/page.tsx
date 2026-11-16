@@ -9,6 +9,11 @@ import {
   transactionValueCents,
   type PortfolioTransaction,
 } from "@/features/portfolio/ledger";
+import { InstrumentValue } from "@/features/portfolio/instrument-value";
+import { TermsCard } from "@/features/portfolio/terms-card";
+import { isBalanceProduct, type InstrumentTerms } from "@/features/portfolio/terms";
+import { todayInSaoPaulo } from "@/features/portfolio/submission";
+import { daysBetween, gainFromCents } from "@/features/portfolio/valuation";
 import { createClient } from "@/server/supabase/client";
 
 type DetailedTransaction = PortfolioTransaction & {
@@ -65,6 +70,18 @@ export default async function PortfolioInstrumentPage({
 }) {
   const { instrumentId } = await params;
   const supabase = await createClient();
+  const [{ data: termsRow }, { data: valuationRow }] = await Promise.all([
+    supabase.from("portfolio_instrument_terms").select("*").eq("instrument_id", instrumentId).maybeSingle(),
+    supabase
+      .from("portfolio_valuations")
+      .select("valued_on, source")
+      .eq("instrument_id", instrumentId)
+      .order("valued_on", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  const terms = (termsRow ?? null) as unknown as InstrumentTerms | null;
+  const lastValuation = (valuationRow ?? null) as { valued_on: string; source: string } | null;
   const { data } = await supabase
     .from("portfolio_instruments")
     .select(`
@@ -90,6 +107,16 @@ export default async function PortfolioInstrumentPage({
     ? new Intl.DateTimeFormat("pt-BR").format(new Date(instrument.price_observed_at))
     : null;
   const priceStatus = getPriceStatus(instrument.latest_price, instrument.price_observed_at);
+  const today = todayInSaoPaulo();
+  const balance = isBalanceProduct(terms?.product_type);
+  const hasInformedValue = Boolean(lastValuation);
+  const rawGain = priceStatus === "missing" ? null : gainFromCents(position.costBasisCents, currentValue);
+  // Só mostra ganho quando há valor informado ou o preço realmente difere do custo.
+  const gain = rawGain && (hasInformedValue || rawGain.gainCents !== 0n) ? rawGain : null;
+  const informedToday = lastValuation && instrument.price_observed_at
+    && lastValuation.valued_on === instrument.price_observed_at.slice(0, 10);
+  const informedAge = lastValuation ? daysBetween(lastValuation.valued_on) : 0;
+  const money = formatMoneyFromCents;
   const reversedIds = new Set(
     instrument.portfolio_transactions
       .map((transaction) => transaction.reverses_transaction_id)
@@ -109,20 +136,30 @@ export default async function PortfolioInstrumentPage({
 
     <section className="instrument-position">
       <div><span>Valor atual</span><strong>{formatMoneyFromCents(currentValue)}</strong></div>
+      {gain && position.costBasisCents > 0n ? <p className="instrument-gain" data-negative={gain.gainCents < 0n}>
+        {gain.gainCents >= 0n ? "+" : ""}{money(gain.gainCents)}
+        {gain.percent !== null ? ` (${gain.percent >= 0 ? "+" : ""}${gain.percent.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%)` : ""}
+        <small> sobre o que você colocou</small>
+      </p> : null}
       <dl>
-        <div><dt>Quantidade</dt><dd>{formatQuantity(position.quantity)}</dd></div>
-        <div><dt>Custo da posição</dt><dd>{formatMoneyFromCents(position.costBasisCents)}</dd></div>
-        <div><dt>Rendimentos</dt><dd>{formatMoneyFromCents(position.incomeCents)}</dd></div>
+        {!balance ? <div><dt>Quantidade</dt><dd>{formatQuantity(position.quantity)}</dd></div> : null}
+        <div><dt>{balance ? "Você colocou" : "Custo da posição"}</dt><dd>{formatMoneyFromCents(position.costBasisCents)}</dd></div>
+        <div><dt>Rendimentos lançados</dt><dd>{formatMoneyFromCents(position.incomeCents)}</dd></div>
         <div><dt>Taxas avulsas</dt><dd>{formatMoneyFromCents(position.expenseCents)}</dd></div>
       </dl>
-      <p data-price-status={priceStatus}>
+      <p data-price-status={informedToday ? "informed" : priceStatus}>
         {priceStatus === "missing"
           ? "Sem preço atual informado; o valor usa o custo da posição."
-          : priceStatus === "stale"
-            ? `Preço manual desatualizado desde ${observed}.`
-            : `Último preço informado em ${observed}.`}
+          : informedToday
+            ? `Valor informado por você em ${formatTradeDate(lastValuation!.valued_on)}${informedAge > 0 ? ` (há ${informedAge} ${informedAge === 1 ? "dia" : "dias"})` : ""}. O north. não consulta o banco: atualize quando quiser.`
+            : priceStatus === "stale"
+              ? `Preço do último lançamento, de ${observed}. Atualize o valor para ver o ganho de hoje.`
+              : `Preço do último lançamento, de ${observed}.`}
       </p>
+      <InstrumentValue instrumentId={instrument.id} today={today} />
     </section>
+
+    <TermsCard instrumentId={instrument.id} terms={terms} today={today} />
 
     <section className="transaction-history">
       <div className="section-head"><div><p className="eyebrow">Livro imutável</p><h2>Movimentações</h2></div></div>
@@ -144,7 +181,7 @@ export default async function PortfolioInstrumentPage({
             <span className="transaction-mark" data-outgoing={outgoing}>{outgoing ? "−" : "+"}</span>
             <div>
               <strong>{label}</strong>
-              <span>{formatTradeDate(transaction.trade_date)}{Number(transaction.quantity) !== 0 ? ` · ${String(transaction.quantity).replace(".", ",")} cotas` : ""}</span>
+              <span>{formatTradeDate(transaction.trade_date)}{!balance && Number(transaction.quantity) !== 0 ? ` · ${String(transaction.quantity).replace(".", ",")} cotas` : ""}</span>
               {transaction.audit_reason ? <small>{transaction.audit_reason}</small> : null}
             </div>
             <div className="transaction-actions">

@@ -850,3 +850,31 @@ h1, h2, h3, .wordmark, .welcome-wordmark { font-family: var(--font-display), var
 @media (prefers-reduced-motion: reduce) { .asst-typing span { animation: none; opacity: .7; } }
 .asst-followups { margin: 4px 0 150px; }
 .asst-followups + .form-error { margin-bottom: 150px; }
+
+/* ===== Valor atual informado e ficha do ativo ===== */
+.instrument-gain { margin: 6px 0 0; color: var(--up); font-size: 15px; font-weight: 850; }
+.instrument-gain[data-negative="true"] { color: var(--down); }
+.instrument-gain small { color: var(--muted); font-size: 12px; font-weight: 600; }
+.value-update-open { margin-top: 14px; min-height: 44px; padding: 0 18px; border: 1.5px solid var(--ink); border-radius: 999px; background: transparent; color: var(--ink); font-size: 13px; font-weight: 850; cursor: pointer; }
+.value-update-form { margin-top: 14px; padding: 16px; border: 1.5px solid var(--ink); border-radius: 16px; background: var(--bg); }
+.value-update-form .auth-field:first-child { margin-top: 0; }
+.value-update-form .auth-field input, .terms-form .auth-field input { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.value-update-actions { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+.value-update-save { min-height: 44px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--ink); color: var(--oncta); font-size: 14px; font-weight: 850; cursor: pointer; }
+.value-update-cancel { min-height: 44px; padding: 0 16px; border: 1.5px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink); font-size: 13px; font-weight: 800; cursor: pointer; }
+.value-update-save:disabled, .value-update-cancel:disabled { opacity: .5; }
+.terms-card { margin-top: 30px; padding: 20px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
+.terms-card .section-head { margin-bottom: 8px; }
+.terms-edit { min-height: 44px; padding: 0 14px; border: 1.5px solid var(--ink); border-radius: 999px; background: transparent; color: var(--ink); font-size: 12px; font-weight: 850; cursor: pointer; }
+.terms-empty { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.terms-list { margin: 8px 0 0; display: grid; gap: 0; }
+.terms-list div { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-top: 1px solid var(--hair); }
+.terms-list dt { color: var(--muted); font-size: 13px; }
+.terms-list dd { margin: 0; text-align: right; font-size: 14px; font-weight: 800; overflow-wrap: anywhere; }
+.terms-form { margin-top: 12px; display: grid; gap: 4px; }
+.terms-field { margin-top: 18px; display: grid; gap: 8px; }
+.terms-field > span { color: var(--muted2); font-size: 12px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+.terms-field .select-trigger { min-height: 48px; width: 100%; justify-content: space-between; border-radius: 12px; background: var(--bg); }
+.terms-field .select-list { max-width: min(380px, calc(100vw - 40px)); }
+.terms-hint { margin: 4px 0 0; }
+.terms-form .portfolio-field-row { margin-top: 0; }

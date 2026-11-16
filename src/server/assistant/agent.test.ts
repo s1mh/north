@@ -142,3 +142,38 @@ describe("ferramentas da fase 4", () => {
       .toHaveProperty("erro");
   });
 });
+
+describe("ferramentas da fase 5a", () => {
+  it("propor_atualizar_valor cria proposta e recusa data futura", async () => {
+    const { client, created } = fakeSupabase();
+    const tools = buildTools(client as never, { actionIds: [] });
+    expect(await run(tools.propor_atualizar_valor, { instrumentId, totalValue: "507,39" })).toMatchObject({ ok: true });
+    expect(created[0]?.kind).toBe("update_valuation");
+    expect(JSON.stringify(created[0]?.payload)).toContain("507.39");
+    expect(await run(tools.propor_atualizar_valor, { instrumentId, totalValue: "507,39", valuedOn: "2099-01-01" })).toHaveProperty("erro");
+    expect(created).toHaveLength(1);
+  });
+
+  it("propor_ficha monta o contrato do exemplo e recusa ficha vazia", async () => {
+    const { client, created } = fakeSupabase();
+    const tools = buildTools(client as never, { actionIds: [] });
+    expect(await run(tools.propor_ficha, {
+      instrumentId, product_type: "rdb", issuer: "Nu Financeira", indexer: "cdi_pct", rate: "120",
+      maturity_date: "2028-09-29", liquidity: "diaria", fgc: "sim",
+    })).toMatchObject({ ok: true });
+    expect(created[0]?.kind).toBe("set_terms");
+    expect(await run(tools.propor_ficha, { instrumentId })).toHaveProperty("erro");
+  });
+
+  it("propor_movimentacao com valorEmReais calcula a quantidade pelo preço atual", async () => {
+    const { client, created } = fakeSupabase();
+    const tools = buildTools(client as never, { actionIds: [] });
+    const result = await run(tools.propor_movimentacao, {
+      instrumentId, transactionType: "aporte", quantity: "0", unitPrice: "0", fees: "0", cashAmount: "0", valorEmReais: "200,00",
+    });
+    expect(result).toMatchObject({ ok: true });
+    const payload = JSON.stringify(created[0]?.payload);
+    expect(payload).toContain('"quantity":"200.00000000"');
+    expect(payload).toContain('"unitPrice":"1"');
+  });
+});
