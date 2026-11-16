@@ -43,7 +43,7 @@ export function PwaClient() {
   }
 
   return updateReady ? <aside className="pwa-update" role="status">
-    <span>Uma nova versão do North está pronta.</span>
+    <span>Uma nova versão do north. está pronta.</span>
     <button type="button" onClick={update}>Atualizar</button>
   </aside> : null;
 }
