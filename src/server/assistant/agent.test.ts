@@ -111,3 +111,34 @@ describe("marcadores adicionais de vazamento", () => {
     expect(containsLeak("Dinheiro parado (caixinha, conta remunerada)")).toBe(true);
   });
 });
+
+describe("ferramentas da fase 4", () => {
+  it("propor_meta cria proposta e recusa data passada", async () => {
+    const { client, created } = fakeSupabase();
+    const tools = buildTools(client as never, { actionIds: [] });
+    expect(await run(tools.propor_meta, {
+      name: "Viagem", kind: "viagem", targetAmount: "10000", targetDate: "2020-01-01", plannedMonthlyAmount: "0",
+    })).toHaveProperty("erro");
+    expect(created).toHaveLength(0);
+    expect(await run(tools.propor_meta, {
+      name: "Viagem", kind: "viagem", targetAmount: "10.000,00", targetDate: "2099-12-01", plannedMonthlyAmount: "500",
+    })).toMatchObject({ ok: true });
+    expect(created[0]?.kind).toBe("create_goal");
+  });
+
+  it("propor_estorno recusa lançamento inexistente e motivo vazio", async () => {
+    const empty = {
+      from: () => {
+        const b: Record<string, unknown> = {};
+        b.select = () => b; b.eq = () => b; b.maybeSingle = async () => ({ data: null });
+        return b;
+      },
+      rpc: async () => ({ data: "x", error: null }),
+    };
+    const tools = buildTools(empty as never, { actionIds: [] });
+    expect(await run(tools.propor_estorno, { transactionId: instrumentId, reason: "erro de digitação" }))
+      .toHaveProperty("erro");
+    expect(await run(tools.propor_estorno, { transactionId: instrumentId, reason: "" }))
+      .toHaveProperty("erro");
+  });
+});

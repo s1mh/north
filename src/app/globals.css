@@ -848,3 +848,5 @@ h1, h2, h3, .wordmark, .welcome-wordmark { font-family: var(--font-display), var
 .asst-typing em { margin-left: 8px; color: var(--muted); font-size: 12px; font-style: normal; }
 @keyframes asst-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-5px); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .asst-typing span { animation: none; opacity: .7; } }
+.asst-followups { margin: 4px 0 150px; }
+.asst-followups + .form-error { margin-bottom: 150px; }

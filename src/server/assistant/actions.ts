@@ -2,8 +2,11 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   createAssetPayloadSchema,
+  createGoalPayloadSchema,
   goalContributionPayloadSchema,
   recordTransactionPayloadSchema,
+  reverseTransactionPayloadSchema,
+  canUndo,
   type ActionKind,
 } from "@/features/assistant/actions";
 
@@ -66,6 +69,29 @@ export async function executeAction(
     };
   }
 
+  if (kind === "reverse_transaction") {
+    const parsed = reverseTransactionPayloadSchema.parse(payload);
+    const { data, error } = await supabase.rpc("reverse_portfolio_transaction", {
+      p_transaction_id: parsed.data.transactionId,
+      p_reason: parsed.data.reason,
+    });
+    if (error || !data) friendly(error, "Não foi possível estornar agora.");
+    return { reversalId: data as string };
+  }
+
+  if (kind === "create_goal") {
+    const parsed = createGoalPayloadSchema.parse(payload);
+    const { data, error } = await supabase.rpc("create_goal_with_plan", {
+      p_name: parsed.data.name,
+      p_kind: parsed.data.kind,
+      p_target_amount: parsed.data.targetAmount,
+      p_target_date: parsed.data.targetDate,
+      p_planned_monthly_amount: parsed.data.plannedMonthlyAmount,
+    });
+    if (error || !data) friendly(error, "Não foi possível criar a meta agora.");
+    return { goalId: data as string };
+  }
+
   const parsed = goalContributionPayloadSchema.parse(payload);
   const { data, error } = await supabase.rpc("record_goal_contribution", {
     p_goal_id: parsed.data.goalId,
@@ -85,6 +111,7 @@ export async function undoAction(
   kind: ActionKind,
   result: unknown,
 ): Promise<void> {
+  if (!canUndo(kind)) throw new ActionError("Esse registro não pode ser desfeito por aqui.");
   const value = (result ?? {}) as { transactionIds?: string[]; contributionId?: string };
   if (kind === "goal_contribution") {
     if (!value.contributionId) throw new ActionError("Não há o que desfazer.");

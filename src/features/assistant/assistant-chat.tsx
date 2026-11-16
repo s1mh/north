@@ -3,18 +3,31 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import type { ActionKind, ActionStatus, ActionView } from "@/features/assistant/actions";
+import { canUndo, type ActionKind, type ActionStatus, type ActionView } from "@/features/assistant/actions";
 import type { AssistantInsight } from "@/features/assistant/types";
 
 export type ChatAction = { id: string; kind: ActionKind; status: ActionStatus; view: ActionView | null };
 export type ChatMessage = { id: string; role: "user" | "assistant"; text: string; actions: ChatAction[] };
 export type ThreadItem = { id: string; title: string; updated_at: string };
 
-const suggestions = [
-  "Como está minha carteira?",
-  "Registrar um aporte",
-  "Estou no ritmo da minha meta?",
-] as const;
+/** Atalhos que mudam conforme a situação da pessoa. */
+export function suggestionsFor({ hasAssets, hasGoals, messages }: {
+  hasAssets: boolean;
+  hasGoals: boolean;
+  messages: ChatMessage[];
+}): string[] {
+  if (messages.length > 0) {
+    const last = [...messages].reverse().find((item) => item.role === "assistant");
+    const confirmed = last?.actions.some((action) => action.status === "confirmed");
+    return confirmed ? ["Registrar outro", "Como está minha carteira?"] : [];
+  }
+  const list: string[] = [];
+  if (hasAssets) list.push("Registrar um aporte", "Como está minha carteira?");
+  else list.push("Cadastrar meu primeiro ativo");
+  list.push(hasGoals ? "Estou no ritmo da minha meta?" : "Criar uma meta");
+  if (hasAssets) list.push("Corrigir um lançamento");
+  return list;
+}
 
 const DISCLAIMER = "Conteúdo educacional. O north. não recomenda investimentos, não executa ordens e não move dinheiro: só registra o seu controle manual.";
 
@@ -80,10 +93,12 @@ function ActionCard({ action, onChange }: {
       </> : null}
     </div> : null}
     {status === "confirmed" ? <div className="asst-card-actions">
-      <button type="button" className="asst-cancel" disabled={busy} onClick={() => decide("undo")}>
+      {canUndo(action.kind) ? <button type="button" className="asst-cancel" disabled={busy} onClick={() => decide("undo")}>
         {busy ? "Desfazendo…" : "Desfazer"}
-      </button>
-      <Link href="/carteira" className="asst-link">Ver carteira →</Link>
+      </button> : null}
+      <Link href={action.kind === "create_goal" ? "/metas" : "/carteira"} className="asst-link">
+        {action.kind === "create_goal" ? "Ver metas →" : "Ver carteira →"}
+      </Link>
     </div> : null}
   </article>;
 }
@@ -102,12 +117,16 @@ function acknowledgement(question: string, firstName: string) {
 }
 
 export function AssistantChat({
+  hasAssets,
+  hasGoals,
   firstName,
   threads: initialThreads,
   initialThreadId,
   initialMessages,
   insights,
 }: {
+  hasAssets: boolean;
+  hasGoals: boolean;
   firstName: string;
   threads: ThreadItem[];
   initialThreadId: string | null;
@@ -271,7 +290,7 @@ export function AssistantChat({
       <h1>{greeting}{firstName ? `, ${firstName}` : ""}! Como vai hoje?</h1>
       <p className="asst-lead">Pode me perguntar sobre a sua carteira e metas, ou me contar o que você fez, tipo “coloquei 500 reais nas caixinhas do Nu”. Eu preparo o registro e você confirma.</p>
       <div className="assistant-quick-questions">
-        {suggestions.map((question) => <button type="button" key={question} disabled={pending} onClick={() => ask(question)}>
+        {suggestionsFor({ hasAssets, hasGoals, messages }).map((question) => <button type="button" key={question} disabled={pending} onClick={() => ask(question)}>
           {question}
         </button>)}
       </div>
@@ -299,6 +318,12 @@ export function AssistantChat({
       </div> : null}
       <div ref={bottom} />
     </section>}
+
+    {messages.length > 0 && !pending ? <div className="assistant-quick-questions asst-followups">
+      {suggestionsFor({ hasAssets, hasGoals, messages }).map((question) => <button type="button" key={question} onClick={() => ask(question)}>
+        {question}
+      </button>)}
+    </div> : null}
 
     {error ? <p className="form-error assistant-error" role="alert">{error}</p> : null}
 

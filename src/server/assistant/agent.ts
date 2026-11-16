@@ -2,9 +2,9 @@ import "server-only";
 import { stepCountIs, streamText, tool, type ModelMessage } from "ai";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { goalContributionSchema } from "@/features/goals/submission";
+import { goalContributionSchema, goalKinds, goalSchema } from "@/features/goals/submission";
 import { derivePosition, formatMoneyFromCents, type PortfolioTransaction } from "@/features/portfolio/ledger";
-import { portfolioAssetSchema, portfolioTransactionSchema, todayInSaoPaulo } from "@/features/portfolio/submission";
+import { portfolioAssetSchema, portfolioReversalSchema, portfolioTransactionSchema, todayInSaoPaulo } from "@/features/portfolio/submission";
 import { isIndicatorStale, latestIndicators, type MarketIndicatorRow } from "@/features/market/presentation";
 import { deriveGoalProgress, getActiveContributionPlan } from "@/features/goals/calculation";
 import { loadAssistantContext } from "@/server/assistant/context";
@@ -24,6 +24,9 @@ export const LEAK_MARKERS = [
   "consultar_carteira",
   "consultar_metas",
   "consultar_mercado",
+  "consultar_movimentacoes",
+  "propor_estorno",
+  "propor_meta",
   "AI_GATEWAY",
   "SUPABASE_",
   "service_role",
@@ -59,6 +62,8 @@ Como registrar:
 - Data: se a pessoa não disser, use hoje. Não aceite data futura.
 - Dinheiro parado (caixinha, conta remunerada, saldo): o ativo é "Instituição › Nome" na classe renda_fixa; quantidade = valor em reais e preço unitário = 1.00. Exemplo: 500 reais = quantidade 500 e preço 1.00. Se o ativo já existe, use um aporte nele. Se não existe, proponha criar o ativo (que já registra o valor inicial).
 - Valores com ponto decimal nas ferramentas (ex.: 500.00). Taxas: 0 se não houver.
+- Corrigir ou apagar um lançamento: use "consultar_movimentacoes" para achar o lançamento certo e "propor_estorno" (o histórico original continua visível). Para corrigir um valor, proponha o estorno do lançamento errado E, em seguida, o novo registro correto, e avise que são duas confirmações. Nunca estorne sem a pessoa ter pedido.
+- Criar meta: use "propor_meta" com nome, tipo (aposentadoria, viagem, imovel, carro, reserva ou personalizada), valor alvo, data futura e aporte mensal planejado (0 se não souber, mas pergunte antes se faltar o valor ou a data). Metas não são pedidos de compra: é só planejamento.
 - Aportes e compras aumentam a posição; resgates e vendas reduzem. Rendimento e taxa usam o valor em dinheiro (cashAmount), sem quantidade.
 
 Limites (importante):
@@ -196,6 +201,105 @@ export function buildTools(supabase: SupabaseClient, collected: Collected) {
       },
     }),
 
+    consultar_movimentacoes: tool({
+      description: "Lista os últimos lançamentos da carteira que ainda valem (id, ativo, tipo, quantidade, preço, valor e data). Use para corrigir ou estornar.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const { data } = await supabase
+          .from("portfolio_transactions")
+          .select(`
+            id, transaction_type, quantity, unit_price, cash_amount, trade_date,
+            reverses_transaction_id, corrects_transaction_id,
+            portfolio_instruments(name, portfolio_institutions(name))
+          `)
+          .order("created_at", { ascending: false })
+          .limit(40);
+        const rows = (data ?? []) as unknown as Array<{
+          id: string; transaction_type: string; quantity: string | number; unit_price: string | number;
+          cash_amount: string | number; trade_date: string; reverses_transaction_id: string | null;
+          portfolio_instruments: { name: string; portfolio_institutions: { name: string } | { name: string }[] | null } | null;
+        }>;
+        const reversed = new Set(rows.map((row) => row.reverses_transaction_id).filter(Boolean));
+        return {
+          lancamentos: rows
+            .filter((row) => !row.reverses_transaction_id && !reversed.has(row.id))
+            .slice(0, 15)
+            .map((row) => {
+              const institution = Array.isArray(row.portfolio_instruments?.portfolio_institutions)
+                ? row.portfolio_instruments?.portfolio_institutions[0]?.name
+                : row.portfolio_instruments?.portfolio_institutions?.name;
+              return {
+                id: row.id,
+                ativo: `${institution ? `${institution} › ` : ""}${row.portfolio_instruments?.name ?? ""}`,
+                tipo: row.transaction_type,
+                quantidade: String(row.quantity),
+                precoUnitario: String(row.unit_price),
+                valorEmDinheiro: String(row.cash_amount),
+                data: row.trade_date,
+              };
+            }),
+        };
+      },
+    }),
+
+    propor_estorno: tool({
+      description: "Propõe estornar (anular) um lançamento existente; a pessoa confirma depois. O histórico original continua visível. Não grava nada.",
+      inputSchema: z.object({
+        transactionId: z.string().describe("id do lançamento, vindo de consultar_movimentacoes"),
+        reason: z.string().min(3).max(200).describe("motivo curto, ex.: valor digitado errado"),
+      }),
+      execute: async (input) => {
+        const parsed = portfolioReversalSchema.safeParse(input);
+        if (!parsed.success) return { erro: "Dados inválidos para o estorno." };
+        const { data: found } = await supabase
+          .from("portfolio_transactions")
+          .select("id, transaction_type, quantity, unit_price, cash_amount, trade_date, reverses_transaction_id, portfolio_instruments(name)")
+          .eq("id", parsed.data.transactionId)
+          .maybeSingle();
+        if (!found) return { erro: "Lançamento não encontrado. Use consultar_movimentacoes." };
+        const row = found as unknown as {
+          transaction_type: string; quantity: string | number; unit_price: string | number;
+          cash_amount: string | number; trade_date: string; reverses_transaction_id: string | null;
+          portfolio_instruments: { name: string } | null;
+        };
+        if (row.reverses_transaction_id) return { erro: "Esse lançamento já é um estorno." };
+        const { count } = await supabase
+          .from("portfolio_transactions")
+          .select("id", { count: "exact", head: true })
+          .eq("reverses_transaction_id", parsed.data.transactionId);
+        if ((count ?? 0) > 0) return { erro: "Esse lançamento já foi estornado." };
+        const amount = Number(row.cash_amount) > 0 ? Number(row.cash_amount) : Number(row.quantity) * Number(row.unit_price);
+        const label = `${row.transaction_type} de ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} em ${row.portfolio_instruments?.name ?? "ativo"} (${row.trade_date.split("-").reverse().join("/")})`;
+        const id = await createAction(supabase, "reverse_transaction", { data: parsed.data, label });
+        collected.actionIds.push(id);
+        return { ok: true, proposta: "criada; aguarda confirmação da pessoa" };
+      },
+    }),
+
+    propor_meta: tool({
+      description: "Propõe criar uma meta financeira (a pessoa confirma depois). Não grava nada.",
+      inputSchema: z.object({
+        name: z.string().min(2).max(80).describe("ex.: Viagem para a Europa"),
+        kind: z.enum(goalKinds),
+        targetAmount: decimalText.describe("valor alvo em reais, ex.: 10000.00"),
+        targetDate: z.string().describe("AAAA-MM-DD, no futuro"),
+        plannedMonthlyAmount: decimalText.default("0").describe("aporte mensal planejado; 0 se não houver"),
+      }),
+      execute: async (input) => {
+        const parsed = goalSchema.safeParse({
+          name: input.name,
+          kind: input.kind,
+          targetAmount: normalizeDecimal(input.targetAmount),
+          targetDate: input.targetDate,
+          plannedMonthlyAmount: normalizeDecimal(input.plannedMonthlyAmount),
+        });
+        if (!parsed.success) return { erro: "Dados inválidos para a meta. A data precisa ser futura e o valor positivo." };
+        const id = await createAction(supabase, "create_goal", { data: parsed.data });
+        collected.actionIds.push(id);
+        return { ok: true, proposta: "criada; aguarda confirmação da pessoa" };
+      },
+    }),
+
     propor_movimentacao: tool({
       description: "Propõe registrar uma movimentação em um ativo que já existe (a pessoa confirma depois). Não grava nada.",
       inputSchema: z.object({
@@ -312,6 +416,9 @@ const TOOL_STATUS: Record<string, string> = {
   propor_movimentacao: "preparando o registro",
   propor_novo_ativo: "preparando o registro",
   propor_aporte_meta: "preparando o registro",
+  consultar_movimentacoes: "olhando seus lançamentos",
+  propor_estorno: "preparando o estorno",
+  propor_meta: "montando a meta",
 };
 
 export class LeakError extends Error {}
