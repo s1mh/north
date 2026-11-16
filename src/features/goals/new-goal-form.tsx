@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, type ReactNode, useState } from "react";
+import { DateField } from "@/components/ui/date-field";
 import {
   brazilianMoneySubmissionValue,
   completeBrazilianMoneyInput,
@@ -108,9 +109,7 @@ export function NewGoalForm() {
       />
     </label>
     <div className="portfolio-field-row">
-      <label className="auth-field"><span>Até quando</span>
-        <input name="targetDate" type="date" required min={tomorrowInSaoPaulo()} />
-      </label>
+      <DateField label="Até quando" name="targetDate" required min={tomorrowInSaoPaulo()} />
       <label className="auth-field"><span>Aporte mensal planejado</span>
         <input
           name="plannedMonthlyAmount"

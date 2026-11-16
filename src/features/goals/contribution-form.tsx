@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { DateField } from "@/components/ui/date-field";
 import { todayInSaoPaulo } from "@/features/portfolio/submission";
 
 export function GoalContributionForm({ goalId }: { goalId: string }) {
@@ -44,9 +45,7 @@ export function GoalContributionForm({ goalId }: { goalId: string }) {
       <label className="auth-field"><span>Valor reservado</span>
         <input name="amount" required inputMode="decimal" pattern="^\d+(?:[,.]\d{1,2})?$" title="Use um valor positivo com até duas casas decimais" placeholder="500,00" />
       </label>
-      <label className="auth-field"><span>Data</span>
-        <input name="contributedOn" type="date" required max={todayInSaoPaulo()} defaultValue={todayInSaoPaulo()} />
-      </label>
+      <DateField label="Data" name="contributedOn" required max={todayInSaoPaulo()} today={todayInSaoPaulo()} defaultValue={todayInSaoPaulo()} />
     </div>
     <label className="auth-field"><span>Observação opcional</span>
       <input name="note" maxLength={120} placeholder="Ex.: valor separado na conta" autoCapitalize="sentences" autoCorrect="on" spellCheck />
