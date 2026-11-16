@@ -46,5 +46,6 @@ export function track(event: TrackedEvent, params?: Record<string, string>) {
   if (!measurementAvailable || typeof window === "undefined") return;
   if (readChoice() !== "accepted") return;
   const layer = ((window as Window & { dataLayer?: unknown[] }).dataLayer ??= []);
-  layer.push({ event, ...sanitizeParams(params), page_location: safeLocation(window.location.href) });
+  // `onde: undefined` limpa o valor do evento anterior (a camada de dados do GTM guarda o último valor).
+  layer.push({ event, onde: undefined, ...sanitizeParams(params), page_location: safeLocation(window.location.href) });
 }
