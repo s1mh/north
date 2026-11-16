@@ -359,7 +359,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .allocation-list div { display:grid; grid-template-columns:10px 1fr auto; align-items:center; gap:10px; font-size:12.5px; font-weight:650; }
 .allocation-dot { width:10px; height:10px; border-radius:3px; }
 .result-note { margin:24px 0; color:var(--muted2); font-size:12px; line-height:1.45; }
-.text-action { min-height:44px; border:0; color:var(--muted); background:transparent; font-size:12px; font-weight:750; cursor:pointer; }
+.text-action { min-height:44px; display:grid; place-items:center; text-decoration:underline; text-underline-offset:3px; border:0; color:var(--muted); background:transparent; font-size:12px; font-weight:750; cursor:pointer; }
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .welcome-shell { min-height:100dvh; padding:34px 24px 30px; display:flex; flex-direction:column; color:#f6f5f0; background:#131210; }
 .welcome-mark { flex:1; display:grid; place-items:center; }

@@ -229,7 +229,7 @@ export function InvestmentSimulator({
     </label> : null}
 
     <div className="investment-allocation-head">
-      <span>Distribuição · perfil</span>
+      <span>Modelo de referência · perfil</span>
       <strong>{profileLabels[profile]}</strong>
       <button type="button" onClick={() => setEditingAllocation((value) => !value)}>
         {editingAllocation ? "concluir" : "editar"}

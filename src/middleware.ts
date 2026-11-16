@@ -35,7 +35,8 @@ export async function middleware(request: NextRequest) {
   }
   const isOnboardingRoute = request.nextUrl.pathname.startsWith("/onboarding/");
   const isPasswordResetRoute = request.nextUrl.pathname.startsWith("/redefinir-senha");
-  if (!isOnboardingRoute && !isPasswordResetRoute) {
+  const skippedOnboarding = request.cookies.get("north-onboarding-skip")?.value === "1";
+  if (!isOnboardingRoute && !isPasswordResetRoute && !skippedOnboarding) {
     const [profileResult, institutionResult] = await Promise.all([
       supabase
         .from("profiles")

@@ -118,6 +118,7 @@ export function BankSelection({
               ? "Selecione pelo menos um"
               : `Continuar · ${selected.length} selecionado${selected.length > 1 ? "s" : ""}`}
         </button>
+        <a className="text-action" href="/onboarding/pular">Pular por enquanto</a>
       </section>
     </main>
   );

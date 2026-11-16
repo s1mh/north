@@ -112,7 +112,7 @@ export function SuitabilityFlow({ initialResult = null }: { initialResult?: Suit
           </div>
 
           <p className="result-note">
-            Este resultado é educacional e considera somente suas respostas. Você pode refazer o questionário quando quiser.
+            Este resultado é educacional e considera somente suas respostas. É só um ponto de partida: você pode ajustar o modelo na tela Investir e refazer o questionário quando quiser.
           </p>
           <Link className="button onboarding-action" href="/inicio">Ir para o início</Link>
           <button className="text-action" type="button" onClick={restart}>Refazer agora</button>
@@ -159,6 +159,7 @@ export function SuitabilityFlow({ initialResult = null }: { initialResult?: Suit
         <button className="button onboarding-action" type="button" onClick={next} disabled={!selected || saving}>
           {saving ? "Salvando seu perfil…" : current === suitabilityQuestions.length - 1 ? "Ver meu perfil" : "Próxima"}
         </button>
+        <a className="text-action" href="/onboarding/pular">Pular por enquanto</a>
       </section>
     </main>
   );
