@@ -69,6 +69,113 @@ export const authTemplates = {
       service: true,
     }),
   },
+
+  // Avisos de segurança do Supabase (enviados quando habilitados no projeto).
+  password_changed: {
+    subject: "A senha da sua conta no north. foi alterada",
+    html: renderEmail({
+      preheader: "Se não foi você, aja agora.",
+      accent: "#f2c9d0",
+      eyebrow: "Aviso de segurança",
+      title: "A sua senha foi alterada.",
+      blocks: [
+        { kind: "p", text: "A senha da sua conta no north. acabou de ser alterada." },
+        { kind: "note", title: "Não foi você?", text: "Peça uma nova senha na tela de entrada (Esqueci minha senha) e escreva para a gente. Se você ativou a verificação em duas etapas, a sua conta continua protegida pelo código." },
+      ],
+      reason: ACCOUNT_REASON,
+      service: true,
+    }),
+  },
+  email_changed: {
+    subject: "O e-mail da sua conta no north. foi alterado",
+    html: renderEmail({
+      preheader: "O e-mail da sua conta mudou.",
+      accent: "#e9de9e",
+      eyebrow: "Aviso de segurança",
+      title: "O e-mail da sua conta mudou.",
+      blocks: [
+        { kind: "p", text: "O e-mail da sua conta no north. foi alterado. O e-mail anterior era <strong>{{ .OldEmail }}</strong>." },
+        { kind: "note", title: "Não foi você?", text: "Escreva para a gente o quanto antes e, se ainda tiver acesso, troque a sua senha." },
+      ],
+      reason: ACCOUNT_REASON,
+      service: true,
+    }),
+  },
+  phone_changed: {
+    subject: "O telefone da sua conta no north. foi alterado",
+    html: renderEmail({
+      preheader: "O telefone da sua conta mudou.",
+      accent: "#e9de9e",
+      eyebrow: "Aviso de segurança",
+      title: "O telefone da sua conta mudou.",
+      blocks: [
+        { kind: "p", text: "O telefone da sua conta no north. foi alterado. O número anterior era <strong>{{ .OldPhone }}</strong>." },
+        { kind: "note", title: "Não foi você?", text: "Escreva para a gente o quanto antes e troque a sua senha." },
+      ],
+      reason: ACCOUNT_REASON,
+      service: true,
+    }),
+  },
+  mfa_factor_enrolled: {
+    subject: "Verificação em duas etapas ativada no north.",
+    html: renderEmail({
+      preheader: "Um novo método de verificação foi adicionado.",
+      accent: "#cde5c4",
+      eyebrow: "Aviso de segurança",
+      title: "Verificação em duas etapas ativada.",
+      blocks: [
+        { kind: "p", text: "Um método de verificação (<strong>{{ .FactorType }}</strong>) foi adicionado à sua conta. A partir de agora, ao entrar, o north. pede o segundo código." },
+        { kind: "note", title: "Não foi você?", text: "Troque a sua senha agora e escreva para a gente." },
+      ],
+      reason: ACCOUNT_REASON,
+      service: true,
+    }),
+  },
+  mfa_factor_unenrolled: {
+    subject: "Verificação em duas etapas desativada no north.",
+    html: renderEmail({
+      preheader: "Um método de verificação foi removido.",
+      accent: "#f2d3b6",
+      eyebrow: "Aviso de segurança",
+      title: "Verificação em duas etapas desativada.",
+      blocks: [
+        { kind: "p", text: "Um método de verificação (<strong>{{ .FactorType }}</strong>) foi removido da sua conta. Ela agora depende só da senha, a menos que você tenha outro método ativo." },
+        { kind: "note", title: "Não foi você?", text: "Troque a sua senha agora, ative a verificação de novo no Perfil e escreva para a gente." },
+      ],
+      reason: ACCOUNT_REASON,
+      service: true,
+    }),
+  },
+  identity_linked: {
+    subject: "Um novo método de entrada foi vinculado à sua conta no north.",
+    html: renderEmail({
+      preheader: "Um novo método de entrada foi vinculado.",
+      accent: "#c9d8ee",
+      eyebrow: "Aviso de segurança",
+      title: "Um novo método de entrada foi vinculado.",
+      blocks: [
+        { kind: "p", text: "O método de entrada <strong>{{ .Provider }}</strong> foi vinculado à sua conta no north." },
+        { kind: "note", title: "Não foi você?", text: "Troque a sua senha e escreva para a gente o quanto antes." },
+      ],
+      reason: ACCOUNT_REASON,
+      service: true,
+    }),
+  },
+  identity_unlinked: {
+    subject: "Um método de entrada foi removido da sua conta no north.",
+    html: renderEmail({
+      preheader: "Um método de entrada foi removido.",
+      accent: "#c9d8ee",
+      eyebrow: "Aviso de segurança",
+      title: "Um método de entrada foi removido.",
+      blocks: [
+        { kind: "p", text: "O método de entrada <strong>{{ .Provider }}</strong> foi removido da sua conta no north." },
+        { kind: "note", title: "Não foi você?", text: "Troque a sua senha e escreva para a gente o quanto antes." },
+      ],
+      reason: ACCOUNT_REASON,
+      service: true,
+    }),
+  },
 } as const;
 
 /** E-mails enviados pelo app via Resend. */

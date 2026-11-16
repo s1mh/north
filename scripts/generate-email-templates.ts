@@ -9,7 +9,7 @@ mkdirSync("docs/email-previews", { recursive: true });
 for (const [name, template] of Object.entries(authTemplates)) {
   writeFileSync(`supabase/templates/${name}.html`, template.html);
   writeFileSync(`docs/email-previews/${name}.html`, template.html
-    .replaceAll("{{ .ConfirmationURL }}", "#").replaceAll("{{ .NewEmail }}", "novo@exemplo.com").replaceAll("{{ .Token }}", "48271930"));
+    .replaceAll("{{ .ConfirmationURL }}", "#").replaceAll("{{ .NewEmail }}", "novo@exemplo.com").replaceAll("{{ .Token }}", "48271930").replaceAll("{{ .OldEmail }}", "antigo@exemplo.com").replaceAll("{{ .OldPhone }}", "+55 11 90000-0000").replaceAll("{{ .Provider }}", "google").replaceAll("{{ .FactorType }}", "totp"));
 }
 writeFileSync("docs/email-previews/welcome.html", renderWelcome("https://usenorthapp.com.br/inicio"));
 writeFileSync("docs/email-previews/account-deleted.html", renderAccountDeleted());
