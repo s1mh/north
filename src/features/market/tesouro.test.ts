@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildTesouroIndicators, fetchTesouroSnapshot, parseTesouroLine } from "@/features/market/tesouro";
+import { buildTesouroIndicators, buildTesouroPrices, fetchTesouroData, fetchTesouroSnapshot, parseTesouroLine } from "@/features/market/tesouro";
+import { treasurySourceIdFromTerms } from "@/features/market/treasury-titles";
 
 const HEADER = "Tipo Titulo;Data Vencimento;Data Base;Taxa Compra Manha;Taxa Venda Manha;PU Compra Manha;PU Venda Manha;PU Base Manha";
 const lines = [
@@ -20,6 +21,7 @@ describe("Tesouro Transparente", () => {
   it("interpreta uma linha do arquivo oficial", () => {
     expect(parseTesouroLine(lines[3]!)).toEqual({
       type: "Tesouro Prefixado", maturity: "2031-01-01", base: "2026-11-13", rateBuy: 15.21, puBuy: 559.99,
+      puSell: 557.29, puBase: 557.29,
     });
   });
 
@@ -55,5 +57,26 @@ describe("Tesouro Transparente", () => {
   it("falha quando o serviço está indisponível", async () => {
     const fetcher = vi.fn().mockResolvedValue(new Response("erro", { status: 503 }));
     await expect(fetchTesouroSnapshot({ fetcher })).rejects.toThrow("tesouro_unavailable");
+  });
+
+  it("gera o preço de venda de cada título do dia mais recente", () => {
+    const prices = buildTesouroPrices(lines.map(parseTesouroLine), new Date("2026-11-16T12:00:00Z"));
+    expect(prices).toHaveLength(6);
+    const selic = prices.find((item) => item.sourceInstrumentId === "Tesouro Selic|2031-03-01")!;
+    expect(selic.close).toBe(20192.26);
+    expect(selic.observedOn).toBe("2026-11-13");
+    expect(selic.market).toBe("Tesouro Direto");
+    expect(selic.symbol).toBe("SELIC-2031-03-01");
+    // O mesmo identificador que a ficha do ativo produz (tipo + vencimento).
+    expect(treasurySourceIdFromTerms("tesouro_selic", "2031-03-01")).toBe("Tesouro Selic|2031-03-01");
+    expect(treasurySourceIdFromTerms("tesouro_ipca_js", "2035-05-15")).toBe("Tesouro IPCA+ com Juros Semestrais|2035-05-15");
+    expect(treasurySourceIdFromTerms("rdb", "2031-03-01")).toBeNull();
+  });
+
+  it("a leitura do arquivo devolve indicadores e preços juntos", async () => {
+    const fetcher = vi.fn().mockResolvedValue(csvResponse([HEADER, ...lines].join("\n")));
+    const data = await fetchTesouroData({ fetcher, now: new Date("2026-11-16T12:00:00Z") });
+    expect(data.indicators).toHaveLength(3);
+    expect(data.prices.every((item) => item.observedOn === "2026-11-13")).toBe(true);
   });
 });

@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 export const productTypes = [
-  "rdb", "cdb", "lci", "lca", "lc", "conta_remunerada", "poupanca", "tesouro",
+  "rdb", "cdb", "lci", "lca", "lc", "conta_remunerada", "poupanca",
+  "tesouro_selic", "tesouro_pre", "tesouro_pre_js", "tesouro_ipca", "tesouro_ipca_js",
+  "tesouro_renda", "tesouro_educa", "tesouro",
   "fundo", "previdencia", "debenture", "cri", "cra", "outro",
 ] as const;
 export const indexers = ["cdi_pct", "selic_pct", "ipca_mais", "pre", "poupanca", "nenhum"] as const;
@@ -19,7 +21,14 @@ export const productTypeLabels: Record<typeof productTypes[number], string> = {
   lc: "Letra de câmbio (LC)",
   conta_remunerada: "Conta remunerada ou caixinha",
   poupanca: "Poupança",
-  tesouro: "Tesouro Direto",
+  tesouro_selic: "Tesouro Selic",
+  tesouro_pre: "Tesouro Prefixado",
+  tesouro_pre_js: "Tesouro Prefixado com juros semestrais",
+  tesouro_ipca: "Tesouro IPCA+",
+  tesouro_ipca_js: "Tesouro IPCA+ com juros semestrais",
+  tesouro_renda: "Tesouro Renda+",
+  tesouro_educa: "Tesouro Educa+",
+  tesouro: "Tesouro Direto (outro título)",
   fundo: "Fundo de investimento",
   previdencia: "Previdência",
   debenture: "Debênture",

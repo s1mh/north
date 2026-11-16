@@ -16,4 +16,7 @@ export type MarketPrice = {
   low: number | null;
   close: number;
   observedOn: string;
+  /** Padrões: B3 / b3_listed. O Tesouro informa os seus. */
+  market?: string;
+  assetClass?: string;
 };

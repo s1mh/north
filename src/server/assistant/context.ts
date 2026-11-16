@@ -2,19 +2,14 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { deriveGoalProgress, getActiveContributionPlan } from "@/features/goals/calculation";
 import { isIndicatorStale, latestIndicators, type MarketIndicatorRow } from "@/features/market/presentation";
-import { derivePosition, type PortfolioTransaction } from "@/features/portfolio/ledger";
+import { todayInSaoPaulo } from "@/features/portfolio/submission";
+import { PORTFOLIO_VALUE_SELECT, valuePortfolio, type ValuableInstrument } from "@/server/portfolio/values";
 import { targetAllocationRecord } from "@/features/suitability/questionnaire";
 import type { InvestorProfile } from "@/features/suitability/score";
 import type { AssistantContext } from "@/features/assistant/types";
 import { createClient } from "@/server/supabase/client";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
-
-type InstrumentRow = {
-  asset_class: string;
-  latest_price: string | number | null;
-  portfolio_transactions: PortfolioTransaction[];
-};
 
 type GoalRow = {
   target_amount: string | number;
@@ -47,14 +42,9 @@ export async function loadAssistantContext(supabase: SupabaseServerClient) {
     supabase.from("profiles").select("current_assessment_id").maybeSingle(),
     supabase
       .from("portfolio_instruments")
-      .select(`
-        asset_class, latest_price,
-        portfolio_transactions(
-          id, transaction_type, quantity, unit_price, fees, cash_amount,
-          reverses_transaction_id, corrects_transaction_id, audit_reason,
-          trade_date, created_at
-        )
-      `)
+      .select(PORTFOLIO_VALUE_SELECT)
+      .order("valued_on", { referencedTable: "portfolio_valuations", ascending: false })
+      .limit(1, { referencedTable: "portfolio_valuations" })
       .order("trade_date", { referencedTable: "portfolio_transactions", ascending: true })
       .order("created_at", { referencedTable: "portfolio_transactions", ascending: true }),
     supabase
@@ -90,19 +80,18 @@ export async function loadAssistantContext(supabase: SupabaseServerClient) {
     ? assessment.profile
     : "conservador";
 
-  const positions = ((portfolioResult.data ?? []) as unknown as InstrumentRow[])
-    .map((instrument) => ({
-      assetClass: instrument.asset_class,
-      ...derivePosition(instrument.portfolio_transactions, instrument.latest_price),
-    }))
-    .filter((position) => position.quantity > 0n);
-  const totalCents = positions.reduce(
-    (total, position) => total + (position.currentValueCents ?? position.costBasisCents),
-    0n,
+  const valued = await valuePortfolio(
+    supabase,
+    (portfolioResult.data ?? []) as unknown as ValuableInstrument[],
+    todayInSaoPaulo(),
   );
+  const positions = valued
+    .filter((item) => item.position.quantity > 0n)
+    .map((item) => ({ assetClass: item.instrument.asset_class, valueCents: item.resolved.valueCents }));
+  const totalCents = positions.reduce((total, position) => total + position.valueCents, 0n);
   const allocationCents = positions.reduce<Record<string, bigint>>((result, position) => {
     const label = classLabels[position.assetClass] ?? "Outros";
-    result[label] = (result[label] ?? 0n) + (position.currentValueCents ?? position.costBasisCents);
+    result[label] = (result[label] ?? 0n) + position.valueCents;
     return result;
   }, {});
   const allocation = Object.fromEntries(

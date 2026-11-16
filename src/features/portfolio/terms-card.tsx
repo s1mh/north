@@ -120,6 +120,9 @@ export function TermsCard({
       {rateLabels[indexer] ? <label className="auth-field"><span>{rateLabels[indexer]?.label}</span>
         <input name="rate" inputMode="decimal" defaultValue={terms?.rate != null ? String(terms.rate).replace(".", ",") : ""} placeholder={rateLabels[indexer]?.placeholder} />
       </label> : null}
+      {productType.startsWith("tesouro_") ? <p className="field-hint terms-hint">
+        Para o Tesouro, o tipo do título e o vencimento ligam este ativo ao preço público do dia. Preencha os dois.
+      </p> : null}
       <div className="portfolio-field-row">
         <DateField label="Início" name="start_date" max={today} today={today} defaultValue={terms?.start_date ?? ""} clearable />
         <DateField label="Vencimento" name="maturity_date" defaultValue={terms?.maturity_date ?? ""} clearable />

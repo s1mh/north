@@ -14,7 +14,9 @@ import { TermsCard } from "@/features/portfolio/terms-card";
 import { isBalanceProduct, type InstrumentTerms } from "@/features/portfolio/terms";
 import { todayInSaoPaulo } from "@/features/portfolio/submission";
 import { daysBetween, gainFromCents } from "@/features/portfolio/valuation";
+import { ESTIMATE_DISCLAIMER, valueSourceLabel } from "@/features/portfolio/value";
 import { estimateInstrument } from "@/server/estimates/instrument";
+import { PORTFOLIO_VALUE_SELECT, valuePortfolio, type ValuableInstrument } from "@/server/portfolio/values";
 import { createClient } from "@/server/supabase/client";
 
 type DetailedTransaction = PortfolioTransaction & {
@@ -85,16 +87,10 @@ export default async function PortfolioInstrumentPage({
   const lastValuation = (valuationRow ?? null) as { valued_on: string; source: string } | null;
   const { data } = await supabase
     .from("portfolio_instruments")
-    .select(`
-      id, symbol, name, asset_class, latest_price, price_observed_at,
-      portfolio_institutions(name),
-      portfolio_transactions(
-        id, transaction_type, quantity, unit_price, fees, cash_amount,
-        reverses_transaction_id, corrects_transaction_id, audit_reason,
-        trade_date, created_at
-      )
-    `)
+    .select(PORTFOLIO_VALUE_SELECT)
     .eq("id", instrumentId)
+    .order("valued_on", { referencedTable: "portfolio_valuations", ascending: false })
+    .limit(1, { referencedTable: "portfolio_valuations" })
     .order("trade_date", { referencedTable: "portfolio_transactions", ascending: false })
     .order("created_at", { referencedTable: "portfolio_transactions", ascending: false })
     .maybeSingle();
@@ -103,7 +99,13 @@ export default async function PortfolioInstrumentPage({
   const instrument = data as unknown as Instrument;
   const chronological = [...instrument.portfolio_transactions].reverse();
   const position = derivePosition(chronological, instrument.latest_price);
-  const currentValue = position.currentValueCents ?? position.costBasisCents;
+  const [valued] = await valuePortfolio(
+    supabase,
+    [{ ...(data as unknown as ValuableInstrument), portfolio_transactions: chronological } as ValuableInstrument],
+    todayInSaoPaulo(),
+  );
+  const resolved = valued!.resolved;
+  const currentValue = resolved.valueCents;
   const observed = instrument.price_observed_at
     ? new Intl.DateTimeFormat("pt-BR").format(new Date(instrument.price_observed_at))
     : null;
@@ -117,13 +119,13 @@ export default async function PortfolioInstrumentPage({
   });
   const balance = isBalanceProduct(terms?.product_type);
   const hasInformedValue = Boolean(lastValuation);
-  const rawGain = priceStatus === "missing" ? null : gainFromCents(position.costBasisCents, currentValue);
-  // Só mostra ganho quando há valor informado ou o preço realmente difere do custo.
-  const gain = rawGain && (hasInformedValue || rawGain.gainCents !== 0n) ? rawGain : null;
+  const rawGain = resolved.source === "custo" ? null : gainFromCents(position.costBasisCents, currentValue);
+  // Só mostra ganho quando há valor informado, preço de mercado, estimativa ou o preço realmente difere do custo.
+  const gain = rawGain && (hasInformedValue || resolved.source !== "lancamento" || rawGain.gainCents !== 0n) ? rawGain : null;
   const informedToday = lastValuation && instrument.price_observed_at
     && lastValuation.valued_on === instrument.price_observed_at.slice(0, 10);
   const informedAge = lastValuation ? daysBetween(lastValuation.valued_on) : 0;
-  const informedValueCents = lastValuation && informedToday ? currentValue : null;
+  const informedValueCents = lastValuation && informedToday && resolved.source === "informado" ? currentValue : null;
   const money = formatMoneyFromCents;
   const reversedIds = new Set(
     instrument.portfolio_transactions
@@ -143,7 +145,7 @@ export default async function PortfolioInstrumentPage({
     </div>
 
     <section className="instrument-position">
-      <div><span>Valor atual</span><strong>{formatMoneyFromCents(currentValue)}</strong></div>
+      <div><span>Valor atual</span><strong>{resolved.estimated ? "≈ " : ""}{formatMoneyFromCents(currentValue)}</strong></div>
       {gain && position.costBasisCents > 0n ? <p className="instrument-gain" data-negative={gain.gainCents < 0n}>
         {gain.gainCents >= 0n ? "+" : ""}{money(gain.gainCents)}
         {gain.percent !== null ? ` (${gain.percent >= 0 ? "+" : ""}${gain.percent.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%)` : ""}
@@ -155,14 +157,18 @@ export default async function PortfolioInstrumentPage({
         <div><dt>Rendimentos lançados</dt><dd>{formatMoneyFromCents(position.incomeCents)}</dd></div>
         <div><dt>Taxas avulsas</dt><dd>{formatMoneyFromCents(position.expenseCents)}</dd></div>
       </dl>
-      <p data-price-status={informedToday ? "informed" : priceStatus}>
-        {priceStatus === "missing"
-          ? "Sem preço atual informado; o valor usa o custo da posição."
-          : informedToday
-            ? `Valor informado por você em ${formatTradeDate(lastValuation!.valued_on)}${informedAge > 0 ? ` (há ${informedAge} ${informedAge === 1 ? "dia" : "dias"})` : ""}. O north. não consulta o banco: atualize quando quiser.`
-            : priceStatus === "stale"
-              ? `Preço do último lançamento, de ${observed}. Atualize o valor para ver o ganho de hoje.`
-              : `Preço do último lançamento, de ${observed}.`}
+      <p data-price-status={resolved.stale ? "stale" : resolved.source === "lancamento" ? priceStatus : "informed"}>
+        {resolved.source === "mercado" || resolved.source === "tesouro"
+          ? `Preço de ${resolved.source === "tesouro" ? "venda do Tesouro" : "mercado (fechamento)"} de ${formatTradeDate(resolved.asOf!)}${resolved.source === "tesouro" ? " · Tesouro Transparente" : " · B3"}${resolved.stale ? ". Está desatualizado: confira com a sua corretora." : "."}`
+          : resolved.source === "estimado_ancorado" || resolved.source === "estimado_contrato"
+            ? `${valueSourceLabel(resolved)}. ${ESTIMATE_DISCLAIMER}`
+            : informedToday
+              ? `Valor informado por você em ${formatTradeDate(lastValuation!.valued_on)}${informedAge > 0 ? ` (há ${informedAge} ${informedAge === 1 ? "dia" : "dias"})` : ""}. O north. não consulta o banco: atualize quando quiser.`
+              : priceStatus === "missing"
+                ? "Sem preço atual informado; o valor usa o custo da posição."
+                : priceStatus === "stale"
+                  ? `Preço do último lançamento, de ${observed}. Atualize o valor para ver o ganho de hoje.`
+                  : `Preço do último lançamento, de ${observed}.`}
       </p>
       <InstrumentValue instrumentId={instrument.id} today={today} />
     </section>
